@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Cross-origin Consent Sharing Demo</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <script src="/consent.js"></script>
+  </head>
+  <body>
+    <div class="cookie-banner">
+      <div class="prompt">
+        <h2>Cookies</h2>
+        <p>We use some essential cookies to make this website work.</p>
+        <p>We’d like to set additional cookies to understand how you use GOV.UK,
+        remember your settings and improve government services.</p>
+        <div class="button-group">
+          <button type="submit" data-accept-cookies="1">Accept additional cookies</button>
+          <button type="submit" data-reject-cookies="1">Reject additional cookies</button>
+        </div>
+      </div>
+      <div class="grant" hidden="">
+        <p>You rejected additional cookies, but maybe you changed your mind?</p>
+        <div class="button-group">
+          <button type="submit" data-accept-cookies="1">Accept additional cookies</button>
+        </div>
+      </div>
+      <div class="revoke" hidden="">
+        <p>You accepted additional cookies, but maybe you changed your mind?</p>
+        <div class="button-group">
+          <button type="submit" data-reject-cookies="1">Reject additional cookies</button>
+        </div>
+      </div>
+    </div>
+
+    <main>
+      <h1>Domain {{ "B" if domain.startswith("consent-api-2") else "A" }}</h1>
+
+      <table>
+        <tr>
+          <th>Consent UID</th>
+          <td class="consent-uid"></td>
+        </tr>
+        <tr>
+          <th>Consent Status</th>
+          <td class="consent-status"></td>
+        </tr>
+      </table>
+
+      <p>
+      {% if domain.startswith("consent-api-2") %}
+        <a href="https://consent-api.herokuapp.com/"
+           referrerpolicy="no-referrer-when-downgrade"
+           data-consent-share="true">Link to Domain A</a>
+      {% else %}
+        <a href="https://consent-api-2.herokuapp.com/"
+          referrerpolicy="no-referrer-when-downgrade"
+          data-consent-share="true">Link to Domain B</a>
+      {% endif %}
+      </p>
+
+      <p>
+        <a href="https://github.com/andyhd/consent-api/">Source code</a>
+      </p>
+
+    </main>
+
+    <script>
+      Consent.init();
+    </script>
+  </body>
+</html>
