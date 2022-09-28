@@ -139,15 +139,16 @@ def consent_js() -> Response:
     return response
 
 
+@app.get("/consent", defaults={"uid": None})
 @app.get("/consent/<uid>")
-@cross_origin(origins=ALLOWED_ORIGINS)
+@cross_origin(origins="*")
 def get_consent(uid):
     user = User(uid)
-    return jsonify(status=user.consent_status)
+    return jsonify(uid=user.uid, status=user.consent_status)
 
 
 @app.post("/consent/<uid>")
-@cross_origin(origins=ALLOWED_ORIGINS)
+@cross_origin(origins="*")
 def set_consent(uid):
     user = User(uid)
     user.consent_status = ConsentStatus[request.form["status"]]
