@@ -6,7 +6,7 @@
   Consent.crossOriginUID = new URL(window.location.href).searchParams.get("uid");
   Consent.consentShared = !!Consent.crossOriginUID;
   Consent.originUID = "{{ uid }}";
-  Consent.originStatus = "{{ consent_status }}";
+  Consent.originStatus = {{ consent_status }};
   Consent.uid = Consent.consentShared ? Consent.crossOriginUID : Consent.originUID;
   Consent.apiURL = "{{ api_url }}/" + Consent.uid;
 
@@ -29,18 +29,15 @@
   };
 
   Consent.showBannerContent = function (status) {
+    var noConsentStatus = status === 'None';
+    var additionalCookiesAccepted = Object.entries(status).filter([key, val] => key !== 'essential' && val).length;
     Object.entries({
-      'None': this.cookiePrompt,
-      'CONSENT': this.revoke,
-      'NO_CONSENT': this.grant,
-    }).forEach(([key, el]) => {
-      if (key === status) {
-        el.hidden = false;
-        el.style.display = "block";
-      } else {
-        el.hidden = true;
-        el.style.display = "none";
-      }
+      this.cookiePrompt: noConsentStatus,
+      this.revoke: additionalCookiesAccepted,
+      this.grant: !additionalCookiesAccepted
+    }).forEach(([el, show]) => {
+      el.hidden = !show;
+      el.style.display = show ? 'block': 'none';
     });
   };
 
@@ -58,7 +55,7 @@
       method: 'POST',
       cache: 'no-cache',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'status=' + status + '&uid=' + this.uid
+      body: 'status=' + JSON.stringify(status) + '&uid=' + this.uid
     })
       .then(() => {
         this.status = status;
@@ -71,7 +68,7 @@
       el.innerText = Consent.uid;
     }
     for (var el of document.querySelectorAll('.consent-status')) {
-      el.innerText = Consent.status;
+      el.innerText = JSON.stringify(Consent.status);
     }
   };
 

@@ -3,12 +3,12 @@ import base64
 import sqlite3
 import uuid
 from datetime import datetime, timedelta
-from enum import Enum
 from urllib.parse import parse_qs, urlparse
+from dataclasses import asdict, dataclass
 
 from flask import Flask
 from flask import g
-from flask import jsonify
+from flask import json, jsonify
 from flask import make_response
 from flask import render_template
 from flask import request
@@ -24,13 +24,19 @@ ALLOWED_ORIGINS = [
 ]
 
 
-class ConsentStatus(Enum):
-    NO_CONSENT = 0
-    CONSENT = 1
+@dataclass
+class ConsentStatus:
+    essential: bool = True
+    settings: bool = False
+    usage: bool = False
+    campaigns: bool = False
 
     def __html__(self):
         # Enables flask.json.jsonify
-        return self.name
+        return str(self)
+
+    def __str__(self):
+        return str(asdict(self))
 
 
 def get_db():
@@ -55,17 +61,9 @@ def init_db(db):
             """
             CREATE TABLE IF NOT EXISTS consent (
                 uid TEXT UNIQUE NOT NULL,
-                status INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS consent_status (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                value TEXT UNIQUE ON CONFLICT IGNORE NOT NULL
+                status TEXT NOT NULL
             );
             """
-        )
-        db.executemany(
-            "INSERT OR IGNORE INTO consent_status (value, id) VALUES (?, ?)",
-            [(status.name, status.value) for status in ConsentStatus],
         )
 
 
@@ -88,7 +86,7 @@ class User:
                     {"uid": self.uid},
                 ).fetchone()
                 if result:
-                    self._status = ConsentStatus(result["status"])
+                    self._status = ConsentStatus(**json.loads(result["status"]))
                 self._status_cached = True
         return self._status
 
@@ -101,7 +99,7 @@ class User:
             db.execute(
                 "INSERT INTO consent (uid, status) VALUES (:uid, :status) "
                 "ON CONFLICT (uid) DO UPDATE SET status = :status",
-                {"uid": self.uid, "status": status.value},
+                {"uid": self.uid, "status": json.dumps(asdict(status))},
             )
             self._status = status
             self._status_cached = True
@@ -124,7 +122,9 @@ def consent_js() -> Response:
             "consent.js",
             api_url="https://consent-api.herokuapp.com/consent",
             uid=user.uid,
-            consent_status=user.consent_status.name if user.consent_status else None,
+            consent_status=json.dumps(asdict(user.consent_status))
+            if user.consent_status
+            else None,
         ),
     )
     response.headers["Content-Type"] = "application/javascript"
@@ -151,7 +151,7 @@ def get_consent(uid):
 @cross_origin(origins="*")
 def set_consent(uid):
     user = User(uid)
-    user.consent_status = ConsentStatus[request.form["status"]]
+    user.consent_status = ConsentStatus(**json.loads(request.form["status"]))
     return "", 204
 
 
