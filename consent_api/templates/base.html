@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>{{ page_title|default("Single Consent API") }}</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+  </head>
+  <body>
+    {% block bodyStart %}{% endblock %}
+
+    <header>
+      <h1>{{ page_title|default("Single Consent API") }}</h1>
+    </header>
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+      <ul class="footer--links">
+        <li><a href="https://github.com/alphagov/consent-api">Source code</a></li>
+      </ul>
+    </footer>
+
+    {% block bodyEnd %}{% endblock %}
+  </body>
+</html>
