@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>UID <span class="uid">{{ user.uid }}</span></h2>
+
+  {% if user.consent_status %}
+    <table>
+      <tr>
+        <th>Essential</th>
+        <td data-consent="{{ user.consent_status.essential }}">{{ user.consent_status.essential }}</td>
+      </tr>
+      <tr>
+        <th>Usage</th>
+        <td data-consent="{{ user.consent_status.usage }}">{{ user.consent_status.usage }}</td>
+      </tr>
+      <tr>
+        <th>Campaigns</th>
+        <td data-consent="{{ user.consent_status.campaigns }}">{{ user.consent_status.campaigns }}</td>
+      </tr>
+      <tr>
+        <th>Settings</th>
+        <td data-consent="{{ user.consent_status.settings }}">{{ user.consent_status.settings }}</td>
+      </tr>
+    </table>
+  {% else %}
+    <p>No consent status set</p>
+  {% endif %}
+{% endblock %}

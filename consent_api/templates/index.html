@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Statuses</h2>
+  <table class="user-list">
+    <thead>
+      <tr>
+        <th rowspan="2">UID</th>
+        <th colspan="4">Consent Status</th>
+      </tr>
+      <tr>
+        <th>Essential</th>
+        <th>Usage</th>
+        <th>Campaigns</th>
+        <th>Settings</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+      <tr>
+        <td><a href="{{ url_for("user", uid=user.uid) }}">{{ user.uid }}</a></td>
+        {% if user.consent_status %}
+          <td data-consent="{{ user.consent_status.essential }}">{{ user.consent_status.essential }}</td>
+          <td data-consent="{{ user.consent_status.usage }}">{{ user.consent_status.usage }}</td>
+          <td data-consent="{{ user.consent_status.campaigns }}">{{ user.consent_status.campaigns }}</td>
+          <td data-consent="{{ user.consent_status.settings }}">{{ user.consent_status.settings }}</td>
+        {% else %}
+          <td colspan="4">-</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
