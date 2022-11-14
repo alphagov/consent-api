@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
+from dataclasses import dataclass
+from typing import ClassVar
 
 from flask import json
 
@@ -15,6 +17,9 @@ class ConsentStatus:
     usage: bool = False
     campaigns: bool = False
 
+    ACCEPT_ALL: ClassVar["ConsentStatus"]
+    REJECT_ALL: ClassVar["ConsentStatus"]
+
     def __html__(self):
         # Enables flask.json.jsonify
         return str(self)
@@ -23,7 +28,19 @@ class ConsentStatus:
         return str(asdict(self))
 
 
+ConsentStatus.ACCEPT_ALL = ConsentStatus(True, True, True, True)
+ConsentStatus.REJECT_ALL = ConsentStatus(True, False, False, False)
+
+
 class User:
+    DELETE_BY_UID = "DELETE FROM consent WHERE uid = :uid"
+    GET_ALL = "SELECT uid, status FROM consent"
+    GET_BY_UID = "SELECT status FROM consent WHERE uid = :uid"
+    SET_CONSENT_STATUS = (
+        "INSERT INTO consent (uid, status) VALUES (:uid, :status) "
+        "ON CONFLICT (uid) DO UPDATE SET status = :status"
+    )
+
     def __init__(self, uid: str | None = None):
         self.uid = uid or generate_uid()
         self._status: ConsentStatus | None = None
@@ -33,10 +50,7 @@ class User:
     def consent_status(self) -> ConsentStatus | None:
         if not self._status_cached:
             with get_db() as db:
-                result = db.execute(
-                    "SELECT status FROM consent WHERE uid = :uid",
-                    {"uid": self.uid},
-                ).fetchone()
+                result = db.execute(User.GET_BY_UID, {"uid": self.uid}).fetchone()
                 if result:
                     self._status = ConsentStatus(**json.loads(result["status"]))
                 self._status_cached = True
@@ -49,9 +63,8 @@ class User:
 
         with get_db() as db:
             db.execute(
-                "INSERT INTO consent (uid, status) VALUES (:uid, :status) "
-                "ON CONFLICT (uid) DO UPDATE SET status = :status",
-                {"uid": self.uid, "status": json.dumps(asdict(status))},
+                User.SET_CONSENT_STATUS,
+                {"uid": self.uid, "status": json.dumps(status)},
             )
             self._status = status
             self._status_cached = True
@@ -60,7 +73,7 @@ class User:
     def get_all(cls) -> list[User]:
         users = []
         with get_db() as db:
-            for row in db.execute("SELECT uid, status FROM consent").fetchall():
+            for row in db.execute(User.GET_ALL).fetchall():
                 user = User(row["uid"])
                 user._status = ConsentStatus(**json.loads(row["status"]))
                 user._status_cached = True

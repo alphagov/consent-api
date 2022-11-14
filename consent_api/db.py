@@ -29,5 +29,5 @@ def init_db(db):
                 uid TEXT UNIQUE NOT NULL,
                 status TEXT NOT NULL
             );
-            """
+            """,
         )
