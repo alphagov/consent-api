@@ -1,0 +1,6 @@
+__pycache__/
+requirements-*.txt
+consent_api/tests/
+coverage.xml
+.coverage
+htmlcov

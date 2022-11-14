@@ -18,7 +18,7 @@
     <tbody>
     {% for user in users %}
       <tr>
-        <td><a href="{{ url_for("user", uid=user.uid) }}">{{ user.uid }}</a></td>
+        <td><b>{{ user.uid }}</b></td>
         {% if user.consent_status %}
           <td data-consent="{{ user.consent_status.essential }}">{{ user.consent_status.essential }}</td>
           <td data-consent="{{ user.consent_status.usage }}">{{ user.consent_status.usage }}</td>

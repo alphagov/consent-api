@@ -1,0 +1,5 @@
+-r requirements-ci.txt
+mypy
+
+pre-commit
+types-flask-cors
