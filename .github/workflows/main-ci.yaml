@@ -3,6 +3,8 @@ name: Consent API CI
 on:
   push:
     branches: [ $default-branch ]
+    tags:
+      - '*'
   pull_request:
     branches: [ $default-branch ]
 
@@ -12,7 +14,7 @@ permissions:
 jobs:
 
   lint:
-    name: "Lint and static checks"
+    name: Lint and static checks
     runs-on: ubuntu-latest
 
     env:
@@ -24,8 +26,8 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version-file: ".python-version"
-        cache: "pip"
+        python-version-file: '.python-version'
+        cache: pip
 
     - name: Install dependencies
       run: |
@@ -36,7 +38,7 @@ jobs:
         make lint
 
   test:
-    name: "Run tests"
+    name: Run tests
     runs-on: ubuntu-latest
 
     env:
@@ -48,8 +50,8 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version-file: ".python-version"
-        cache: "pip"
+        python-version-file: '.python-version'
+        cache: pip
 
     - name: Install dependencies
       run: |
@@ -62,15 +64,48 @@ jobs:
     - name: Report code coverage
       uses: codecov/codecov-action@v3
 
-  # docker-image:
-  #   name: "Build Docker image"
-  #   runs-on: ubuntu-latest
+  docker-image:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type }} == 'tag'
 
-  #   env:
-  #   - name: Build Docker image
-  #     run: |
-  #       make docker-image
+    env:
+      PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+      SERVICE: ${{ secrets.GOOGLE_CLOUD_SERVICE_ID }}
+      DOCKER_REGISTRY: gcr.io
+      DOCKER_IMAGE_NAME: gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}/${{ secrets.GOOGLE_CLOUD_SERVICE_ID }}
 
-  #   - name: Push Docker image
-  #     run: |
-  #       make docker-push
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+        service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
+
+    - name: Docker auth
+      id: docker-auth
+      uses: 'docker/login-action@v1'
+      with:
+        username: 'oauth2accesstoken'
+        password: '${{ steps.auth.outputs.access_token }}'
+        registry: '${{ env.DOCKER_REPOSITORY }}'
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t "${{ env.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}" .
+        docker push "${{ env.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}"
+
+    - name: Deploy to Cloud Run
+      id: deploy
+      uses: google-github-actions/deploy-cloudrun@v0
+      with:
+        service: ${{ env.SERVICE }}
+        region: ${{ env.REGION }}
+        image: '${{ env.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}'
+
+    - name: Show URL
+      run: |
+        echo ${{ steps.deploy.outputs.url }}
