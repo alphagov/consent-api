@@ -104,7 +104,7 @@ jobs:
       id: deploy
       uses: google-github-actions/deploy-cloudrun@v0
       with:
-        service: ${{ secrets.GOOLE_CLOUD_SERVICE_ID }}
+        service: ${{ secrets.GOOGLE_CLOUD_SERVICE_ID }}
         region: ${{ secrets.GOOGLE_CLOUD_REGION }}
         image: '${{ env.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}'
 
