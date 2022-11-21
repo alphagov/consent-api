@@ -10,12 +10,15 @@ clean:
 .PHONY: deps
 deps:
 	python -m pip install -U pip
-	pip install -r requirements.txt
-	if [ -f requirements-$(ENV).txt ]; then pip install -r requirements-$(ENV).txt; fi
+	python -m pip install -r requirements.txt
+	[ -f requirements-$(ENV).txt ] && python -m pip install -r requirements-$(ENV).txt
 
 .PHONY: lint
 lint:
 	black --check .
+	isort --check-only --profile=black --force-single-line-imports .
+	flake8 --max-line-length=88 --extend-ignore=E203
+	mypy --namespace-packages .
 
 .PHONY: lint-fix
 lint-fix:

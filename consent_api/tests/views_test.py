@@ -1,3 +1,4 @@
+"""Tests of view functions."""
 import sqlite3
 from contextlib import contextmanager
 from unittest.mock import patch
@@ -13,6 +14,7 @@ from consent_api.models import User
 
 @pytest.fixture
 def db():
+    """Get a test database connection."""
     with patch("consent_api.models.get_db") as get_db:
         db = sqlite3.connect(":memory:")
         db.row_factory = sqlite3.Row
@@ -23,10 +25,12 @@ def db():
 
 
 def test_index_page(client):
+    """Check the index page loads."""
     assert client.get(url_for("home")).status_code == 200
 
 
 def test_get_consent_no_uid(client, db):
+    """Test getting consent status with a null user ID."""
     response = client.get(url_for("get_consent"))
     assert response.status_code == 200
     assert len(response.json["uid"]) == 22
@@ -34,6 +38,7 @@ def test_get_consent_no_uid(client, db):
 
 
 def test_get_consent_with_uid(client, db):
+    """Test getting consent status for a user with no consent status."""
     uid = "test-uid"
     response = client.get(url_for("get_consent", uid=uid))
     assert response.status_code == 200
@@ -43,6 +48,8 @@ def test_get_consent_with_uid(client, db):
 
 @pytest.fixture
 def existing_consent_record(db):
+    """Return a helper function to add a consent status record to the database."""
+
     @contextmanager
     def _make_record(uid, status):
         db.execute(
@@ -59,6 +66,7 @@ def existing_consent_record(db):
 
 
 def test_get_consent_with_existing_record(existing_consent_record, client):
+    """Test getting consent status for a user with an existing status record."""
     uid = "test-uid"
     with existing_consent_record(uid, ConsentStatus.ACCEPT_ALL):
         response = client.get(url_for("get_consent", uid=uid))
@@ -75,6 +83,7 @@ def test_get_consent_with_existing_record(existing_consent_record, client):
     ],
 )
 def test_set_consent(client, db, status):
+    """Test setting a user's consent status multiple times."""
     uid = "test-uid"
     url = url_for("set_consent", uid=uid)
     response = client.post(url, data={"status": json.dumps(status)})

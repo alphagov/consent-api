@@ -1,3 +1,4 @@
+"""Database functions."""
 import sqlite3
 
 from flask import g
@@ -6,6 +7,7 @@ from consent_api import app
 
 
 def get_db():
+    """Get a database connection."""
     db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect("consent.db")
@@ -16,12 +18,13 @@ def get_db():
 
 @app.teardown_appcontext
 def close_connection(_):
-    db = getattr(g, "_database", None)
-    if db is not None:
+    """Close the database connection."""
+    if (db := getattr(g, "_database", None)) is not None:
         db.close()
 
 
 def init_db(db):
+    """Ensure the database schema is initialized."""
     with db:
         db.executescript(
             """
