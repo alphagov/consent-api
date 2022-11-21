@@ -24,10 +24,6 @@ lint:
 lint-fix:
 	pre-commit run --all-files
 
-.PHONY: mypy
-mypy:
-	mypy --package $(APP_NAME) --namespace-packages
-
 .PHONY: test
 test:
 	pytest -x -n=auto --dist=loadfile
