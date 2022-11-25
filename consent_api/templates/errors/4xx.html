@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% set page_title = "Bad request" %}
+
+{% block content %}
+  <h2>Error code {{ code }}</h2>
+  <p>The service has rejected your request.</p>
+  <p>Please check you have included correct authentication credentials with your request.</p>
+{% endblock %}

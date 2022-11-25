@@ -1,4 +1,4 @@
-ENV ?= dev
+ENV ?= development
 
 -include .env
 export

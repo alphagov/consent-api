@@ -19,11 +19,11 @@
     {% for user in users %}
       <tr>
         <td><b>{{ user.uid }}</b></td>
-        {% if user.consent_status %}
-          <td data-consent="{{ user.consent_status.essential }}">{{ user.consent_status.essential }}</td>
-          <td data-consent="{{ user.consent_status.usage }}">{{ user.consent_status.usage }}</td>
-          <td data-consent="{{ user.consent_status.campaigns }}">{{ user.consent_status.campaigns }}</td>
-          <td data-consent="{{ user.consent_status.settings }}">{{ user.consent_status.settings }}</td>
+        {% if user.consent is not none %}
+          <td data-consent="{{ user.consent.essential }}">{{ user.consent.essential }}</td>
+          <td data-consent="{{ user.consent.usage }}">{{ user.consent.usage }}</td>
+          <td data-consent="{{ user.consent.campaigns }}">{{ user.consent.campaigns }}</td>
+          <td data-consent="{{ user.consent.settings }}">{{ user.consent.settings }}</td>
         {% else %}
           <td colspan="4">-</td>
         {% endif %}

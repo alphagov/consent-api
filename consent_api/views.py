@@ -6,8 +6,8 @@ from flask import request
 from flask_cors import cross_origin
 
 from consent_api import app
-from consent_api.models import ConsentStatus
-from consent_api.models import User
+from consent_api.models import CookieConsent
+from consent_api.models import UserConsent
 
 
 @app.get("/consent", defaults={"uid": None})
@@ -20,8 +20,8 @@ def get_consent(uid):
     If the user is not specified, create a new user ID and return it with a null consent
     status.
     """
-    user = User(uid)
-    return jsonify(uid=user.uid, status=user.consent_status)
+    consent = UserConsent.get(uid)
+    return jsonify(consent.json)
 
 
 @app.post("/consent/<uid>")
@@ -36,14 +36,17 @@ def set_consent(uid):
     The body must contain a single name/value pair, with the name `status`, and the
     value must be a JSON object encoded as a string.
     """
-    user = User(uid)
-    # Use application/x-www-form-urlencoded body to keep the CORS request simple
+    user = UserConsent(uid=uid)
+    # application/x-www-form-urlencoded body to keep the CORS request simple
+    status = request.form["status"]
     # status field contains stringified JSON object
-    user.consent_status = ConsentStatus(**json.loads(request.form["status"]))
+    status = json.loads(status)
+    # TODO validation
+    user.update(consent=CookieConsent(**status))
     return "", 204
 
 
 @app.route("/")
 def home() -> str:
     """Display the contents of the consent status database table."""
-    return render_template("index.html", users=User.get_all())
+    return render_template("index.html", users=UserConsent.get_all())
