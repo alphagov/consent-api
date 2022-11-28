@@ -4,7 +4,6 @@ ENV ?= development
 export
 
 PORT ?= 8000
-VERSION=$(shell cat version)
 
 .PHONY: clean
 clean:
@@ -20,35 +19,32 @@ deps:
 lint:
 	black --check .
 	isort --check-only --profile=black --force-single-line-imports .
-	flake8 --max-line-length=88 --extend-ignore=E203
-	mypy --namespace-packages .
+	flake8 --max-line-length=88 --extend-ignore=E203 --exclude migrations
 
 .PHONY: lint-fix
 lint-fix:
 	pre-commit run --all-files
 
+.PHONY: run-migrations
+run-migrations:
+	flask db upgrade
+
 .PHONY: test
 test:
-	pytest -x -n=auto --dist=loadfile
+	pytest -x -n=auto --dist=loadfile -W ignore::DeprecationWarning
 
 .PHONY: test-coverage
 test-coverage:
-	pytest -n=auto --cov --cov-report=xml --cov-report=term
+	pytest -n=auto --cov --cov-report=xml --cov-report=term -W ignore::DeprecationWarning
 
 .PHONY: run
 run:
-	flask --app $(APP_NAME):app --debug run --debugger --reload
+	flask --debug run --debugger --reload
 
 .PHONY: docker-image
 docker-image: clean
-	docker buildx build --platform linux/amd64 -t $(APP_NAME):latest .
-	docker tag $(APP_NAME):latest $(APP_NAME):$(VERSION)
-
-.PHONY: docker-push
-docker-push: docker-image
-	docker tag $(APP_NAME):$(VERSION) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
-	docker push $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+	docker buildx build --platform linux/amd64 -t $(APP_NAME) .
 
 .PHONY: docker-run
 docker-run:
-	docker run -it --env-file=.env --env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" -p 8000:$(PORT) $(APP_NAME):$(VERSION)
+	docker run -it --env-file=.env --env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" -p 8000:$(PORT) $(APP_NAME)

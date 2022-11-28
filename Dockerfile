@@ -33,4 +33,4 @@ COPY migrations/ migrations/
 
 ENV PATH="/home/app/venv/bin:$PATH"
 
-ENTRYPOINT gunicorn consent_api:app
+CMD flask --app=consent_api:app db upgrade && gunicorn consent_api:app
