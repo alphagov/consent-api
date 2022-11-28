@@ -2,8 +2,7 @@ name: Consent API Deployment
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: ['main']
 
 env:
   REGISTRY: gcr.io
@@ -19,11 +18,20 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: read|write
       id-token: write
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Bump version and push tag
+      id: release
+      uses: rymndhng/release-on-push-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        bump_version_scheme: minor
+        use_github_release_notes: true
 
     - name: Authenticate to Google Cloud
       id: auth
@@ -47,7 +55,7 @@ jobs:
         push: true
         tags: |
           ${{ env.IMAGE_NAME }}:latest
-          ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          ${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag_name }}
 
     - name: Deploy to Cloud Run
       id: deploy
@@ -55,7 +63,7 @@ jobs:
       with:
         service: ${{ env.SERVICE_ID }}
         region: ${{ env.REGION }}
-        image: ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+        image: ${{ env.IMAGE_NAME }}:${{ steps.release.output.tag_name }}
 
     - name: Show URL
       run: |
