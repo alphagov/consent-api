@@ -1,7 +1,6 @@
 name: Consent API CI
 
 on:
-  workflow_dispatch:  # manual trigger
   push:
     branches: [ $default-branch ]
   pull_request:

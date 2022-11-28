@@ -1,35 +1,19 @@
 """Tests of view functions."""
-import sqlite3
-from contextlib import contextmanager
-from unittest.mock import patch
-
 import pytest
 from flask import json
 from flask import url_for
 
-from consent_api.db import init_db
-from consent_api.models import ConsentStatus
-from consent_api.models import User
+from consent_api.models import CookieConsent
+from consent_api.models import UserConsent
+from consent_api.models import generate_uid
 
 
-@pytest.fixture
-def db():
-    """Get a test database connection."""
-    with patch("consent_api.models.get_db") as get_db:
-        db = sqlite3.connect(":memory:")
-        db.row_factory = sqlite3.Row
-        init_db(db)
-        get_db.return_value = db
-        yield db
-        db.close()
-
-
-def test_index_page(client):
+def test_index_page(client, db_session):
     """Check the index page loads."""
     assert client.get(url_for("home")).status_code == 200
 
 
-def test_get_consent_no_uid(client, db):
+def test_get_consent_no_uid(client):
     """Test getting consent status with a null user ID."""
     response = client.get(url_for("get_consent"))
     assert response.status_code == 200
@@ -37,7 +21,7 @@ def test_get_consent_no_uid(client, db):
     assert response.json["status"] is None
 
 
-def test_get_consent_with_uid(client, db):
+def test_get_consent_with_uid(client, db_session):
     """Test getting consent status for a user with no consent status."""
     uid = "test-uid"
     response = client.get(url_for("get_consent", uid=uid))
@@ -46,46 +30,30 @@ def test_get_consent_with_uid(client, db):
     assert response.json["status"] is None
 
 
-@pytest.fixture
-def existing_consent_record(db):
-    """Return a helper function to add a consent status record to the database."""
-
-    @contextmanager
-    def _make_record(uid, status):
-        db.execute(
-            User.SET_CONSENT_STATUS,
-            {
-                "uid": uid,
-                "status": json.dumps(status),
-            },
-        )
-        yield None
-        db.execute(User.DELETE_BY_UID, {"uid": uid})
-
-    yield _make_record
-
-
-def test_get_consent_with_existing_record(existing_consent_record, client):
+def test_get_consent_with_existing_record(client, db_session):
     """Test getting consent status for a user with an existing status record."""
-    uid = "test-uid"
-    with existing_consent_record(uid, ConsentStatus.ACCEPT_ALL):
-        response = client.get(url_for("get_consent", uid=uid))
-        assert response.status_code == 200
-        assert response.json["uid"] == uid
-        assert all(category for category in response.json["status"].values())
+    existing = UserConsent(uid=generate_uid(), consent=CookieConsent.ACCEPT_ALL.json)
+    db_session.add(existing)
+    db_session.commit()
+    response = client.get(url_for("get_consent", uid=existing.uid))
+    assert response.status_code == 200
+    assert response.json["uid"] == existing.uid
+    assert response.json["status"] == existing.consent
 
 
 @pytest.mark.parametrize(
     "status",
     [
-        ConsentStatus.REJECT_ALL,
-        ConsentStatus.ACCEPT_ALL,
+        CookieConsent.REJECT_ALL.json,
+        CookieConsent.ACCEPT_ALL.json,
     ],
 )
-def test_set_consent(client, db, status):
+def test_set_consent(client, db_session, status):
     """Test setting a user's consent status multiple times."""
     uid = "test-uid"
-    url = url_for("set_consent", uid=uid)
-    response = client.post(url, data={"status": json.dumps(status)})
+    response = client.post(
+        url_for("set_consent", uid=uid),
+        data={"status": json.dumps(status)},
+    )
     assert response.status_code == 204
-    assert User(uid).consent_status == status
+    assert UserConsent.get(uid).consent == status

@@ -65,6 +65,7 @@ repos:
     - flake8-docstrings==1.6.0
     - flake8-eradicate==1.4.0
     - pep8-naming==0.13.2
+    exclude: migrations
 
 - repo: https://github.com/ikamensh/flynt
   rev: '0.76'

@@ -1,7 +1,10 @@
-ENV ?= dev
+ENV ?= development
 
 -include .env
 export
+
+PORT ?= 8000
+VERSION=$(shell cat version)
 
 .PHONY: clean
 clean:
@@ -37,11 +40,15 @@ run:
 	flask --app $(APP_NAME):app --debug run --debugger --reload
 
 .PHONY: docker-image
-docker-image:
-	@docker buildx build --platform linux/amd64 -t $(APP_NAME) .
-	@docker tag $(APP_NAME) $(APP_NAME):$(VERSION)
+docker-image: clean
+	docker buildx build --platform linux/amd64 -t $(APP_NAME):latest .
+	docker tag $(APP_NAME):latest $(APP_NAME):$(VERSION)
 
 .PHONY: docker-push
 docker-push: docker-image
-	@docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
-	@docker push $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+	docker tag $(APP_NAME):$(VERSION) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+	docker push $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+
+.PHONY: docker-run
+docker-run:
+	docker run -it --env-file=.env --env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" -p 8000:$(PORT) $(APP_NAME):$(VERSION)
