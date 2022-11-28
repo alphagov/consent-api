@@ -7,9 +7,8 @@ from dataclasses import fields
 from typing import ClassVar
 
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.orm import DeclarativeMeta
 
-import consent_api
 from consent_api import db
 from consent_api.util import generate_uid
 
@@ -47,8 +46,7 @@ class CookieConsent:
 CookieConsent.ACCEPT_ALL = CookieConsent(*([True] * len(fields(CookieConsent))))
 CookieConsent.REJECT_ALL = CookieConsent()
 
-
-BaseModel: DeclarativeMeta = consent_api.db.Model
+BaseModel: DeclarativeMeta = db.Model
 
 
 class UserConsent(BaseModel):
