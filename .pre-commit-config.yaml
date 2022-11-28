@@ -63,7 +63,6 @@ repos:
     additional_dependencies:
     - flake8-bugbear==22.10.27
     - flake8-docstrings==1.6.0
-    - flake8-eradicate==1.4.0
     - pep8-naming==0.13.2
     exclude: migrations
 
@@ -81,3 +80,8 @@ repos:
   rev: v0.991
   hooks:
   - id: mypy
+    args:
+    - "--ignore-missing-imports"
+    - "--scripts-are-modules"
+    - "--exclude"
+    - "migrations"
