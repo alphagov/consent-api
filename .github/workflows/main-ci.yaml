@@ -2,11 +2,12 @@ name: Consent API CI
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches: [ 'main' ]
   pull_request:
-    branches: [ $default-branch ]
+    branches: [ 'main' ]
 
 env:
+  FLASK_APP: consent_api
   ENV: ci
 
 jobs:
@@ -36,6 +37,19 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 2s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@v3
 
@@ -50,8 +64,27 @@ jobs:
         make deps
 
     - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
       run: |
+        make run-migrations
         make test-coverage
 
-    - name: Report code coverage
-      uses: codecov/codecov-action@v3
+  deploy:
+    name: Tag and trigger deployment
+    runs-on: ubuntu-latest
+    if: github.ref_name == github.event.repository.default_branch
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+
+    - name: Bump version and push tag
+      uses: rymndhng/release-on-push-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        bump_version_scheme: minor
+        use_github_release_notes: true
