@@ -1,7 +1,7 @@
 """Fixtures for all tests."""
+
 import pytest
 import sqlalchemy
-from flask_migrate import upgrade
 
 TEST_DATABASE_URI = "sqlite:///:memory:"
 
@@ -26,12 +26,6 @@ def app():
 def db(app):
     """Create a test database and drop it when tests are done."""
     from consent_api import db as _db
-
-    sqlalchemy.orm.configure_mappers()
-
-    _db.drop_all()
-
-    upgrade()
 
     yield _db
 
