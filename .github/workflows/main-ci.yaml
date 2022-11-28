@@ -55,3 +55,20 @@ jobs:
 
     - name: Report code coverage
       uses: codecov/codecov-action@v3
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    if: github.ref_name == github.event.repository.default_branch
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
