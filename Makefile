@@ -20,24 +20,27 @@ deps:
 lint:
 	black --check .
 	isort --check-only --profile=black --force-single-line-imports .
-	flake8 --max-line-length=88 --extend-ignore=E203
-	mypy --namespace-packages .
+	flake8 --max-line-length=88 --extend-ignore=E203 --exclude migrations
 
 .PHONY: lint-fix
 lint-fix:
 	pre-commit run --all-files
 
+.PHONY: run-migrations
+run-migrations:
+	flask db upgrade
+
 .PHONY: test
 test:
-	pytest -x -n=auto --dist=loadfile
+	pytest -x -n=auto --dist=loadfile -W ignore::DeprecationWarning
 
 .PHONY: test-coverage
 test-coverage:
-	pytest -n=auto --cov --cov-report=xml --cov-report=term
+	pytest -n=auto --cov --cov-report=xml --cov-report=term -W ignore::DeprecationWarning
 
 .PHONY: run
 run:
-	flask --app $(APP_NAME):app --debug run --debugger --reload
+	flask --debug run --debugger --reload
 
 .PHONY: docker-image
 docker-image: clean
