@@ -50,3 +50,14 @@ def set_consent(uid):
 def home() -> str:
     """Display the contents of the consent status database table."""
     return render_template("index.html", users=UserConsent.get_all())
+
+
+@app.get("/health")
+def health():
+    """Check the API is able to respond to requests."""
+    try:
+        UserConsent.get_all()
+    except Exception:
+        raise
+    else:
+        return "Healthy: OK"
