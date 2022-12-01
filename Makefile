@@ -1,8 +1,10 @@
-ENV ?= development
-
 -include .env
 export
 
+APP_NAME ?= consent_api
+DATABASE_URL ?= postgresql://localhost:5432:$(APP_NAME)
+DOCKER_DB_URL ?= postgresql://host.docker.internal:5432/$(APP_NAME)
+ENV ?= development
 PORT ?= 8000
 
 .PHONY: clean
@@ -47,4 +49,10 @@ docker-image: clean
 
 .PHONY: docker-run
 docker-run:
-	docker run -d --rm --env DATABASE_URL="$(DATABASE_URL)" --env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" -p 8000:$(PORT) $(APP_NAME)
+	docker run \
+		-it \
+		--rm \
+		--env DATABASE_URL="$(DOCKER_DB_URL)" \
+		--env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" \
+		-p $(PORT):$(PORT) \
+		$(APP_NAME)
