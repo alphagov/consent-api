@@ -27,6 +27,11 @@ lint:
 lint-fix:
 	pre-commit run --all-files
 
+.PHONY: client
+client:
+	mkdir -p consent_api/client/dist
+	yarn build
+
 .PHONY: run-migrations
 run-migrations:
 	flask db upgrade

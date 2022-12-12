@@ -4,3 +4,4 @@ consent_api/tests/
 coverage.xml
 .coverage
 htmlcov
+consent_api/client
