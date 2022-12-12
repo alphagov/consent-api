@@ -1,6 +1,9 @@
 {
   "name": "@alphagov/consent-api",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=19.0.1"
+  },
   "description": "Client code for the Cookie Consent Sharing API",
   "sideEffects": false,
   "main": "consent_api/client/dist/consent_api_client.js",

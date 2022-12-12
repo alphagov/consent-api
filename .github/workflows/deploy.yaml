@@ -74,6 +74,7 @@ jobs:
       if: steps.release.outputs.tag_name != ''
       with:
         node-version-file: package.json
+        cache: npm
         registry-url: https://npm.pkg.github.com
 
     - name: Publish JS package
