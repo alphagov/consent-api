@@ -20,6 +20,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      packages: write
 
     steps:
     - uses: actions/checkout@v3
@@ -68,3 +69,16 @@ jobs:
         service: ${{ env.SERVICE_ID }}
         region: ${{ env.REGION }}
         image: ${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag_name }}
+
+    - uses: actions/setup-node@v3
+      if: steps.release.outputs.tag_name != ''
+      with:
+        node-version-file: package.json
+        registry-url: https://npm.pkg.github.com
+
+    - name: Publish JS package
+      if: steps.release.outputs.tag_name != ''
+      run: |
+        yarn publish --new-version ${{ steps.release.outputs.version }}
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
