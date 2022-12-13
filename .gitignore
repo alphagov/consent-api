@@ -2,3 +2,5 @@ consent.db
 coverage.xml
 .coverage
 htmlcov
+client/dist/
+node_modules/

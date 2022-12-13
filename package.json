@@ -1,0 +1,39 @@
+{
+  "name": "@alphagov/consent-api",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=19.0.1"
+  },
+  "description": "Client code for the Cookie Consent Sharing API",
+  "sideEffects": false,
+  "main": "client/dist/consent_api_client.js",
+  "scripts": {
+    "build": "webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphagov/consent-api.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/",
+    "access": "public"
+  },
+  "author": {
+    "name": "Andy Driver",
+    "email": "andy.driver@digital.cabinet-office.gov.uk"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alphagov/consent-api/issues"
+  },
+  "homepage": "https://github.com/alphagov/consent-api/client/#readme",
+  "dependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.20.5",
+    "@babel/preset-env": "^7.20.2",
+    "babel-loader": "^9.1.0",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
+  }
+}
