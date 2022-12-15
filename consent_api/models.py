@@ -89,5 +89,5 @@ class UserConsent(BaseModel):
     def update(self, consent: CookieConsent) -> None:
         """Update a specified user's consent status."""
         self.consent = consent.json
-        db.session.add(self)
+        db.session.merge(self)
         db.session.commit()
