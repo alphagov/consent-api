@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path')
 
 module.exports = {
   mode: 'development',
@@ -22,7 +22,7 @@ module.exports = {
     }]
   },
   output: {
-    filename: "consent.js",
-    path: path.resolve(__dirname, 'client/dist'),
+    filename: 'consent.js',
+    path: path.resolve(__dirname, 'client/dist')
   }
-};
+}

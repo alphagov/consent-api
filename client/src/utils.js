@@ -1,103 +1,105 @@
-(function () {
-  "use strict";
+let Utils;
 
-  Utils = window.Utils = {};
+(function () {
+  'use strict'
+
+  Utils = window.Utils = {}
 
   Utils.ALL_COOKIES = {
-    "essential": true,
-    "usage": true,
-    "campaigns": true,
-    "settings": true
-  };
+    essential: true,
+    usage: true,
+    campaigns: true,
+    settings: true
+  }
 
   Utils.ESSENTIAL_COOKIES = {
-    "essential": true,
-    "usage": false,
-    "campaigns": false,
-    "settings": false
-  };
+    essential: true,
+    usage: false,
+    campaigns: false,
+    settings: false
+  }
 
   Utils.acceptedAdditionalCookies = function (status) {
-    var responded = false, acceptedAdditionalCookies = false;
-    for (var key in status) {
-      if (status.hasOwnProperty(key)) {
-        responded = true;
-        if (key !== "essential") {
-          acceptedAdditionalCookies ||= status[key];
+    let responded = false; let acceptedAdditionalCookies = false
+    for (const key in status) {
+      if (Object.prototype.hasOwnProperty.call(status, key)) {
+        responded = true
+        if (key !== 'essential') {
+          acceptedAdditionalCookies ||= status[key]
         }
       }
     }
-    return {responded: responded, acceptedAdditionalCookies: acceptedAdditionalCookies};
-  };
+    return { responded, acceptedAdditionalCookies }
+  }
 
   Utils.getQueryString = function (url) {
-    return url.slice((url.indexOf("?") + 1) || url.length);
-  };
+    return url.slice((url.indexOf('?') + 1) || url.length)
+  }
 
   Utils.getURLParameter = function (name) {
-    name += "=";
-    var pairs = Utils.getQueryString(window.location.href).split("&");
-    for (var index = 0; pairs.length > index; index++) {
+    name += '='
+    const pairs = Utils.getQueryString(window.location.href).split('&')
+    for (let index = 0; pairs.length > index; index++) {
       if (pairs[index].slice(0, name.length) === name) {
-        return pairs[index].slice(name.length);
+        return pairs[index].slice(name.length)
       }
     }
-  };
+  }
 
   Utils.getCookie = function (name, defaultValue) {
-    name += "=";
-    const cookies = document.cookie.split(";");
-    for (var index = 0; cookies.length > index; index++) {
+    name += '='
+    const cookies = document.cookie.split(';')
+    for (let index = 0; cookies.length > index; index++) {
       if (cookies[index].trim().slice(0, name.length) === name) {
-        return decodeURIComponent(cookies[index].trim().slice(name.length));
+        return decodeURIComponent(cookies[index].trim().slice(name.length))
       }
     }
-    return defaultValue ? defaultValue : null;
-  };
+    return defaultValue || null
+  }
 
   Utils.setCookie = function (name, value, options) {
-    options = (options || {});
-    var cookieString = name.concat("=", value, "; path=/");
+    options = (options || {})
+    let cookieString = name.concat('=', value, '; path=/')
     if (options.days) {
       const expiryDate = new Date()
-      expiryDate.setTime(expiryDate.getTime() + (options.days * 24 * 60 * 60 * 1000));
-      cookieString += "; expires=".concat(expiryDate.toGMTString());
+      expiryDate.setTime(expiryDate.getTime() + (options.days * 24 * 60 * 60 * 1000))
+      cookieString += '; expires='.concat(expiryDate.toGMTString())
     }
-    if (document.location.protocol === "https:") {
-      cookieString += "; Secure";
+    if (document.location.protocol === 'https:') {
+      cookieString += '; Secure'
     }
-    document.cookie = cookieString;
-  };
+    document.cookie = cookieString
+  }
 
   Utils.addURLParameter = function (url, name, value) {
-    name = encodeURIComponent(name).concat("=");
-    value = encodeURIComponent(value);
-    var [address, queryString] = url.split("?");
-    var parameters = (queryString || "").split("&");
-    var index = 0, newParameters = [], modified = false;
+    name = encodeURIComponent(name).concat('=')
+    value = encodeURIComponent(value)
+    const [address, queryString] = url.split('?')
+    const parameters = (queryString || '').split('&')
+    let index = 0; const newParameters = []; let modified = false
     for (; parameters.length > index; index++) {
       if (parameters[index].slice(0, name.length) === name) {
-        newParameters[newParameters.length] = name.concat(value);
-        modified = true;
-      } else if (parameters[index] !== "") {
-        newParameters[newParameters.length] = parameters[index];
+        newParameters[newParameters.length] = name.concat(value)
+        modified = true
+      } else if (parameters[index] !== '') {
+        newParameters[newParameters.length] = parameters[index]
       }
     }
     if (!modified) {
-      newParameters[newParameters.length] = name.concat(value);
+      newParameters[newParameters.length] = name.concat(value)
     }
-    return [address, newParameters.join("&")].join("?");
-  };
+    return [address, newParameters.join('&')].join('?')
+  }
 
   Utils.removeURLParameter = function (url, name) {
-    name += "=";
-    var [address, queryString] = url.split("?");
-    var parameters = (queryString || "").split("&");
-    for (var index = 0; parameters.length > index; index++) {
+    name += '='
+    const [address, queryString] = url.split('?')
+    const parameters = (queryString || '').split('&')
+    for (let index = 0; parameters.length > index; index++) {
       if (parameters[index].slice(0, name.length) === name) {
-        parameters.splice(index--, 1);
+        parameters.splice(index--, 1)
       }
     }
-    return [address, parameters.join("&")].join("?");
-  };
-})();
+    return [address, parameters.join('&')].join('?')
+  }
+})()
