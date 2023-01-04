@@ -48,10 +48,46 @@ def set_consent(uid):
     return jsonify(user.json)
 
 
-@app.route("/")
+@app.get("/")
 def home() -> str:
+    """Display a welcome page and self-service sign up CTA."""
+    return render_template(
+        "welcome.html",
+        **{
+            "num_orgs": 1234,
+            "num_services": 2468,
+        },
+    )
+
+
+@app.get("/create_account")
+def create_account() -> str:
+    """Show a signup form."""
+    return "Sign-up form coming soon"
+
+
+@app.get("/login")
+def login() -> str:
+    """Show a login form."""
+    return "Login form coming soon"
+
+
+@app.get("/clients")
+def list_clients() -> str:
+    """Show a list of existing client services and organisations."""
+    return "Client list coming soon"
+
+
+@app.get("/contact")
+def contact_us() -> str:
+    """Show a contact form."""
+    return "Contact form coming soon"
+
+
+@app.get("/status")
+def statuses() -> str:
     """Display the contents of the consent status database table."""
-    return render_template("index.html", users=UserConsent.get_all())
+    return render_template("statuses.html", users=UserConsent.get_all())
 
 
 @app.get("/health")
