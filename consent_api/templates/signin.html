@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import form_group %}
+
+{% set page_title = "Login" %}
+
+{% block maincolumn_content %}
+  <h1>Sign in</h1>
+  <p>If you do not have an account, you can <a href="{{ url_for('create_account') }}">create one now</a>.</p>
+  <form method="post" novalidate="">
+    {{ form_group(form.email) }}
+    {{ form_group(form.password) }}
+    <footer>
+      {{ form.csrf_token }}
+      <button>Continue</button>
+      <a href="{{ url_for("forgot_password") }}">Forgotten your password?</a>
+    </footer>
+  </form>
+{% endblock %}

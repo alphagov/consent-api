@@ -31,7 +31,13 @@
     <main>
     {% block main %}
       <div class="width-container">
-        {% block content %}{% endblock %}
+        {% block content %}
+        <div class="grid-row">
+          <div class="grid-col-two-thirds">
+            {% block maincolumn_content %}{% endblock %}
+          </div>
+        </div>
+        {% endblock %}
       </div>
     {% endblock %}
     </main>

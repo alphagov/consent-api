@@ -24,6 +24,7 @@ app.config.from_object("consent_api.config")
 
 # assign error page handlers to all error status codes we care about
 for template, codes in {
+    "errors/403.html": [403],
     "errors/404.html": [404],
     "errors/4xx.html": [401, 405, 406, 408, 409],
     "errors/503.html": [503],

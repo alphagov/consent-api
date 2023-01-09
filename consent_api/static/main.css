@@ -13,12 +13,20 @@ body {
 .nav-header {
   background: #0b0c0c;
   border-top: 1px solid #0b0c0c;
+  border-bottom: 10px solid #fff;
   margin-top: -1px;
   position: relative;
 }
 
 .nav-header a {
   color: #fff;
+}
+
+.nav-header .width-container {
+  border-bottom: 10px solid #1d70b8;
+  margin-bottom: -10px;
+  position: relative;
+  padding-top: 10px;
 }
 
 .nav-header .width-container::after {
@@ -66,10 +74,16 @@ body {
 
 main {
   background: #fff;
+  padding-bottom: 90px;
 }
 
-main>h1 {
-  margin-top: 0;
+h1 {
+  font-size: 36px;
+  font-size: 2.25rem;
+  line-height: 1.1111111111;
+  font-weight: 700;
+  margin-top: 1.25em;
+  margin-bottom: .5555555556em;
 }
 
 h2 {
@@ -77,37 +91,48 @@ h2 {
   padding: 2rem 0 1rem;
 }
 
-.uid {
-  font-family: monospace;
-  font-weight: 400;
+p {
+  color: #0b0c0c;
+  font-size: 19px;
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
-th {
-  text-align: left;
-  padding-right: 15px;
+ul {
+  font-size: 19px;
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  list-style-type: disc;
+  margin: 0 0 20px;
+  padding: 0 0 0 20px;
 }
 
-td {
-  font-family: monospace;
+ul > li {
+  margin-bottom: 5px;
 }
 
 .user-list {
   width: 100%;
 }
 
-th {
+.user-list th {
+  text-align: left;
+  padding-right: 15px;
   background: #ddd;
   color: #888;
 }
 
-th,
-td {
-  margin: 0;
-  padding: 0.5rem;
+.user-list td {
+  font-family: monospace;
+  width: calc(70% / 4);
 }
 
+.user-list th,
 .user-list td {
-  width: calc(70% / 4);
+  margin: 0;
+  padding: 0.5rem;
 }
 
 .user-list td:first-child {
@@ -128,18 +153,17 @@ footer {
   background: #f3f2f1;
   bottom: 0vh;
   border-top: 1px solid #b1b4b6;
-  color: #0b0c0c;
-  font-size: 1rem;
-  line-height: 1.25;
   padding: 2rem 0;
   position: relative;
 }
 
 footer a {
   color: #0b0c0c;
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
-.footer--links {
+footer .footer--links {
   list-style: none;
   padding: 0;
 }
@@ -178,16 +202,17 @@ footer a {
   line-height: 2.36;
 }
 
+button,
 .button {
   font-weight: 400;
-  font-size: 16px;
-  font-size: 1rem;
-  line-height: 1.1875;
+  font-size: 19px;
+  font-size: 1.1875rem;
+  line-height: 1;
   box-sizing: border-box;
   display: inline-block;
   position: relative;
-  width: 100%;
-  margin: 0 0 22px;
+  width: auto;
+  margin: 0;
   padding: 8px 10px 7px;
   border: 2px solid transparent;
   border-radius: 0;
@@ -195,9 +220,54 @@ footer a {
   background-color: #00703c;
   box-shadow: 0 2px 0 #002d18;
   text-align: center;
+  text-decoration: none;
   vertical-align: top;
   cursor: pointer;
   -webkit-appearance: none;
+}
+
+button:active,
+.button:active {
+  top: 2px;
+}
+
+button:focus,
+.button:focus {
+  border-color: #fd0;
+  outline: 3px solid transparent;
+  box-shadow: inset 0 0 0 1px #fd0;
+}
+
+button:focus:not(:active):not(:hover) {
+  color: #0b0c0c;
+  background-color: #fd0;
+  box-shadow: 0 2px 0 #0b0c0c;
+}
+
+button:hover,
+.button:hover {
+  background-color: #005a30;
+}
+
+button.secondary,
+.button.secondary {
+  color: #0b0c0c;
+  background-color: #f3f2f1;
+  box-shadow: 0 2px 0 #929191;
+}
+
+button.secondary:hover,
+.button.secondary:hover {
+  background-color: #c7c6c6;
+}
+
+.product-page .nav-header {
+  border-bottom: 0;
+}
+
+.product-page .nav-header .width-container {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .product-header {
@@ -219,6 +289,7 @@ footer a {
 }
 
 .product-header p {
+  color: #fff;
   font-size: 24px;
   font-size: 1.5rem;
   line-height: 1.25;
@@ -298,4 +369,104 @@ footer a {
 
 .usage .big-number {
   margin-bottom: 0;
+}
+
+.form-group {
+  margin-bottom: 30px;
+}
+
+.form-group::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.form-group label {
+  font-size: 19px;
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group .hint {
+  color: #505a5f;
+  font-size: 19px;
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  margin-bottom: 10px;
+}
+
+.form-group input {
+  font-size: 19px;
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  box-sizing: border-box;
+  width: 75%;
+  height: 40px;
+  height: 2.5rem;
+  margin-top: 0;
+  padding: 5px;
+  border: 2px solid #0b0c0c;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-group input:focus {
+  outline: 3px solid #fd0;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 2px;
+}
+
+form footer {
+  position: relative;
+  margin-bottom: 30px;
+  background: transparent;
+  border: none;
+  font-size: inherit;
+  line-height: inherit;
+  padding: 0;
+}
+
+form footer button {
+  margin-right: 10px;
+}
+
+form footer a {
+  display: block;
+  margin-top: 30px;
+  color: #1d70b8;
+}
+
+form footer a:visited {
+  color: #1d70b8;
+}
+
+.services {
+  list-style-type: none;
+  padding: 0;
+}
+
+.services .service {
+  margin: 0 0 20px;
+  padding: 0;
+  border: 1px solid #b1b4b6;
+  background: #f3f2f1;
+}
+
+.services .service a {
+  text-decoration: none;
+  display: block;
+  padding: 20px;
+}
+
+.services .service .name {
+  font-weight: 700;
+  display: block;
+}
+
+.services .service .domain {
+  color: #0b0c0c;
+  display: block;
 }
