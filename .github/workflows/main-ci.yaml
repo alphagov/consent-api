@@ -38,7 +38,9 @@ jobs:
 
     - name: Install dependencies
       run: |
-        make deps
+        python -m pip install \
+          -r requirements-production.txt \
+          -r requirements-ci.txt
 
     - name: Run tests
       env:
