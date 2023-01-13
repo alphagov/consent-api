@@ -1,7 +1,5 @@
-flask==2.2.2
-flask-migrate==4.0.0
-flask-sqlalchemy==3.0.2
-flask_cors==3.0.10
-gunicorn==20.1.0
-psycopg2==2.9.5
-python-dotenv==0.21.0
+-r requirements-production.txt
+-r requirements-ci.txt
+
+ipython==8.6.0
+pre-commit==2.20.0

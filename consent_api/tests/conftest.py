@@ -1,7 +1,12 @@
 """Fixtures for all tests."""
 
 import pytest
+import requests
 import sqlalchemy
+
+from consent_api.tests.api import ConsentAPI
+from consent_api.tests.pom import fake_govuk
+from consent_api.tests.pom import haas as haas_
 
 TEST_DATABASE_URI = "sqlite:///:memory:"
 
@@ -44,3 +49,40 @@ def db_session(db, request):
     transaction.rollback()
     connection.close()
     db.session.remove()
+
+
+@pytest.fixture
+def server_ready():
+    """Return a function to assert a web server is responsive."""
+
+    def check(url):
+        try:
+            return 200 <= requests.get(url).status_code < 400
+        except requests.exceptions.ConnectionError:
+            return False
+
+    return check
+
+
+@pytest.fixture
+def govuk(browser, server_ready):
+    """Return fake GOV.UK homepage object model instance."""
+    url = fake_govuk.Homepage.url
+    assert server_ready(url), f"Fake GOV.UK homepage not ready at {url}"
+    yield fake_govuk.FakeGOVUK(browser)
+
+
+@pytest.fixture
+def consent_api(client, server_ready):
+    """Return consent API client."""
+    api = ConsentAPI(client)
+    assert server_ready(api.url), f"Consent API not ready at {api.url}"
+    yield api
+
+
+@pytest.fixture
+def haas(browser, server_ready):
+    """Return HaaS service."""
+    url = haas_.Homepage.url
+    assert server_ready(url), f"HaaS not ready at {url}"
+    yield haas_.HaaS(browser)

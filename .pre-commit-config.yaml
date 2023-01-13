@@ -84,6 +84,8 @@ repos:
   rev: v0.991
   hooks:
   - id: mypy
+    additional_dependencies:
+    - "types-requests==2.28.11.7"
     args:
     - "--ignore-missing-imports"
     - "--scripts-are-modules"

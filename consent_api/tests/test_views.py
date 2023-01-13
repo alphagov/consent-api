@@ -7,6 +7,8 @@ from consent_api.models import CookieConsent
 from consent_api.models import UserConsent
 from consent_api.models import generate_uid
 
+pytestmark = [pytest.mark.integration]
+
 
 def test_index_page(client, db_session):
     """Check the index page loads."""
