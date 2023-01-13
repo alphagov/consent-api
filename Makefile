@@ -6,6 +6,7 @@ DATABASE_URL ?= postgresql://localhost:5432:$(APP_NAME)
 DOCKER_DB_URL ?= postgresql://host.docker.internal:5432/$(APP_NAME)
 ENV ?= development
 PORT ?= 8000
+SELENIUM_DRIVER ?= firefox
 
 .PHONY: clean
 clean:
@@ -15,7 +16,6 @@ clean:
 deps:
 	python -m pip install -U pip
 	python -m pip install -r requirements.txt
-	[ -f requirements-$(ENV).txt ] && python -m pip install -r requirements-$(ENV).txt
 	npm install
 
 .PHONY: lint
@@ -39,15 +39,23 @@ run-migrations:
 
 .PHONY: test
 test:
-	pytest -x -n=auto --dist=loadfile -W ignore::DeprecationWarning
+	pytest -x -n=auto --dist=loadfile -W ignore::DeprecationWarning -m "not end_to_end"
+
+.PHONY: test-e2e
+test-e2e:
+	pytest \
+		-W ignore::DeprecationWarning \
+		-m end_to_end \
+		--splinter-webdriver $(SELENIUM_DRIVER) \
+		--splinter-headless
 
 .PHONY: test-coverage
 test-coverage:
-	pytest -n=auto --cov --cov-report=xml --cov-report=term -W ignore::DeprecationWarning
+	pytest -n=auto --cov --cov-report=xml --cov-report=term -W ignore::DeprecationWarning -m "not end_to_end"
 
 .PHONY: run
 run:
-	flask --debug run --debugger --reload
+	flask --debug run --debugger --reload --port $(PORT)
 
 .PHONY: docker-image
 docker-image: clean

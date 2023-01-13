@@ -4,13 +4,13 @@
   'use strict'
 
   function Consent () {
-    this.apiURL = 'https://consent-api-bgzqvpmbyq-nw.a.run.app/'
     this.sharedUID = Utils.getURLParameter('uid')
     this.localUID = Utils.getCookie('uid')
     this.uid = this.sharedUID || this.localUID
   }
 
-  Consent.prototype.init = function () {
+  Consent.prototype.init = function (config) {
+    this.apiURL = (config.host || 'https://consent-api-bgzqvpmbyq-nw.a.run.app/')
     this.$cookieBanner = document.querySelector('[data-module~="govuk-cookie-banner"]')
     if (this.$cookieBanner && !this.$cookieBanner.hidden) {
       console.log('Consent.init: adding event listeners to cookie banner buttons')
@@ -116,7 +116,5 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    new Consent().init()
-  })
+  window.Consent = Consent
 })()
