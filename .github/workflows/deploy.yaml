@@ -40,6 +40,10 @@ jobs:
     name: Deploy a release
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      id-token: write
+
     needs: release
     if: needs.release.outputs.tag_name != ''
 
