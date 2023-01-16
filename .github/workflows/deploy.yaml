@@ -37,7 +37,7 @@ jobs:
         use_github_release_notes: true
 
   deploy-release:
-    name: Deploy a release
+    name: Deploy release
     runs-on: ubuntu-latest
 
     permissions:
@@ -86,39 +86,43 @@ jobs:
     name: Test release
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      id-token: write
+
     needs: deploy-release
 
     services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 2s
-          --health-retries 10
-        ports:
-          - "5432:5432"
-
       fake_govuk:
         image: gcr.io/govuk-bigquery-analytics/sde_prototype_govuk
         env:
-          CONSENT_API_HOST: http://localho.st:8000/
+          CONSENT_API_HOST: ${{ jobs.deploy-release.steps.deploy.outputs.url }}
           PORT: 8080
-        ports:
-          - "8080:8080"
 
       haas:
         image: gcr.io/govuk-bigquery-analytics/haas
         env:
-          CONSENT_API_HOST: http://localho.st:8000/
+          CONSENT_API_HOST: ${{ jobs.deploy-release.steps.deploy.outputs.url }}
           PORT: 8081
-        ports:
-          - "8081:8081"
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v1
+      with:
+        token_format: access_token
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+    - name: Login to Google Container Registry
+      id: docker-auth
+      uses: docker/login-action@v2
+      with:
+        registry: gcr.io
+        username: oauth2accesstoken
+        password: '${{ steps.auth.outputs.access_token }}'
 
     - name: Start Selenoid
       uses: Xotabu4/selenoid-github-action@v2
@@ -137,13 +141,11 @@ jobs:
 
     - name: Run tests
       env:
-        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-        E2E_CONSENT_API_URL: http://localho.st:8000
-        E2E_TEST_GOVUK_URL: http://localho.st:8080
-        E2E_TEST_HAAS_URL: http://localho.st:8081
+        E2E_CONSENT_API_URL: ${{ jobs.deploy-release.steps.deploy.outputs.url }}
+        E2E_TEST_GOVUK_URL: http://fake_govuk:8080
+        E2E_TEST_HAAS_URL: http://haas:8081
       run: |
         make run-migrations \
-        flask --debug run --debugger --port 8000 &\
         pytest \
           -m end_to_end \
           --splinter-driver remote \
