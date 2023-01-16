@@ -101,23 +101,21 @@ jobs:
         ports:
           - "5432:5432"
 
-      consent_api:
-        image: ${{ env.IMAGE_NAME }}:${{ jobs.release.outputs.tag_name }}
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-          PORT: 8000
-
       fake_govuk:
         image: gcr.io/govuk-bigquery-analytics/sde_prototype_govuk
         env:
-          CONSENT_API_HOST: http://consent_api:8000/
+          CONSENT_API_HOST: http://localho.st:8000/
           PORT: 8080
+        ports:
+          - "8080:8080"
 
       haas:
         image: gcr.io/govuk-bigquery-analytics/haas
         env:
-          CONSENT_API_HOST: http://consent_api:8000/
+          CONSENT_API_HOST: http://localho.st:8000/
           PORT: 8081
+        ports:
+          - "8081:8081"
 
     steps:
     - uses: actions/checkout@v3
@@ -140,11 +138,12 @@ jobs:
     - name: Run tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-        E2E_CONSENT_API_URL: http://consent_api:8000
-        E2E_TEST_GOVUK_URL: http://fake_govuk:8080
-        E2E_TEST_HAAS_URL: http://haas:8081
+        E2E_CONSENT_API_URL: http://localho.st:8000
+        E2E_TEST_GOVUK_URL: http://localho.st:8080
+        E2E_TEST_HAAS_URL: http://localho.st:8081
       run: |
-        make run-migrations
+        make run-migrations \
+        flask --debug run --debugger --port 8000 &\
         pytest \
           -m end_to_end \
           --splinter-driver remote \
