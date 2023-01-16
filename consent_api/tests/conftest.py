@@ -3,6 +3,7 @@
 import pytest
 import requests
 import sqlalchemy
+from selenium.webdriver.chrome.options import Options
 
 from consent_api.tests.api import ConsentAPI
 from consent_api.tests.pom import fake_govuk
@@ -51,6 +52,20 @@ def db_session(db, request):
     db.session.remove()
 
 
+@pytest.fixture(scope="session")
+def splinter_driver_kwargs(splinter_webdriver, splinter_driver_kwargs):
+    """Use chrome with remote webdriver."""
+    kwargs = {}
+    if splinter_webdriver == "remote":
+        kwargs.update(
+            {
+                "browser": "chrome",
+                "options": Options(),
+            }
+        )
+    return kwargs
+
+
 @pytest.fixture
 def server_ready():
     """Return a function to assert a web server is responsive."""
@@ -73,9 +88,9 @@ def govuk(browser, server_ready):
 
 
 @pytest.fixture
-def consent_api(client, server_ready):
+def consent_api(server_ready):
     """Return consent API client."""
-    api = ConsentAPI(client)
+    api = ConsentAPI()
     assert server_ready(api.url), f"Consent API not ready at {api.url}"
     yield api
 

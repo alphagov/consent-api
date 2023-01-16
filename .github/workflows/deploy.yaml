@@ -37,8 +37,11 @@ jobs:
         use_github_release_notes: true
 
   deploy-release:
-    name: Deploy a release
+    name: Deploy release
     runs-on: ubuntu-latest
+
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
 
     permissions:
       contents: write
@@ -88,34 +91,10 @@ jobs:
 
     needs: deploy-release
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 2s
-          --health-retries 10
-        ports:
-          - "5432:5432"
-
-      fake_govuk:
-        image: gcr.io/govuk-bigquery-analytics/sde_prototype_govuk
-        env:
-          CONSENT_API_HOST: http://localho.st:8000/
-          PORT: 8080
-        ports:
-          - "8080:8080"
-
-      haas:
-        image: gcr.io/govuk-bigquery-analytics/haas
-        env:
-          CONSENT_API_HOST: http://localho.st:8000/
-          PORT: 8081
-        ports:
-          - "8081:8081"
+    env:
+      E2E_TEST_CONSENT_API_URL: ${{ needs.deploy-release.outputs.url }}
+      E2E_TEST_GOVUK_URL: https://sde-prototype-govuk-j4f7bdslta-nw.a.run.app/
+      E2E_TEST_HAAS_URL: https://haas-j4f7bdslta-nw.a.run.app/
 
     steps:
     - uses: actions/checkout@v3
@@ -132,20 +111,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install \
-          -r requirements-production.txt \
+          -r requirements.txt \
           -r requirements-ci.txt
 
     - name: Run tests
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-        E2E_CONSENT_API_URL: http://localho.st:8000
-        E2E_TEST_GOVUK_URL: http://localho.st:8080
-        E2E_TEST_HAAS_URL: http://localho.st:8081
       run: |
-        make run-migrations \
-        flask --debug run --debugger --port 8000 &\
         pytest \
           -m end_to_end \
-          --splinter-driver remote \
+          -W ignore::DeprecationWarning \
+          --splinter-webdriver remote \
           --splinter-remote-url http://localhost:4444/wd/hub \
           --splinter-headless

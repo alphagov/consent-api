@@ -10,4 +10,7 @@ DEBUG = env.get("DEBUG", True)
 
 SECRET_KEY = env.get("SECRET_KEY", os.urandom(24))
 
-SQLALCHEMY_DATABASE_URI = env["DATABASE_URL"]
+SQLALCHEMY_DATABASE_URI = env.get(
+    "DATABASE_URL",
+    "postgresql://localhost:5432/consent_api",
+)

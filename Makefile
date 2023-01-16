@@ -15,7 +15,8 @@ clean:
 .PHONY: deps
 deps:
 	python -m pip install -U pip
-	python -m pip install -r requirements.txt
+	pip install -r requirements.txt
+	if [ -f requirements-$(ENV).txt ]; then pip install -r requirements-$(ENV).txt; fi
 	npm install
 
 .PHONY: lint
