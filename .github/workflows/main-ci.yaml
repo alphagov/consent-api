@@ -39,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install \
-          -r requirements-production.txt \
+          -r requirements.txt \
           -r requirements-ci.txt
 
     - name: Run tests
