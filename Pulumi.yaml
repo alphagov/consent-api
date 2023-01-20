@@ -1,0 +1,6 @@
+name: sde-consent-api
+runtime:
+  name: python
+description: Shared Cookie Consent API
+main: infra/__main__.py
+stackConfigDir: infra/config/

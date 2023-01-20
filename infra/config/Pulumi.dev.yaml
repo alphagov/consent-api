@@ -1,0 +1,6 @@
+config:
+  gcp:project: sde-consent-api
+  gcp:region: europe-west2
+  sde-consent-api:db-name: sde-consent-api-db
+  sde-consent-api:db-password:
+    secure: AAABAHlN6DOXyUDcq0q1r9QgLamMZVsYvz/FA+H6QniKPNY78Mge0AdZ0jBf6SmD
