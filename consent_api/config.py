@@ -14,3 +14,5 @@ SQLALCHEMY_DATABASE_URI = env.get(
     "DATABASE_URL",
     "postgresql://localhost:5432/consent_api",
 )
+
+CONSENT_EXPIRY_DAYS = 7

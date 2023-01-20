@@ -4,11 +4,15 @@ from __future__ import annotations
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import fields
+from datetime import datetime
+from datetime import timedelta
 from typing import ClassVar
 
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import DeclarativeMeta
 
+from consent_api import app
 from consent_api import db
 from consent_api.util import generate_uid
 
@@ -49,7 +53,16 @@ CookieConsent.REJECT_ALL = CookieConsent()
 BaseModel: DeclarativeMeta = db.Model
 
 
-class UserConsent(BaseModel):
+class Timestamped:
+    """Mixin to add created and update timestamps to models."""
+
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(
+        db.DateTime, default=func.now(), onupdate=func.utc_timestamp()
+    )
+
+
+class UserConsent(Timestamped, BaseModel):
     """
     UserConsent represents a user's consent to cookies.
 
@@ -75,6 +88,18 @@ class UserConsent(BaseModel):
     def get_all(cls) -> list[UserConsent]:
         """List all user consent statuses."""
         return db.session.execute(db.select(UserConsent)).scalars()
+
+    @classmethod
+    def bulk_delete(cls, expired=False) -> None:
+        """Delete all user consent statuses older than a configured interval."""
+        query = db.delete(UserConsent)
+        if expired:
+            query = query.where(
+                UserConsent.updated_at
+                < (datetime.now() - timedelta(days=app.config["CONSENT_EXPIRY_DAYS"]))
+            )
+        db.session.execute(query)
+        db.session.commit()
 
     @classmethod
     def get(cls, uid: str | None = None) -> UserConsent:
