@@ -56,7 +56,7 @@ test-coverage:
 
 .PHONY: run
 run:
-	flask --debug run --debugger --reload --port $(PORT)
+	flask --debug run --debugger --reload --host "0.0.0.0" --port $(PORT)
 
 .PHONY: docker-image
 docker-image: clean

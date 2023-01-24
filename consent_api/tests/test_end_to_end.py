@@ -87,10 +87,14 @@ def test_connected_services(browser, govuk, haas, consent_api):
 
     # we can modify the consent status vis the settings form
     cookies_page.reject(["campaigns"])
-    assert cookies_page.get_settings() == CookieConsent(usage=True, settings=True)
+    assert cookies_page.get_settings() == CookieConsent(
+        campaigns=False, usage=True, settings=True
+    )
 
     # the consent status is updated in the API
-    assert consent_api.get_consent(uid) == CookieConsent(usage=True, settings=True)
+    assert consent_api.get_consent(uid) == CookieConsent(
+        campaigns=False, usage=True, settings=True
+    )
 
     # we can go back to the other domain and see consent status is shared
     govuk_cookies_page = govuk.cookies_page.get()
