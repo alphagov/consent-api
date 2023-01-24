@@ -1,4 +1,4 @@
-/* global Utils */
+/* global Consent, Utils */
 
 (function () {
   function CookieSettings ($module) {
@@ -23,6 +23,8 @@
     }
 
     this.setFormValues(this.cookiesPolicy)
+
+    Consent.addEventListener('statusShared', this.setFormValues.bind(this))
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {
@@ -71,9 +73,9 @@
     Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), { days: 365 })
     Utils.setCookie('cookies_preferences_set', true, { days: 365 })
 
-    this.showConfirmationMessage()
+    Consent.setStatus(this.cookiesPolicy)
 
-    return false
+    this.showConfirmationMessage()
   }
 
   CookieSettings.prototype.showConfirmationMessage = function () {

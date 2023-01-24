@@ -5,70 +5,70 @@
 
   function Consent () {
     this.sharedUID = Utils.getURLParameter('uid')
+    this.undecorateURL()
     this.localUID = Utils.getCookie('uid')
     this.uid = this.sharedUID || this.localUID
+    this.eventListeners = {
+      statusShared: [
+        this.updateCookiesPolicyCookie
+      ],
+      uidAssigned: [
+        this.setUIDCookie,
+        this.decorateLinks
+      ]
+    }
   }
 
-  Consent.prototype.init = function (config) {
-    this.apiURL = (config.host || 'https://consent-api-bgzqvpmbyq-nw.a.run.app/')
-    this.$cookieBanner = document.querySelector('[data-module~="govuk-cookie-banner"]')
-    if (this.$cookieBanner && !this.$cookieBanner.hidden) {
-      console.log('Consent.init: adding event listeners to cookie banner buttons')
-      this.$cookieBanner.querySelectorAll('[data-accept-cookies]').forEach((button) => {
-        button.addEventListener('click', (e) => { this.setStatus(Utils.ALL_COOKIES) })
-      })
-      this.$cookieBanner.querySelectorAll('[data-reject-cookies]').forEach((button) => {
-        button.addEventListener('click', (e) => { this.setStatus(Utils.ESSENTIAL_COOKIES) })
-      })
-    }
-
-    this.$cookieSettingsForm = document.querySelector('form[data-module~="cookie-settings"]')
-    if (this.$cookieSettingsForm) {
-      console.log('Consent.init: adding submit listener to cookie settings form')
-      this.$cookieSettingsForm.addEventListener('submit', (event) => { this.setStatus(event.target.getFormValues()) })
-    }
+  Consent.prototype.init = function () {
+    this.apiURL = document.querySelector('[data-consent-api-url]').dataset.consentApiUrl
 
     if (!this.localUID && this.sharedUID) {
-      console.log('Consent.init: UID cookie not set, setting to', this.uid)
-      Utils.setCookie('uid', this.uid, { days: 365 })
+      this.setUIDCookie(this.uid)
     }
 
     this.status = {}
 
-    this.undecorateURL()
-
     this.getStatus((response) => {
       if (response) {
-        console.log('Consent.init: got status response', response)
         if (!this.uid) {
           this.uid = response.uid
-          console.log('Consent.init: got new UID, setting cookie', this.uid)
-          Utils.setCookie('uid', this.uid, { days: 365 })
+          this.dispatchEvent('uidAssigned', this.uid)
         }
         const meta = Utils.acceptedAdditionalCookies(response.status)
         if (meta.responded) {
           this.status = response.status
-          console.log('Consent.init: setting cookies_policy', this.status)
-          Utils.setCookie('cookies_policy', JSON.stringify(this.status), { days: 365 })
-          Utils.setCookie('cookies_preferences_set', 'true')
-          if (this.$cookieBanner) {
-            this.$cookieBanner.hidden = true
-          }
+          this.dispatchEvent('statusShared', this.status)
         }
-        if (this.$cookieSettingsForm) {
-          console.log('Consent.init: update cookies settings form')
-          this.$cookieSettingsForm.setFormValues(this.status)
-        }
-        this.decorateLinks()
       }
     })
   }
 
+  Consent.prototype.setUIDCookie = function (uid) {
+    Utils.setCookie('uid', uid, { days: 365 })
+  }
+
+  Consent.prototype.updateCookiesPolicyCookie = function (cookiesPolicy) {
+    Utils.setCookie('cookies_policy', JSON.stringify(cookiesPolicy), { days: 365 })
+    Utils.setCookie('cookies_preferences_set', 'true')
+  }
+
+  Consent.prototype.addEventListener = function (eventName, callback) {
+    if (eventName in this.eventListeners) {
+      this.eventListeners[eventName].push(callback)
+    }
+  }
+
+  Consent.prototype.dispatchEvent = function (eventName, details) {
+    if (eventName in this.eventListeners) {
+      this.eventListeners[eventName].forEach(function (callback) {
+        callback(details)
+      })
+    }
+  }
+
   Consent.prototype.undecorateURL = function () {
-    console.log('Consent.undecorateURL: before', window.location.href)
     const undecoratedURL = Utils.removeURLParameter(window.location.href, 'uid')
     window.history.replaceState(null, null, undecoratedURL)
-    console.log('Consent.undecorateURL: after', undecoratedURL)
   }
 
   Consent.prototype.getApiEndpoint = function () {
@@ -77,7 +77,7 @@
 
   Consent.prototype.getStatus = function (callback) {
     const request = new XMLHttpRequest()
-    request.onreadystatechange = () => {
+    request.onreadystatechange = function () {
       if (request.readyState === XMLHttpRequest.DONE) {
         let responseJSON = {}
         if (request.status === 0 || (request.status >= 200 && request.status < 400)) {
@@ -91,30 +91,32 @@
   }
 
   Consent.prototype.setStatus = function (status) {
-    this.status = (status || this.status)
-    const request = new XMLHttpRequest()
-    request.open('POST', this.getApiEndpoint())
-    request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-    request.send('status='.concat(JSON.stringify(this.status)))
+    if (status) {
+      this.status = status
+      const request = new XMLHttpRequest()
+      request.open('POST', this.getApiEndpoint())
+      request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+      request.send('status='.concat(JSON.stringify(this.status)))
+    }
   }
 
-  Consent.prototype.decorateLinks = function () {
-    if (this.uid) {
-      console.log('Consent.decorateLinks', this.uid)
+  Consent.prototype.decorateLinks = function (uid) {
+    if (uid) {
       const nodes = document.querySelectorAll('[data-consent-share]')
       for (let index = 0; nodes.length > index; index++) {
-        nodes[index].addEventListener('click', (event) => {
+        nodes[index].addEventListener('click', function (event) {
           if (event.target.hasAttribute('href')) {
             const url = event.target.getAttribute('href')
-            const decoratedUrl = Utils.addURLParameter(url, 'uid', this.uid)
-            console.log('Consent.decorateLinks: decoratedUrl', decoratedUrl)
+            const decoratedUrl = Utils.addURLParameter(url, 'uid', uid)
             event.target.setAttribute('href', decoratedUrl)
           }
         })
       }
-      console.log(`Consent.decorateLinks: decorated ${nodes.length} links`)
     }
   }
 
-  window.Consent = Consent
+  document.addEventListener('DOMContentLoaded', function () {
+    window.Consent = new Consent()
+    window.Consent.init()
+  })
 })()
