@@ -38,4 +38,5 @@ db.init_app(app)
 migrate = Migrate()
 migrate.init_app(app, db)
 
+import consent_api.commands  # noqa
 import consent_api.views  # noqa
