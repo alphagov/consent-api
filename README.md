@@ -53,3 +53,23 @@ Run the tests with the following command:
 ```
 pytest --splinter-driver $SELENIUM_DRIVER --splinter-headless -m end_to_end
 ```
+
+## Contributing
+
+### Branching
+
+This project uses [Github Flow](https://githubflow.github.io/).
+
+* `main` branch is always deployable
+* To work on something new, create a descriptively named branch off `main`
+* Commit to that branch locally and regularly push to the same named branch on the
+  server (Github)
+* When you need feedback or help, or you think the branch is ready to merge, rebase off
+  `main` and open a pull request
+* After the pull request has been reviewed and automated checks have passed, you can
+  merge to `main`
+* Commits to `main` are automatically built, deployed and tested in the Integration
+  environment.
+
+New features are developed on feature branches, which must be rebased on the main branch
+and squashed before merging to main.
