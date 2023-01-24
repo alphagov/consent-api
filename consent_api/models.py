@@ -57,9 +57,7 @@ class Timestamped:
     """Mixin to add created and update timestamps to models."""
 
     created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(
-        db.DateTime, default=func.now(), onupdate=func.utc_timestamp()
-    )
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
 
 
 class UserConsent(Timestamped, BaseModel):
