@@ -1,4 +1,4 @@
-/* global Utils */
+/* global Consent, Utils */
 
 (function () {
   function CookieBanner ($module) {
@@ -27,6 +27,8 @@
     for (let i = 0, length = nodes.length; i < length; i++) {
       nodes[i].addEventListener('click', this.hideBanner.bind(this))
     }
+
+    Consent.addEventListener('statusShared', this.hideBanner.bind(this))
 
     this.showBanner()
   }
@@ -58,6 +60,7 @@
     this.$module.showAcceptConfirmation()
     Utils.setCookie('cookies_policy', JSON.stringify(Utils.ALL_COOKIES), { days: 365 })
     Utils.setCookie('cookies_preferences_set', 'true', { days: 365 })
+    Consent.setStatus(Utils.ALL_COOKIES)
   }
 
   CookieBanner.prototype.showAcceptConfirmation = function () {
@@ -71,6 +74,7 @@
     this.$module.showRejectConfirmation()
     Utils.setCookie('cookies_policy', JSON.stringify(Utils.ESSENTIAL_COOKIES), { days: 365 })
     Utils.setCookie('cookies_preferences_set', 'true', { days: 365 })
+    Consent.setStatus(Utils.ESSENTIAL_COOKIES)
   }
 
   CookieBanner.prototype.showRejectConfirmation = function () {
