@@ -66,17 +66,18 @@ def splinter_driver_kwargs(splinter_webdriver, splinter_driver_kwargs):
     return kwargs
 
 
+def get_response_ok(url):
+    """Return True if a GET request to the URL responds successfully."""
+    try:
+        return 200 <= requests.get(url).status_code < 400
+    except requests.exceptions.ConnectionError:
+        return False
+
+
 @pytest.fixture
 def server_ready():
     """Return a function to assert a web server is responsive."""
-
-    def check(url):
-        try:
-            return 200 <= requests.get(url).status_code < 400
-        except requests.exceptions.ConnectionError:
-            return False
-
-    return check
+    return get_response_ok
 
 
 @pytest.fixture
