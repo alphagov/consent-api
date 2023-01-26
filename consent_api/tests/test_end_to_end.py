@@ -11,16 +11,10 @@ pytestmark = [pytest.mark.end_to_end]
 
 def test_single_service(browser, govuk, consent_api):
     """Test Consent API integration with fake GOVUK homepage."""
-    browser.cookies.delete_all()
-
     # with no consent status recorded, we are shown a cookie banner
     homepage = govuk.homepage.get()
     cookie_banner = homepage.cookie_banner
     assert cookie_banner.visible
-
-    # we have been assigned a UID, but no consent status is recorded yet
-    uid = browser.cookies.all()["uid"]
-    assert consent_api.get_consent(uid) is None
 
     # rejecting cookies dismisses the cookie banner message (the banner is still visible
     # with a confirmation message)
@@ -30,6 +24,10 @@ def test_single_service(browser, govuk, consent_api):
     # consent status is stored in a cookie
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.REJECT_ALL
+
+    # we have been assigned a UID
+    browser.wait_for(lambda _: "uid" in browser.cookies.all())
+    uid = browser.cookies.all()["uid"]
 
     # consent status is also recorded in the API associated with the current UID
     assert consent_api.get_consent(uid) == CookieConsent.REJECT_ALL
@@ -43,7 +41,9 @@ def test_single_service(browser, govuk, consent_api):
     assert cookies_page.get_settings() == CookieConsent(usage=True)
 
     # the consent status is updated in the API
-    assert consent_api.get_consent(uid) == CookieConsent(usage=True)
+    browser.wait_for(
+        lambda _: consent_api.get_consent(uid) == CookieConsent(usage=True)
+    )
 
     # now that we have a recorded consent status, the cookie banner is hidden
     homepage = govuk.homepage.get()
@@ -52,14 +52,9 @@ def test_single_service(browser, govuk, consent_api):
 
 def test_connected_services(browser, govuk, haas, consent_api):
     """Test sharing consent across services."""
-    browser.cookies.delete_all()
-
     start_page = haas.start_page.get()
     cookie_banner = start_page.cookie_banner
     assert cookie_banner.visible
-
-    uid = browser.cookies.all()["uid"]
-    assert consent_api.get_consent(uid) is None
 
     cookie_banner.accept_cookies()
     assert not cookie_banner.message.visible
@@ -67,6 +62,8 @@ def test_connected_services(browser, govuk, haas, consent_api):
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.ACCEPT_ALL
 
+    browser.wait_for(lambda _: "uid" in browser.cookies.all())
+    uid = browser.cookies.all()["uid"]
     assert consent_api.get_consent(uid) == CookieConsent.ACCEPT_ALL
 
     # browse to a different domain/origin
@@ -87,14 +84,11 @@ def test_connected_services(browser, govuk, haas, consent_api):
 
     # we can modify the consent status vis the settings form
     cookies_page.reject(["campaigns"])
-    assert cookies_page.get_settings() == CookieConsent(
-        campaigns=False, usage=True, settings=True
-    )
+    rejected_campaigns = CookieConsent(usage=True, settings=True)
+    assert cookies_page.get_settings() == rejected_campaigns
 
     # the consent status is updated in the API
-    assert consent_api.get_consent(uid) == CookieConsent(
-        campaigns=False, usage=True, settings=True
-    )
+    browser.wait_for(lambda _: consent_api.get_consent(uid) == rejected_campaigns)
 
     # we can go back to the other domain and see consent status is shared
     govuk_cookies_page = govuk.cookies_page.get()

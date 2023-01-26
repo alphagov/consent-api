@@ -24,6 +24,7 @@ def get_consent(uid):
     return jsonify(consent.json)
 
 
+@app.post("/consent", defaults={"uid": None})
 @app.post("/consent/<uid>")
 @cross_origin(origins="*")
 def set_consent(uid):
@@ -36,14 +37,15 @@ def set_consent(uid):
     The body must contain a single name/value pair, with the name `status`, and the
     value must be a JSON object encoded as a string.
     """
-    user = UserConsent(uid=uid)
+    user = UserConsent.get(uid)
     # application/x-www-form-urlencoded body to keep the CORS request simple
     status = request.form["status"]
     # status field contains stringified JSON object
     status = json.loads(status)
     # TODO validation
-    user.update(consent=CookieConsent(**status))
-    return "", 204
+    consent = CookieConsent(**status)
+    user.update(consent=consent)
+    return jsonify(user.json)
 
 
 @app.route("/")
