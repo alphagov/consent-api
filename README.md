@@ -30,7 +30,7 @@ To run end-to-end tests you will need Chrome or Firefox installed. Specify which
 want to use for running tests by setting the `SELENIUM_DRIVER` environment variable, eg:
 
 ```
-export SELENIUM_DRIVER=firefox
+export SELENIUM_DRIVER=chrome
 ```
 
 You also need a running instance of the Consent API and instances of the [SDE Prototype
