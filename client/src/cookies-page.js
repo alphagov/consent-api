@@ -6,12 +6,10 @@
   }
 
   CookieSettings.prototype.init = function () {
-    console.log('CookieSettings.init')
     this.$module.submitSettingsForm = this.submitSettingsForm.bind(this)
     this.$module.getFormValues = this.getFormValues.bind(this)
     this.$module.setFormValues = this.setFormValues.bind(this)
 
-    console.log('CookieSettings.init: add cookies page submit handler')
     document.querySelector('form[data-module=cookie-settings]')
       .addEventListener('submit', this.$module.submitSettingsForm)
 
@@ -24,7 +22,10 @@
 
     this.setFormValues(this.cookiesPolicy)
 
-    Consent.addEventListener('statusShared', this.setFormValues.bind(this))
+    Consent.addEventListener('ConsentStatusLoaded', function (status) {
+      console.log('CookieSettings.handleConsentStatusLoaded:', status)
+      this.setFormValues(status)
+    }.bind(this))
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {
@@ -65,11 +66,10 @@
 
   CookieSettings.prototype.submitSettingsForm = function (event) {
     event.preventDefault()
-    console.log('CookieSettings.submitSettingsForm')
 
     this.cookiesPolicy = this.getFormValues(event.target)
 
-    console.log('CookieSettings.submitSettingsForm: setting cookies_policy', this.cookiesPolicy)
+    console.log('CookieSettings.submitSettingsForm: setting cookiesPolicy', this.cookiesPolicy)
     Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), { days: 365 })
     Utils.setCookie('cookies_preferences_set', true, { days: 365 })
 

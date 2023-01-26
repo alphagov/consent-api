@@ -4,6 +4,7 @@ import pytest
 import requests
 import sqlalchemy
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.wait import WebDriverWait
 
 from consent_api.tests.api import ConsentAPI
 from consent_api.tests.pom import fake_govuk
@@ -64,6 +65,18 @@ def splinter_driver_kwargs(splinter_webdriver, splinter_driver_kwargs):
             }
         )
     return kwargs
+
+
+def wait_for(self, callback, timeout=10):
+    """Wait until the callback returns True or the timeout is reached."""
+    WebDriverWait(self.driver, timeout).until(callback)
+
+
+@pytest.fixture
+def browser(browser):
+    """Monkeypatch browser instance to add a wait_for convenience method."""
+    browser.wait_for = wait_for.__get__(browser)
+    return browser
 
 
 def get_response_ok(url):

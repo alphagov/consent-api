@@ -57,5 +57,7 @@ def test_set_consent(client, db_session, status):
         url_for("set_consent", uid=uid),
         data={"status": json.dumps(status)},
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
+    assert response.json["uid"] == uid
+    assert response.json["status"] == status
     assert UserConsent.get(uid).consent == status

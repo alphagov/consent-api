@@ -6,11 +6,9 @@
   }
 
   CookieBanner.prototype.init = function () {
-    console.log('CookieBanner.init:', this.$module)
     this.cookies_preferences_set = Utils.getCookie('cookies_preferences_set') === 'true'
-    console.log('CookieBanner.init: cookies_preferences_set', this.cookies_preferences_set)
     this.cookies_policy = JSON.parse(Utils.getCookie('cookies_policy', '{}'))
-    console.log('CookieBanner.init: cookies_policy', this.cookies_policy)
+    console.log('CookieBanner.init: cookies_policy cookie', this.cookies_policy)
 
     this.$module.message = this.$module.querySelector('.js-cookie-banner-message')
     this.$module.confirmAccept = this.$module.querySelector('.js-cookie-banner-confirmation-accept')
@@ -28,7 +26,11 @@
       nodes[i].addEventListener('click', this.hideBanner.bind(this))
     }
 
-    Consent.addEventListener('statusShared', this.hideBanner.bind(this))
+    Consent.addEventListener('ConsentStatusLoaded', function (status) {
+      console.log('CookieBanner.handleConsentStatusLoaded:', status)
+      this.setCookiesPolicyCookie(status)
+      this.hideBanner()
+    }.bind(this))
 
     this.showBanner()
   }
@@ -37,8 +39,8 @@
     const meta = Utils.acceptedAdditionalCookies(this.cookies_policy)
 
     if (this.cookies_preferences_set) {
-      console.log('CookieBanner.showBanner: not showing banner')
-      this.$module.hidden = true
+      console.log('CookieBanner.showBanner: cookie set')
+      this.hideBanner()
     } else {
       console.log('CookieBanner.showBanner: no cookie set, showing banner')
       this.$module.hidden = false
@@ -52,15 +54,22 @@
   }
 
   CookieBanner.prototype.hideBanner = function () {
+    console.log('CookieBanner.hideBanner')
     this.$module.hidden = true
   }
 
   CookieBanner.prototype.acceptCookies = function () {
-    console.log('CookieBanner.acceptCookies: setting ALL_COOKIES')
+    console.log('CookieBanner.acceptCookies')
+    const acceptAll = Utils.ALL_COOKIES
     this.$module.showAcceptConfirmation()
-    Utils.setCookie('cookies_policy', JSON.stringify(Utils.ALL_COOKIES), { days: 365 })
+    this.setCookiesPolicyCookie(acceptAll)
+    Consent.setStatus(acceptAll)
+  }
+
+  CookieBanner.prototype.setCookiesPolicyCookie = function (cookiesPolicy) {
+    console.log('CookieBanner.setCookiesPolicyCookie:', cookiesPolicy)
+    Utils.setCookie('cookies_policy', JSON.stringify(cookiesPolicy), { days: 365 })
     Utils.setCookie('cookies_preferences_set', 'true', { days: 365 })
-    Consent.setStatus(Utils.ALL_COOKIES)
   }
 
   CookieBanner.prototype.showAcceptConfirmation = function () {
@@ -70,11 +79,11 @@
   }
 
   CookieBanner.prototype.rejectCookies = function () {
-    console.log('CookieBanner.rejectCookies: setting ESSENTIAL_COOKIES')
+    console.log('CookieBanner.rejectCookies')
+    const rejectAll = Utils.ESSENTIAL_COOKIES
     this.$module.showRejectConfirmation()
-    Utils.setCookie('cookies_policy', JSON.stringify(Utils.ESSENTIAL_COOKIES), { days: 365 })
-    Utils.setCookie('cookies_preferences_set', 'true', { days: 365 })
-    Consent.setStatus(Utils.ESSENTIAL_COOKIES)
+    this.setCookiesPolicyCookie(rejectAll)
+    Consent.setStatus(rejectAll)
   }
 
   CookieBanner.prototype.showRejectConfirmation = function () {

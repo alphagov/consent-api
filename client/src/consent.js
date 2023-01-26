@@ -3,53 +3,42 @@
 (function () {
   'use strict'
 
-  function Consent () {
-    this.sharedUID = Utils.getURLParameter('uid')
-    this.undecorateURL()
-    this.localUID = Utils.getCookie('uid')
-    this.uid = this.sharedUID || this.localUID
+  function Consent (apiUrl) {
+    this.apiUrl = apiUrl
+    const uidFromCookie = Utils.getCookie('uid')
+    const uidFromUrl = Utils.getURLParameter('uid')
+    if (uidFromCookie) {
+      console.log('Consent: UID from cookie')
+    } else if (uidFromUrl) {
+      console.log('Consent: UID from URL parameter')
+    }
+    this.uid = uidFromCookie || uidFromUrl
+    console.log('Consent: UID =', this.uid)
     this.eventListeners = {
-      statusShared: [
-        this.updateCookiesPolicyCookie
-      ],
-      uidAssigned: [
-        this.setUIDCookie,
-        this.decorateLinks
+      ConsentStatusLoaded: [],
+      ConsentStatusSet: [],
+      ConsentUidSet: [
+        this.decorateLinks,
+        this.setUidCookie
       ]
     }
   }
 
   Consent.prototype.init = function () {
-    this.apiURL = document.querySelector('[data-consent-api-url]').dataset.consentApiUrl
+    this.undecorateUrl()
 
-    if (!this.localUID && this.sharedUID) {
-      this.setUIDCookie(this.uid)
+    if (this.uid) {
+      this.dispatchEvent('ConsentUidSet', this.uid)
+
+      this.getStatus(function (response) {
+        this.dispatchEvent('ConsentStatusLoaded', response.status)
+      }.bind(this))
     }
-
-    this.status = {}
-
-    this.getStatus((response) => {
-      if (response) {
-        if (!this.uid) {
-          this.uid = response.uid
-          this.dispatchEvent('uidAssigned', this.uid)
-        }
-        const meta = Utils.acceptedAdditionalCookies(response.status)
-        if (meta.responded) {
-          this.status = response.status
-          this.dispatchEvent('statusShared', this.status)
-        }
-      }
-    })
   }
 
-  Consent.prototype.setUIDCookie = function (uid) {
+  Consent.prototype.setUidCookie = function (uid) {
+    console.log('Consent.setUidCookie:', uid)
     Utils.setCookie('uid', uid, { days: 365 })
-  }
-
-  Consent.prototype.updateCookiesPolicyCookie = function (cookiesPolicy) {
-    Utils.setCookie('cookies_policy', JSON.stringify(cookiesPolicy), { days: 365 })
-    Utils.setCookie('cookies_preferences_set', 'true')
   }
 
   Consent.prototype.addEventListener = function (eventName, callback) {
@@ -66,13 +55,19 @@
     }
   }
 
-  Consent.prototype.undecorateURL = function () {
-    const undecoratedURL = Utils.removeURLParameter(window.location.href, 'uid')
-    window.history.replaceState(null, null, undecoratedURL)
+  Consent.prototype.undecorateUrl = function () {
+    let editedUrl = Utils.removeURLParameter(window.location.href, 'uid')
+    if (editedUrl.slice(-1) === '?') {
+      editedUrl = editedUrl.slice(0, -1)
+    }
+    if (window.location.href !== editedUrl) {
+      console.log('Consent.undecorateUrl:', window.location.href, '->', editedUrl)
+      window.history.replaceState(null, null, editedUrl)
+    }
   }
 
   Consent.prototype.getApiEndpoint = function () {
-    return this.apiURL.concat('consent', this.uid ? '/'.concat(this.uid) : '')
+    return this.apiUrl.concat('consent', this.uid ? '/'.concat(this.uid) : '')
   }
 
   Consent.prototype.getStatus = function (callback) {
@@ -82,8 +77,11 @@
         let responseJSON = {}
         if (request.status === 0 || (request.status >= 200 && request.status < 400)) {
           responseJSON = JSON.parse(request.responseText)
+          if (responseJSON) {
+            console.log('Consent.getStatus: response =', responseJSON)
+            callback(responseJSON)
+          }
         }
-        callback(responseJSON)
       }
     }
     request.open('GET', this.getApiEndpoint())
@@ -92,31 +90,50 @@
 
   Consent.prototype.setStatus = function (status) {
     if (status) {
-      this.status = status
+      console.log('Consent.setStatus:', status)
       const request = new XMLHttpRequest()
+      request.onreadystatechange = function () {
+        if (request.readyState === XMLHttpRequest.DONE) {
+          let responseJSON = {}
+          if (request.status === 0 || (request.status >= 200 && request.status < 400)) {
+            responseJSON = JSON.parse(request.responseText)
+            if (responseJSON) {
+              console.log('Consent.setStatus: response =', responseJSON)
+              if (responseJSON.uid !== this.uid) {
+                this.dispatchEvent('ConsentUidSet', responseJSON.uid)
+              }
+              this.dispatchEvent('ConsentStatusSet', responseJSON.status)
+            }
+          }
+        }
+      }.bind(this)
       request.open('POST', this.getApiEndpoint())
       request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-      request.send('status='.concat(JSON.stringify(this.status)))
+      request.send('status='.concat(JSON.stringify(status)))
     }
   }
 
   Consent.prototype.decorateLinks = function (uid) {
     if (uid) {
-      const nodes = document.querySelectorAll('[data-consent-share]')
+      console.log('Consent.decorateLinks:', uid)
+      const nodes = document.querySelectorAll('[data-consent-share][href]')
       for (let index = 0; nodes.length > index; index++) {
+        console.log('Adding event listener to', nodes[index])
         nodes[index].addEventListener('click', function (event) {
-          if (event.target.hasAttribute('href')) {
-            const url = event.target.getAttribute('href')
-            const decoratedUrl = Utils.addURLParameter(url, 'uid', uid)
-            event.target.setAttribute('href', decoratedUrl)
-          }
+          const url = event.target.getAttribute('href')
+          const decoratedUrl = Utils.addURLParameter(url, 'uid', uid)
+          console.log(`Consent.decorateLinks: ${url} -> ${decoratedUrl}`)
+          event.target.setAttribute('href', decoratedUrl)
         })
       }
     }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    window.Consent = new Consent()
-    window.Consent.init()
+    const node = document.querySelector('[data-consent-api-url]')
+    if (node) {
+      window.Consent = new Consent(node.dataset.consentApiUrl)
+      window.Consent.init()
+    }
   })
 })()
