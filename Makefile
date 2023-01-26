@@ -6,7 +6,7 @@ DATABASE_URL ?= postgresql://localhost:5432:$(APP_NAME)
 DOCKER_DB_URL ?= postgresql://host.docker.internal:5432/$(APP_NAME)
 ENV ?= development
 PORT ?= 8000
-SELENIUM_DRIVER ?= firefox
+SELENIUM_DRIVER ?= chrome
 
 .PHONY: clean
 clean:
