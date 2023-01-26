@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import render_form %}
+
+{% set page_title = "Create an account" %}
+
+{% block maincolumn_content %}
+  <h1>Create an account</h1>
+  {{ render_form(form) }}
+{% endblock %}

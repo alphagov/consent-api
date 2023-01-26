@@ -1,0 +1,24 @@
+{% macro render_form(form) %}
+  <form method="post" novalidate="">
+    {% for field in form %}
+      {% if field.widget.input_type == "hidden" %}
+        {{ field() }}
+      {% else %}
+        {{ form_group(field) }}
+      {% endif %}
+    {% endfor %}
+    <footer>
+      <button>Continue</button>
+    </footer>
+  </form>
+{% endmacro %}
+
+{% macro form_group(field) %}
+  <div class="form-group">
+    {{ field.label }}
+    {% if field.description %}
+      <div class="hint">{{ field.description }}</div>
+    {% endif %}
+    {{ field(**kwargs) }}
+  </div>
+{% endmacro %}
