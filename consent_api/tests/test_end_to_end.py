@@ -11,6 +11,9 @@ pytestmark = [pytest.mark.end_to_end]
 
 def test_single_service(browser, govuk, consent_api):
     """Test Consent API integration with fake GOVUK homepage."""
+    govuk.homepage.get()
+    browser.driver.delete_all_cookies()
+
     # with no consent status recorded, we are shown a cookie banner
     homepage = govuk.homepage.get()
     cookie_banner = homepage.cookie_banner
@@ -52,6 +55,11 @@ def test_single_service(browser, govuk, consent_api):
 
 def test_connected_services(browser, govuk, haas, consent_api):
     """Test sharing consent across services."""
+    haas.start_page.get()
+    browser.driver.delete_all_cookies()
+    haas.homepage.get()
+    browser.driver.delete_all_cookies()
+
     start_page = haas.start_page.get()
     cookie_banner = start_page.cookie_banner
     assert cookie_banner.visible
