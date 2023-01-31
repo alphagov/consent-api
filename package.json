@@ -1,0 +1,23 @@
+{
+  "name": "@alphagov/consent-api",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=19.0.1"
+  },
+  "description": "Client code for the Cookie Consent Sharing API",
+  "sideEffects": false,
+  "main": "client/src/consent_api_client.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphagov/consent-api.git"
+  },
+  "author": {
+    "name": "Andy Driver",
+    "email": "andy.driver@digital.cabinet-office.gov.uk"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alphagov/consent-api/issues"
+  },
+  "homepage": "https://github.com/alphagov/consent-api/client/#readme"
+}
