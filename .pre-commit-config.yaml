@@ -93,7 +93,7 @@ repos:
     - "--exclude"
     - "migrations"
 
-- repo: https://github.com/standard/standard
-  rev: v17.0.0
+- repo: https://github.com/pre-commit/mirrors-eslint
+  rev: v8.33.0
   hooks:
-  - id: standard
+  - id: eslint
