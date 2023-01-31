@@ -16,8 +16,8 @@ from consent_api.models import CookieConsent
 from consent_api.models import UserConsent
 
 
-@app.get("/consent", defaults={"uid": None})
-@app.get("/consent/<uid>")
+@app.get("/api/v1/consent/", defaults={"uid": None})
+@app.get("/api/v1/consent/<uid>")
 @cross_origin(origins="*")
 def get_consent(uid):
     """
@@ -30,8 +30,8 @@ def get_consent(uid):
     return jsonify(consent.json)
 
 
-@app.post("/consent", defaults={"uid": None})
-@app.post("/consent/<uid>")
+@app.post("/api/v1/consent/", defaults={"uid": None})
+@app.post("/api/v1/consent/<uid>")
 @cross_origin(origins="*")
 def set_consent(uid):
     """
