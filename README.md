@@ -13,7 +13,7 @@ your application. One way to do this is to install it with `npm`. Add the
 following to the `dependencies` section of your `package.json`:
 
 ```json
-"@alphagov/consent-api": "alphagov/consent-api#semver:1.7.0",
+"@alphagov/consent-api": "alphagov/consent-api#semver:1.7.1",
 ```
 
 Alternatively, you can [download the client Javascript](client/src/consent.js)
