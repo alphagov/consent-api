@@ -6,9 +6,121 @@ central database.
 This enables web services to share user consent status across multiple domains.
 
 
-## Testing
+## Installation
 
-### Unit tests
+In order to set first-party cookies, the client Javascript must be served with
+your application. One way to do this is to install it with `npm`. Add the
+following to the `dependencies` section of your `package.json`:
+
+```json
+"@alphagov/consent-api": "alphagov/consent-api#semver:1.7.0",
+```
+
+Alternatively, you can [download the client Javascript](client/src/consent.js)
+and save it with your web application source code.
+
+The client script needs to be loaded on any page that could be an entry point to
+your web application, allows modifying cookie consent, or provides a link to
+another domain with which you want to share cookie consent status. It is
+probably easiest to add the script to a base template used for all pages.
+
+It is common practice to add Javascript tags just before the end `</body>` tag,
+eg:
+
+```html
+    ...
+
+    <script src="{path_to_client_js}/consent.js"></script>
+  </body>
+</html>
+```
+
+
+## Configuration
+
+If you need to direct the client to an alternative API (for example, during
+testing), you can add a `data-consent-api-url` attribute to the `body` tag in
+your HTML file, eg:
+
+```html
+  <body data-consent-api-url="https://consent-api.example.com/">
+```
+
+
+## Usage
+
+The client Javascript adds a `Consent` object to the `window`, allowing you to
+call its methods from your own script.
+
+### Methods
+
+#### onStatusLoaded
+
+Add a callback function to be invoked when the client receives a consent status
+from the API. The consent status is automatically requested on page load, and if
+the API responds, the callback will be invoked with the consent status object as
+an argument.
+
+##### Arguments
+
+<table>
+<tr valign="top"><th align="left"><code>callback</code> (required)</th><td align="left">A callback function which will be called
+with the consent status object as an argument.</td></tr>
+</table>
+
+##### Example
+
+```javascript
+Consent.onStatusLoaded((status) => {
+  console.log("Consent Status:")
+  console.log(`- Essential cookies (${status.essential})`)
+  console.log(`- Campaign cookies (${status.campaigns})`)
+  console.log(`- Settings cookies (${status.settings})`)
+  console.log(`- Usage cookies (${status.usage})`)
+})
+```
+
+#### setStatus
+
+Set the current user's consent status in the API, to be shared with other
+domains. The method returns immediately, but is processed asynchronously. When
+the API has been successfully updated, the callback method is invoked (if
+provided).
+
+##### Arguments
+
+<table>
+<tr valign="top"><th align="left"><code>status</code> (required)</th><td align="left">A consent status JSON object. Eg:
+<pre>
+{
+  "essential": true,
+  "campaigns": false,
+  "settings": false,
+  "usage": false
+}
+</pre>
+</td></tr>
+<tr valign="top"><th align="left"><code>callback</code></th><td align="left">An
+optional callback function which will be called
+with the consent status as an argument.</td></tr>
+</table>
+
+##### Example
+
+```javascript
+Consent.setStatus(
+  acceptAllCookies,
+  (status) => {
+    console.log("Consent status successfully updated to", status)
+  }
+)
+```
+
+## Development
+
+### Testing
+
+#### Unit tests
 
 Run unit tests with the following command:
 
@@ -16,7 +128,7 @@ Run unit tests with the following command:
 pytest -m unit
 ```
 
-### Integration tests
+#### Integration tests
 
 Run integration tests with the following command:
 
@@ -24,7 +136,7 @@ Run integration tests with the following command:
 pytest -m integration
 ```
 
-### End-to-end tests
+#### End-to-end tests
 
 To run end-to-end tests you will need Chrome or Firefox installed. Specify which you
 want to use for running tests by setting the `SELENIUM_DRIVER` environment variable, eg:
@@ -53,8 +165,6 @@ Run the tests with the following command:
 ```
 pytest --splinter-driver $SELENIUM_DRIVER --splinter-headless -m end_to_end
 ```
-
-## Contributing
 
 ### Branching
 

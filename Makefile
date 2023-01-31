@@ -17,7 +17,6 @@ deps:
 	python -m pip install -U pip
 	pip install -r requirements.txt
 	if [ -f requirements-$(ENV).txt ]; then pip install -r requirements-$(ENV).txt; fi
-	npm install
 
 .PHONY: lint
 lint:
@@ -28,11 +27,6 @@ lint:
 .PHONY: lint-fix
 lint-fix:
 	pre-commit run --all-files
-
-.PHONY: client
-client:
-	mkdir -p client/dist
-	npm run build
 
 .PHONY: run-migrations
 run-migrations:
