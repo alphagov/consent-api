@@ -33,6 +33,7 @@ COPY migrations/ migrations/
 
 ENV PATH="/home/app/venv/bin:$PATH"
 ENV FLASK_APP="consent_api:app"
+ENV PYTHONUNBUFFERED="True"
 
 CMD flask db upgrade && gunicorn consent_api:app
 HEALTHCHECK CMD python -c "import urllib.request as r; r.urlopen('http://localhost:${PORT:-8000}/health')"
