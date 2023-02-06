@@ -6,90 +6,42 @@ from pulumi import Config
 from pulumi import Output
 
 config = Config()
-
-network = gcp.compute.Network(
-    "default",
-    description="Default network for the project",
-    name="default",
-    routing_mode="REGIONAL",
-)
-
-private_ip = gcp.compute.GlobalAddress(
-    "private_ip",
-    address="10.125.80.0",
-    address_type="INTERNAL",
-    name="default-ip-range",
-    network=network.id,
-    prefix_length=20,
-    purpose="VPC_PEERING",
-)
-
-peering_connection = gcp.servicenetworking.Connection(
-    "peering_connection",
-    network=network.name,
-    reserved_peering_ranges=[private_ip.name],
-    service="servicenetworking.googleapis.com",
-)
+project = gcp.projects.get_project(filter="id:sde-consent-api")
 
 db_instance = gcp.sql.DatabaseInstance(
-    "main",
+    "consent-postgres-db-instance",
     database_version="POSTGRES_14",
-    name="sde-consent-api-db",
-    settings=gcp.sql.DatabaseInstanceSettingsArgs(
-        deletion_protection_enabled=True,
-        maintenance_window=gcp.sql.DatabaseInstanceSettingsMaintenanceWindowArgs(
-            update_track="stable",
-        ),
-        ip_configuration=gcp.sql.DatabaseInstanceSettingsIpConfigurationArgs(
-            ipv4_enabled=False,
-            private_network=network.id,
-        ),
-        tier="db-f1-micro",
-    ),
-    opts=pulumi.ResourceOptions(
-        depends_on=[peering_connection],
-    ),
+    deletion_protection=False,
+    settings=gcp.sql.DatabaseInstanceSettingsArgs(tier="db-f1-micro"),
 )
 
 database = gcp.sql.Database(
-    "consent_api",
-    charset="UTF8",
-    collation="en_US.UTF8",
+    "consent-db",
     instance=db_instance.name,
-    name="consent_api",
+    name=config.require("db-name"),
 )
 
 users = gcp.sql.User(
-    "users",
+    "consent-db-user",
     instance=db_instance.name,
-    name="postgres",
-    # password=config.require_secret("db-password"),
-)
-
-database_url: Output = Output.secret(
-    Output.format(
-        "postgresql://postgres@/{host}?host=/cloudsql/{connection}",
-        host=db_instance.private_ip_address,
-        connection=db_instance.connection_name,
-    )
+    name=config.require("db-name"),
+    password=config.require_secret("db-password"),
 )
 
 github_service_account = gcp.serviceaccount.Account(
-    "github_actions",
-    account_id="github-actions",
-    description="For pushing and deploying Docker images to Google Cloud",
-    display_name="Github Actions",
+    "github-service-account",
+    account_id="github",
+    display_name="Github",
 )
 
 wi_pool = gcp.iam.WorkloadIdentityPool(
     "default",
-    description="Enable Github Actions to push to GCR",
-    display_name="SDE Consent API Github Actions",
-    workload_identity_pool_id="consent-api-github-actions",
+    display_name="Github",
+    workload_identity_pool_id="github-actions",
 )
 
 wif_provider = gcp.iam.WorkloadIdentityPoolProvider(
-    "default",
+    "github-wi-provider",
     attribute_mapping={
         "attribute.actor": "assertion.actor",
         "attribute.repository": "assertion.repository",
@@ -97,6 +49,7 @@ wif_provider = gcp.iam.WorkloadIdentityPoolProvider(
         "google.subject": "assertion.sub",
     },
     display_name="Github",
+    description="Github OIDC identity pool provider for Github Actions",
     oidc=gcp.iam.WorkloadIdentityPoolProviderOidcArgs(
         issuer_uri="https://token.actions.githubusercontent.com",
     ),
@@ -104,123 +57,99 @@ wif_provider = gcp.iam.WorkloadIdentityPoolProvider(
     workload_identity_pool_provider_id="github",
 )
 
+github_member = Output.format(
+    "principalSet://iam.googleapis.com/{wi_pool}/attribute.repository/{repo}",
+    wi_pool=wi_pool.name,
+    repo="alphagov/consent-api",
+)
+
 github_iam = gcp.serviceaccount.IAMBinding(
-    "github-iam",
-    members=[
-        Output.concat(
-            "principalSet://iam.googleapis.com/",
-            wi_pool.id,
-            "/attribute.repository/alphagov/consent-api",
-        ),
-    ],
+    "github-iam-binding",
+    members=[github_member],
     role="roles/iam.workloadIdentityUser",
     service_account_id=github_service_account.name,
 )
 
-connector = gcp.vpcaccess.Connector(
-    "default",
-    ip_cidr_range="10.8.0.0/28",
-    name="consent-api-serverless",
-    network=network.id,
-    max_throughput=1000,
+github_assume_cloudrun_role = gcp.serviceaccount.IAMBinding(
+    "github-cloudrun-binding",
+    members=[github_service_account.member],
+    role="roles/iam.serviceAccountUser",
+    service_account_id=Output.format(
+        "projects/{project_id}/serviceAccounts/{sa_email}",
+        project_id="sde-consent-api",
+        sa_email=Output.concat(
+            project.projects[0].number,
+            "-compute@developer.gserviceaccount.com",
+        ),
+    ),
 )
 
-vpc_connector_to_serverless = gcp.compute.Firewall(
-    "vpc-connector-to-serverless",
-    allows=[
-        gcp.compute.FirewallAllowArgs(protocol="icmp"),
-        gcp.compute.FirewallAllowArgs(ports=["665-666"], protocol="udp"),
-        gcp.compute.FirewallAllowArgs(ports=["667"], protocol="tcp"),
+github_storage_role = gcp.projects.IAMCustomRole(
+    "github-access-to-storage",
+    description="Role for Github Actions user to read and write GCR images",
+    permissions=[
+        "storage.buckets.get",
+        "storage.objects.create",
+        "storage.objects.delete",
+        "storage.objects.list",
     ],
-    destination_ranges=["0.0.0.0/0"],
-    direction="EGRESS",
-    name="vpc-connector-to-serverless",
-    network=network.id,
-    source_ranges=[
-        "107.178.230.64/26",
-        "35.199.224.0/19",
-    ],
-    target_tags=["vpc-connector"],
+    role_id="githubStorageRole",
+    title="Github Storage Role",
 )
 
-serverless_to_vpc_connector = gcp.compute.Firewall(
-    "serverless-to-vpc-connector",
-    allows=[
-        gcp.compute.FirewallAllowArgs(protocol="icmp"),
-        gcp.compute.FirewallAllowArgs(ports=["665-666"], protocol="udp"),
-        gcp.compute.FirewallAllowArgs(ports=["667"], protocol="tcp"),
-    ],
-    direction="INGRESS",
-    name="serverless-to-vpc-connector",
-    network=network.id,
-    source_ranges=[
-        "107.178.230.64/26",
-        "35.199.224.0/19",
-    ],
-    target_tags=["vpc-connector"],
+github_gcr_role = gcp.storage.BucketIAMBinding(
+    "github-gcr-binding",
+    bucket=gcp.storage.get_bucket(name="artifacts.sde-consent-api.appspot.com").name,
+    members=[github_service_account.member],
+    role=github_storage_role.name,
 )
 
-vpc_connector_requests = gcp.compute.Firewall(
-    "vpc-connector-requests",
-    allows=[
-        gcp.compute.FirewallAllowArgs(protocol="icmp"),
-        gcp.compute.FirewallAllowArgs(protocol="udp"),
-        gcp.compute.FirewallAllowArgs(protocol="tcp"),
+github_deploy_role = gcp.projects.IAMCustomRole(
+    "github-cloudrun-deploy",
+    description="Role for Github Actions user to deploy to Cloud Run",
+    permissions=[
+        "run.services.get",
+        "run.services.create",
+        "run.services.update",
+        "run.services.delete",
     ],
-    direction="INGRESS",
-    name="vpc-connector-requests",
-    network=network.id,
-    project="sde-consent-api",
-    source_tags=["vpc-connector"],
+    role_id="githubDeployRole",
+    title="Github Deploy Role",
 )
 
-vpc_connector_health_checks = gcp.compute.Firewall(
-    "vpc-connector-health-checks",
-    allows=[
-        gcp.compute.FirewallAllowArgs(ports=["667"], protocol="tcp"),
-    ],
-    direction="INGRESS",
-    name="vpc-connector-health-checks",
-    network=network.id,
-    project="sde-consent-api",
-    source_ranges=[
-        "130.211.0.0/22",
-        "35.191.0.0/16",
-        "108.170.220.0/23",
-    ],
-    target_tags=["vpc-connector"],
+db_password: Output = Output.secret(
+    Output.format(
+        "postgresql://{user}:{password}@/{host}?host=/cloudsql/{connection}",
+        user=config.require("db-name"),
+        password=config.require_secret("db-password"),
+        host=config.require("db-name"),
+        connection=db_instance.connection_name,
+    )
 )
-
-docker_image = "gcr.io/sde-consent-api/consent-api:v1.7.2"
 
 consent_api = gcp.cloudrun.Service(
-    "consent-api",
-    location=Config("gcp").require("region"),
+    "consent-api-service",
     name="consent-api",
+    location=Config("gcp").require("region"),
     template=gcp.cloudrun.ServiceTemplateArgs(
         metadata=gcp.cloudrun.ServiceTemplateMetadataArgs(
             annotations={
                 "autoscaling.knative.dev/maxScale": "5",
-                "client.knative.dev/user-image": docker_image,
                 "run.googleapis.com/cloudsql-instances": db_instance.connection_name,
-                "run.googleapis.com/vpc-access-connector": connector.id,
-                "run.googleapis.com/vpc-access-egress": "private-ranges-only",
             },
         ),
         spec=gcp.cloudrun.ServiceTemplateSpecArgs(
             containers=[
                 gcp.cloudrun.ServiceTemplateSpecContainerArgs(
+                    image="gcr.io/sde-consent-api/consent-api:v1.7.2",
                     envs=[
                         gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
                             name="DATABASE_URL",
-                            value=database_url,
+                            value=db_password,
                         ),
                     ],
-                    image=docker_image,
                 )
             ],
-            service_account_name="832060047369-compute@developer.gserviceaccount.com",
-            timeout_seconds=300,
         ),
     ),
     traffics=[
@@ -230,6 +159,24 @@ consent_api = gcp.cloudrun.Service(
         )
     ],
 )
+
+github_deploy_binding = gcp.cloudrun.IamBinding(
+    "github-deploy-binding",
+    location=consent_api.location,
+    project=consent_api.project,
+    service=consent_api.name,
+    role=github_deploy_role.name,
+    members=[github_service_account.member],
+)
+
+public_access = gcp.cloudrun.IamBinding(
+    "public-access",
+    location=consent_api.location,
+    service=consent_api.name,
+    role="roles/run.invoker",
+    members=["allUsers"],
+)
+
 
 pulumi.export("consent_api_url", consent_api.statuses[0].url)
 pulumi.export("workload_identity_provider", wif_provider.name)
