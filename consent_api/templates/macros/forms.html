@@ -12,13 +12,10 @@
     </footer>
   </form>
 {% endmacro %}
-
 {% macro form_group(field) %}
   <div class="form-group">
     {{ field.label }}
-    {% if field.description %}
-      <div class="hint">{{ field.description }}</div>
-    {% endif %}
+    {% if field.description %}<div class="hint">{{ field.description }}</div>{% endif %}
     {{ field(**kwargs) }}
   </div>
 {% endmacro %}

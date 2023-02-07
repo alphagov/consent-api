@@ -1,4 +1,4 @@
-(function () {
+;(function () {
   'use strict'
 
   var uidKey = 'consent_uid'
@@ -17,13 +17,13 @@
       essential: true,
       campaigns: true,
       settings: true,
-      usage: true
+      usage: true,
     }
     this.REJECT_ALL = {
       essential: true,
       campaigns: false,
       settings: false,
-      usage: false
+      usage: false,
     }
     this.eventListeners = []
   }
@@ -35,11 +35,16 @@
     // get the current uid from the cookie or the URL if it exists
     setUid(this, uidFromCookie || uidFromUrl)
     if (this.uid) {
-
       // fetch consent status from API and notify listeners on response
-      request(apiUrl.concat(this.uid), {}, function (response) {
-        this.eventListeners.forEach(function (callback) { callback(response.status) })
-      }.bind(this))
+      request(
+        apiUrl.concat(this.uid),
+        {},
+        function (response) {
+          this.eventListeners.forEach(function (callback) {
+            callback(response.status)
+          })
+        }.bind(this)
+      )
     }
   }
 
@@ -49,15 +54,18 @@
 
   Consent.prototype.setStatus = function (status) {
     if (status) {
-      request(apiUrl.concat(this.uid || ''), {
-        method: "POST",
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'status='.concat(JSON.stringify(status))
-      }, function (response) {
-
-        // get the current uid from the API if we don't already have one
-        setUid(this, response.uid)
-      }.bind(this))
+      request(
+        apiUrl.concat(this.uid || ''),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'status='.concat(JSON.stringify(status)),
+        },
+        function (response) {
+          // get the current uid from the API if we don't already have one
+          setUid(this, response.uid)
+        }.bind(this)
+      )
     }
   }
 
@@ -74,11 +82,13 @@
       })
 
       // set uid cookie
-      document.cookie = uidKey.concat('=', uid).concat(
-        '; path=/',
-        '; max-age='.concat(Consent.COOKIE_LIFETIME),
-        (document.location.protocol === 'https:') ? '; Secure' : ''
-      )
+      document.cookie = uidKey
+        .concat('=', uid)
+        .concat(
+          '; path=/',
+          '; max-age='.concat(Consent.COOKIE_LIFETIME),
+          document.location.protocol === 'https:' ? '; Secure' : ''
+        )
     }
   }
 
@@ -86,11 +96,14 @@
     var req = new XMLHttpRequest()
     options = options || {}
     req.onreadystatechange = function () {
-      if (req.readyState === req.DONE && (req.status === 0 || (req.status >= 200 && req.status < 400))) {
+      if (
+        req.readyState === req.DONE &&
+        (req.status === 0 || (req.status >= 200 && req.status < 400))
+      ) {
         callback(JSON.parse(req.responseText))
       }
     }
-    req.open(options.method || "GET", url)
+    req.open(options.method || 'GET', url)
     for (var name in options.headers || {}) {
       req.setRequestHeader(name, options.headers[name])
     }
@@ -105,7 +118,9 @@
       url.params[index] = newParam
       modified = true
     })
-    if (!modified) { url.params.push(newParam) }
+    if (!modified) {
+      url.params.push(newParam)
+    }
     return buildUrl(url)
   }
 
@@ -121,7 +136,7 @@
     var parts = url.split('?')
     return {
       address: parts[0],
-      params: (parts[1] || "").split('&').filter(Boolean)
+      params: (parts[1] || '').split('&').filter(Boolean),
     }
   }
 

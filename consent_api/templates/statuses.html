@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% set page_title = "Statuses" %}
-
 {% block content %}
   <h2>Statuses</h2>
   <table class="user-list">
@@ -18,19 +16,21 @@
       </tr>
     </thead>
     <tbody>
-    {% for user in users %}
-      <tr>
-        <td><b>{{ user.uid }}</b></td>
-        {% if user.consent is not none %}
-          <td data-consent="{{ user.consent.essential }}">{{ user.consent.essential }}</td>
-          <td data-consent="{{ user.consent.usage }}">{{ user.consent.usage }}</td>
-          <td data-consent="{{ user.consent.campaigns }}">{{ user.consent.campaigns }}</td>
-          <td data-consent="{{ user.consent.settings }}">{{ user.consent.settings }}</td>
-        {% else %}
-          <td colspan="4">-</td>
-        {% endif %}
-      </tr>
-    {% endfor %}
+      {% for user in users %}
+        <tr>
+          <td>
+            <b>{{ user.uid }}</b>
+          </td>
+          {% if user.consent is not none %}
+            <td data-consent="{{ user.consent.essential }}">{{ user.consent.essential }}</td>
+            <td data-consent="{{ user.consent.usage }}">{{ user.consent.usage }}</td>
+            <td data-consent="{{ user.consent.campaigns }}">{{ user.consent.campaigns }}</td>
+            <td data-consent="{{ user.consent.settings }}">{{ user.consent.settings }}</td>
+          {% else %}
+            <td colspan="4">-</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
     </tbody>
   </table>
 {% endblock %}

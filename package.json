@@ -19,5 +19,11 @@
   "bugs": {
     "url": "https://github.com/alphagov/consent-api/issues"
   },
-  "homepage": "https://github.com/alphagov/consent-api/client/#readme"
+  "homepage": "https://github.com/alphagov/consent-api/client/#readme",
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": false,
+    "singleQuote": true
+  }
 }

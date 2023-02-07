@@ -1,7 +1,7 @@
 /* global Consent, Utils */
 
-(function () {
-  function CookieSettings ($module) {
+;(function () {
+  function CookieSettings($module) {
     this.$module = $module
   }
 
@@ -10,13 +10,16 @@
     this.$module.getFormValues = this.getFormValues.bind(this)
     this.$module.setFormValues = this.setFormValues.bind(this)
 
-    document.querySelector('form[data-module=cookie-settings]')
+    document
+      .querySelector('form[data-module=cookie-settings]')
       .addEventListener('submit', this.$module.submitSettingsForm)
 
     this.cookiesPolicy = JSON.parse(Utils.getCookie('cookies_policy'))
     if (!this.cookiesPolicy) {
       this.cookiesPolicy = Consent.REJECT_ALL
-      Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), { days: 365 })
+      Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), {
+        days: 365,
+      })
     }
 
     this.setFormValues(this.cookiesPolicy)
@@ -44,7 +47,7 @@
   }
 
   CookieSettings.prototype.getFormValues = function (form) {
-    form = (form || this.$module)
+    form = form || this.$module
     var formInputs = form.getElementsByTagName('input')
     var values = {}
 
@@ -68,7 +71,9 @@
 
     this.cookiesPolicy = this.getFormValues(event.target)
 
-    Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), { days: 365 })
+    Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), {
+      days: 365,
+    })
     Utils.setCookie('cookies_preferences_set', true, { days: 365 })
 
     Consent.setStatus(this.cookiesPolicy)
@@ -77,7 +82,9 @@
   }
 
   CookieSettings.prototype.showConfirmationMessage = function () {
-    var confirmationMessage = document.querySelector('div[data-cookie-confirmation]')
+    var confirmationMessage = document.querySelector(
+      'div[data-cookie-confirmation]'
+    )
     // hide the message if already visible so assistive tech is triggered when it appears
     confirmationMessage.style.display = 'none'
     var previousPageLink = document.querySelector('.cookie-settings__prev-page')
