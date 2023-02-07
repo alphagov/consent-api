@@ -1,7 +1,7 @@
-(function () {
+;(function () {
   'use strict'
 
-  var Utils = window.Utils = {}
+  var Utils = (window.Utils = {})
 
   Utils.acceptedAdditionalCookies = function (cookiesPolicy) {
     for (var category in cookiesPolicy) {
@@ -17,7 +17,9 @@
   }
 
   Utils.isEmpty = function (obj) {
-    for (var x in obj) { if (Object.prototype.hasOwnProperty.call(obj, x)) return false }
+    for (var x in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, x)) return false
+    }
     return true
   }
 
@@ -33,10 +35,14 @@
   }
 
   Utils.setCookie = function (name, value, options) {
-    document.cookie = name.concat('=', value).concat(
-      '; path=/',
-      options.days ? '; max-age='.concat(options.days * 24 * 60 * 60 * 1000) : '',
-      (document.location.protocol === 'https:') ? '; Secure' : ''
-    )
+    document.cookie = name
+      .concat('=', value)
+      .concat(
+        '; path=/',
+        options.days
+          ? '; max-age='.concat(options.days * 24 * 60 * 60 * 1000)
+          : '',
+        document.location.protocol === 'https:' ? '; Secure' : ''
+      )
   }
 })()

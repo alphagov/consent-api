@@ -2,98 +2,113 @@ ci:
   autoupdate_commit_msg: |
     [pre-commit.ci] pre-commit autoupdate [norelease]
 
+exclude: ^migrations/
+
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
 
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
-  hooks:
-  - id: check-added-large-files
-  - id: check-merge-conflict
-  - id: detect-private-key
-  - id: end-of-file-fixer
-  - id: requirements-txt-fixer
-  - id: trailing-whitespace
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.0.1
+    hooks:
+      - id: autoflake
+        args:
+          - "--in-place"
+          - "--ignore-init-module-imports"
+          - "--remove-all-unused-imports"
+          - "--remove-unused-variables"
 
-- repo: https://github.com/PyCQA/autoflake
-  rev: v2.0.1
-  hooks:
-  - id: autoflake
-    args:
-    - "--in-place"
-    - "--ignore-init-module-imports"
-    - "--remove-all-unused-imports"
-    - "--remove-unused-variables"
+  - repo: https://github.com/MarcoGorelli/auto-walrus
+    rev: v0.2.2
+    hooks:
+      - id: auto-walrus
 
-- repo: https://github.com/MarcoGorelli/auto-walrus
-  rev: v0.2.2
-  hooks:
-  - id: auto-walrus
+  - repo: https://github.com/kplaube/pre-commit-dodgy
+    rev: "0.0.2"
+    hooks:
+      - id: dodgy
 
-- repo: https://github.com/kplaube/pre-commit-dodgy
-  rev: "0.0.2"
-  hooks:
-  - id: dodgy
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args:
+          - "--profile=black"
+          - "--force-single-line-imports"
+          - "--ensure-newline-before-comments"
 
-- repo: https://github.com/PyCQA/isort
-  rev: 5.12.0
-  hooks:
-  - id: isort
-    args:
-    - "--profile=black"
-    - "--force-single-line-imports"
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.6.0.rc1
+    hooks:
+      - id: docformatter
+        args:
+          - "--recursive"
+          - "--in-place"
+          - "--wrap-summaries=88"
+          - "--wrap-descriptions=88"
+          - "--pre-summary-newline"
 
-- repo: https://github.com/PyCQA/docformatter
-  rev: v1.6.0.rc1
-  hooks:
-  - id: docformatter
-    args:
-    - "--recursive"
-    - "--in-place"
-    - "--wrap-summaries=88"
-    - "--wrap-descriptions=88"
-    - "--pre-summary-newline"
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
 
-- repo: https://github.com/psf/black
-  rev: 23.1.0
-  hooks:
-  - id: black
+  - repo: https://github.com/PyCQA/flake8
+    rev: "6.0.0"
+    hooks:
+      - id: flake8
+        args:
+          - "--max-line-length=88"
+          - "--extend-ignore=E203"
+        additional_dependencies:
+          - flake8-bugbear==22.10.27
+          - flake8-comprehensions==3.10.1
+          - flake8-docstrings==1.6.0
+          - flake8-simplify==0.19.3
+          - pep8-naming==0.13.2
 
-- repo: https://github.com/PyCQA/flake8
-  rev: '6.0.0'
-  hooks:
-  - id: flake8
-    args:
-    - "--max-line-length=88"
-    - "--extend-ignore=E203"
-    additional_dependencies:
-    - flake8-bugbear==22.10.27
-    - flake8-docstrings==1.6.0
-    - pep8-naming==0.13.2
-    exclude: migrations
+  - repo: https://github.com/ikamensh/flynt
+    rev: "0.77"
+    hooks:
+      - id: flynt
 
-- repo: https://github.com/ikamensh/flynt
-  rev: '0.77'
-  hooks:
-  - id: flynt
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.3.1
+    hooks:
+      - id: pyupgrade
 
-- repo: https://github.com/asottile/pyupgrade
-  rev: v3.3.1
-  hooks:
-  - id: pyupgrade
+  - repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.19.13
+    hooks:
+      - id: djlint-jinja
+        types_or: ["html"]
+        entry: djlint --profile jinja --reformat --indent 2 --ignore "J004,H006,H017" --quiet
 
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v0.991
-  hooks:
-  - id: mypy
-    additional_dependencies:
-    - "types-requests==2.28.11.7"
-    args:
-    - "--ignore-missing-imports"
-    - "--scripts-are-modules"
-    - "--exclude"
-    - "migrations"
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.0.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - "types-requests==2.28.11.7"
+        args:
+          - "--ignore-missing-imports"
+          - "--scripts-are-modules"
 
-- repo: https://github.com/pre-commit/mirrors-eslint
-  rev: v8.33.0
-  hooks:
-  - id: eslint
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0-alpha.4
+    hooks:
+      - id: prettier
+        exclude: consent_api/templates/
+        types_or: ["javascript", "css"]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.33.0
+    hooks:
+      - id: eslint
