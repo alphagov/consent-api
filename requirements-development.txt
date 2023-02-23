@@ -1,5 +1,0 @@
--r requirements.txt
--r requirements-ci.txt
-
-ipython==8.10.0
-pre-commit==2.20.0

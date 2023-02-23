@@ -1,0 +1,42 @@
+version: 2
+updates:
+
+  - package-ecosystem: "pip"
+    directory: "/requirements/ci"
+    schedule:
+      interval: "daily"
+    labels:
+      - "norelease"
+      - "dependencies"
+
+  - package-ecosystem: "pip"
+    directory: "/requirements/development"
+    schedule:
+      interval: "daily"
+    labels:
+      - "norelease"
+      - "dependencies"
+
+  - package-ecosystem: "pip"
+    directory: "/requirements/production"
+    schedule:
+      interval: "daily"
+    labels:
+      - "release:patch"
+      - "dependencies"
+
+  - package-ecosystem: "pip"
+    directory: "/requirements/infra"
+    schedule:
+      interval: "daily"
+    labels:
+      - "norelease"
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "norelease"
+      - "dependencies"
