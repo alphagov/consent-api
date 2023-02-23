@@ -2,135 +2,49 @@
 
 import pulumi
 import pulumi_gcp as gcp
-from pulumi import Config
-from pulumi import Output
 
-config = Config()
-project = gcp.projects.get_project(filter="id:sde-consent-api")
+config = pulumi.Config()
+
+stack = pulumi.get_stack()
+
+project = gcp.projects.get_project(
+    filter=f"id:{pulumi.Config('gcp').require('project')}",
+).projects[0]
 
 db_instance = gcp.sql.DatabaseInstance(
-    "consent-postgres-db-instance",
-    database_version="POSTGRES_14",
+    "db-instance",
+    database_version=config.require("db-version"),
     deletion_protection=False,
-    settings=gcp.sql.DatabaseInstanceSettingsArgs(tier="db-f1-micro"),
+    settings=gcp.sql.DatabaseInstanceSettingsArgs(tier=config.require("db-tier")),
 )
 
-database = gcp.sql.Database(
-    "consent-db",
+db = gcp.sql.Database(
+    "db",
     instance=db_instance.name,
     name=config.require("db-name"),
 )
 
-users = gcp.sql.User(
-    "consent-db-user",
+db_user = gcp.sql.User(
+    "db-user",
     instance=db_instance.name,
     name=config.require("db-name"),
     password=config.require_secret("db-password"),
 )
 
-github_service_account = gcp.serviceaccount.Account(
-    "github-service-account",
-    account_id="github",
-    display_name="Github",
-)
-
-wi_pool = gcp.iam.WorkloadIdentityPool(
-    "default",
-    display_name="Github",
-    workload_identity_pool_id="github-actions",
-)
-
-wif_provider = gcp.iam.WorkloadIdentityPoolProvider(
-    "github-wi-provider",
-    attribute_mapping={
-        "attribute.actor": "assertion.actor",
-        "attribute.repository": "assertion.repository",
-        "attribute.repository_owner": "assertion.repository_owner",
-        "google.subject": "assertion.sub",
-    },
-    display_name="Github",
-    description="Github OIDC identity pool provider for Github Actions",
-    oidc=gcp.iam.WorkloadIdentityPoolProviderOidcArgs(
-        issuer_uri="https://token.actions.githubusercontent.com",
-    ),
-    workload_identity_pool_id=wi_pool.workload_identity_pool_id,
-    workload_identity_pool_provider_id="github",
-)
-
-github_member = Output.format(
-    "principalSet://iam.googleapis.com/{wi_pool}/attribute.repository/{repo}",
-    wi_pool=wi_pool.name,
-    repo="alphagov/consent-api",
-)
-
-github_iam = gcp.serviceaccount.IAMBinding(
-    "github-iam-binding",
-    members=[github_member],
-    role="roles/iam.workloadIdentityUser",
-    service_account_id=github_service_account.name,
-)
-
-github_assume_cloudrun_role = gcp.serviceaccount.IAMBinding(
-    "github-cloudrun-binding",
-    members=[github_service_account.member],
-    role="roles/iam.serviceAccountUser",
-    service_account_id=Output.format(
-        "projects/{project_id}/serviceAccounts/{sa_email}",
-        project_id="sde-consent-api",
-        sa_email=Output.concat(
-            project.projects[0].number,
-            "-compute@developer.gserviceaccount.com",
-        ),
-    ),
-)
-
-github_storage_role = gcp.projects.IAMCustomRole(
-    "github-access-to-storage",
-    description="Role for Github Actions user to read and write GCR images",
-    permissions=[
-        "storage.buckets.get",
-        "storage.objects.create",
-        "storage.objects.delete",
-        "storage.objects.list",
-    ],
-    role_id="githubStorageRole",
-    title="Github Storage Role",
-)
-
-github_gcr_role = gcp.storage.BucketIAMBinding(
-    "github-gcr-binding",
-    bucket=gcp.storage.get_bucket(name="artifacts.sde-consent-api.appspot.com").name,
-    members=[github_service_account.member],
-    role=github_storage_role.name,
-)
-
-github_deploy_role = gcp.projects.IAMCustomRole(
-    "github-cloudrun-deploy",
-    description="Role for Github Actions user to deploy to Cloud Run",
-    permissions=[
-        "run.services.get",
-        "run.services.create",
-        "run.services.update",
-        "run.services.delete",
-    ],
-    role_id="githubDeployRole",
-    title="Github Deploy Role",
-)
-
-db_password: Output = Output.secret(
-    Output.format(
-        "postgresql://{user}:{password}@/{host}?host=/cloudsql/{connection}",
-        user=config.require("db-name"),
-        password=config.require_secret("db-password"),
-        host=config.require("db-name"),
+db_url: pulumi.Output = pulumi.Output.secret(
+    pulumi.Output.format(
+        "postgresql://{user}:{password}@/{db}?host=/cloudsql/{connection}",
+        user=db_user.name,
+        password=db_user.password,
+        db=db.name,
         connection=db_instance.connection_name,
     )
 )
 
-consent_api = gcp.cloudrun.Service(
-    "consent-api-service",
-    name="consent-api",
-    location=Config("gcp").require("region"),
+cloudrun_service = gcp.cloudrun.Service(
+    "service",
+    name=f"{stack}-consent-api",
+    location=pulumi.Config("gcp").require("region"),
     template=gcp.cloudrun.ServiceTemplateArgs(
         metadata=gcp.cloudrun.ServiceTemplateMetadataArgs(
             annotations={
@@ -141,11 +55,18 @@ consent_api = gcp.cloudrun.Service(
         spec=gcp.cloudrun.ServiceTemplateSpecArgs(
             containers=[
                 gcp.cloudrun.ServiceTemplateSpecContainerArgs(
-                    image="gcr.io/sde-consent-api/consent-api:v1.7.2",
+                    image="gcr.io/{project}/{image}".format(
+                        project=project.project_id,
+                        image=config.require("docker-image"),
+                    ),
                     envs=[
                         gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
                             name="DATABASE_URL",
-                            value=db_password,
+                            value=db_url,
+                        ),
+                        gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
+                            name="ENV",
+                            value=stack,
                         ),
                     ],
                 )
@@ -160,24 +81,103 @@ consent_api = gcp.cloudrun.Service(
     ],
 )
 
-github_deploy_binding = gcp.cloudrun.IamBinding(
-    "github-deploy-binding",
-    location=consent_api.location,
-    project=consent_api.project,
-    service=consent_api.name,
-    role=github_deploy_role.name,
-    members=[github_service_account.member],
-)
-
-public_access = gcp.cloudrun.IamBinding(
-    "public-access",
-    location=consent_api.location,
-    service=consent_api.name,
+cloudrun_allow_public_access = gcp.cloudrun.IamBinding(
+    "public-access-binding",
+    location=cloudrun_service.location,
+    service=cloudrun_service.name,
     role="roles/run.invoker",
     members=["allUsers"],
 )
 
+github_service_account = gcp.serviceaccount.Account(
+    "service-account",
+    account_id=f"{stack}",
+    display_name=f"{stack.title()} Service Account",
+)
 
-pulumi.export("consent_api_url", consent_api.statuses[0].url)
-pulumi.export("workload_identity_provider", wif_provider.name)
+github_wi_pool = gcp.iam.WorkloadIdentityPool(
+    "workload-identity-pool",
+    display_name="Github",
+    workload_identity_pool_id="github",
+)
+
+github_wi_provider = gcp.iam.WorkloadIdentityPoolProvider(
+    "workload-identity-pool-provider",
+    workload_identity_pool_provider_id="github",
+    display_name="Github",
+    workload_identity_pool_id=github_wi_pool.workload_identity_pool_id,
+    oidc=gcp.iam.WorkloadIdentityPoolProviderOidcArgs(
+        issuer_uri="https://token.actions.githubusercontent.com",
+    ),
+    attribute_mapping={
+        "attribute.actor": "assertion.actor",
+        "attribute.repository": "assertion.repository",
+        "attribute.repository_owner": "assertion.repository_owner",
+        "google.subject": "assertion.sub",
+    },
+)
+
+github_oidc_member = pulumi.Output.format(
+    "principalSet://iam.googleapis.com/{wi_pool}/attribute.repository/{repo}",
+    wi_pool=github_wi_pool.name,
+    repo="alphagov/consent-api",
+)
+
+github_service_account_binding = gcp.serviceaccount.IAMBinding(
+    "github-oidc-service-account-binding",
+    members=[github_oidc_member],
+    role="roles/iam.workloadIdentityUser",
+    service_account_id=github_service_account.name,
+)
+
+# TODO don't use the default service account
+github_cloudrun_binding = gcp.serviceaccount.IAMBinding(
+    "cloudrun-binding",
+    members=[github_oidc_member],
+    role="roles/iam.serviceAccountUser",
+    service_account_id=gcp.compute.get_default_service_account().name,
+)
+
+github_access_to_storage_role = gcp.projects.IAMCustomRole(
+    "access-to-storage-role",
+    permissions=[
+        "storage.buckets.get",
+        "storage.objects.create",
+        "storage.objects.delete",
+        "storage.objects.list",
+    ],
+    role_id="pushToGCR",
+    title="Push to GCR",
+)
+
+github_gcr_iam_binding = gcp.storage.BucketIAMBinding(
+    "gcr-binding",
+    bucket=gcp.storage.get_bucket(f"artifacts.{project.project_id}.appspot.com").name,
+    members=[github_service_account.member],
+    role=github_access_to_storage_role.name,
+)
+
+github_cloudrun_deploy_role = gcp.projects.IAMCustomRole(
+    "cloudrun-deploy-role",
+    permissions=[
+        "run.services.get",
+        "run.services.create",
+        "run.services.update",
+        "run.services.delete",
+    ],
+    role_id="cloudrunDeploy",
+    title="Deploy Cloud Run Services",
+)
+
+github_allow_deploy = gcp.cloudrun.IamBinding(
+    "cloudrun-binding",
+    location=cloudrun_service.location,
+    project=cloudrun_service.project,
+    service=cloudrun_service.name,
+    role=github_cloudrun_deploy_role.name,
+    members=[github_service_account.member],
+)
+
+pulumi.export("consent_api_url", cloudrun_service.statuses[0].url)
+pulumi.export("workload_identity_provider", github_wi_provider.name)
 pulumi.export("service_account", github_service_account.email)

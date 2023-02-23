@@ -1,9 +1,9 @@
 config:
   gcp:project: sde-consent-api
   gcp:region: europe-west2
-  sde-consent-api:db-name: sde-consent-api-db
+  sde-consent-api:db-name: consent-api
   sde-consent-api:db-password:
-    secure: AAABAHlN6DOXyUDcq0q1r9QgLamMZVsYvz/FA+H6QniKPNY78Mge0AdZ0jBf6SmD
+    secure: AAABAOpi5jcJse/73XxR34U/iM2D94AfwC3tp1rGY1/MD71BXuJdcwKODSO+9IUCmFfgOF2uvo4hSdmCPhIwBvvjwGgT3Qgvi83E
   sde-consent-api:db-tier: db-f1-micro
   sde-consent-api:db-version: POSTGRES_14
   sde-consent-api:docker-image: consent-api:v1.7.3
