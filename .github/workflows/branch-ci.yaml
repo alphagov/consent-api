@@ -1,4 +1,4 @@
-name: CI on development branches
+name: Test
 
 on:
   push:
@@ -35,12 +35,8 @@ jobs:
           python-version-file: '.python-version'
           cache: pip
 
-      - name: pip-dependencies
-        run: make deps
+      - run: make deps
 
-      - name: run-tests
+      - run: make run-migrations test-coverage
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-        run: |
-          make run-migrations
-          make test-coverage

@@ -1,4 +1,4 @@
-name: Deploy branch
+name: Deploy PR branch
 
 on:
   issue_comment:
@@ -17,7 +17,7 @@ env:
 
 jobs:
 
-  branch-deploy:
+  deploy-request:
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     outputs:
@@ -31,20 +31,19 @@ jobs:
           environment: dev
 
   build-and-deploy:
-    name: Deploy to GCR
-    needs: branch-deploy
-    environment: ${{ needs.branch-deploy.outputs.environment }}
-    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@v1
+    needs: deploy-request
+    environment: ${{ needs.deploy-request.outputs.environment }}
+    uses: alphagov/consent-api/.github/workflows/reusable/build-and-deploy.yaml@v1
     secrets: inherit
     with:
       image-name: ${{ env.IMAGE_NAME }}
-      branch-or-tag: ${{ needs.branch-deploy.outputs.branch-or-tag }}
+      branch-or-tag: ${{ needs.deploy-request.outputs.branch-or-tag }}
       service-id: ${{ env.SERVICE_ID }}
 
   update-deployment-url:
-    needs: [branch-deploy, build-and-deploy]
+    needs: [deploy-request, build-and-deploy]
     environment:
-      name: ${{ needs.branch-deploy.outputs.environment }}
+      name: ${{ needs.deploy-request.outputs.environment }}
       url: ${{ needs.build-and-deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v3
