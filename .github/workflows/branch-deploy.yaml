@@ -34,7 +34,6 @@ jobs:
     needs: deploy-request
     environment: ${{ needs.deploy-request.outputs.environment }}
     uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@80199b3c
-    secrets: inherit
     with:
       image-name: ${{ env.IMAGE_NAME }}
       branch-or-tag: ${{ needs.deploy-request.outputs.branch-or-tag }}
