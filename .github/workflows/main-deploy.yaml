@@ -4,21 +4,17 @@ on:
   push:
     branches: ['main']
 
-env:
-    SERVICE_ID: consent-api
-    IMAGE_NAME: gcr.io/sde-consent-api/consent-api
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
 
-  make-release:
+  release:
     runs-on: ubuntu-latest
 
     outputs:
       tag_name: ${{ steps.release.outputs.tag_name }}
-
-    permissions:
-      contents: write
-      id-token: write
 
     steps:
     - uses: actions/checkout@v3
@@ -32,35 +28,53 @@ jobs:
         bump_version_scheme: patch
         use_github_release_notes: true
 
-    - name: Keep major version tags up-to-date
-      uses: Actions-R-Us/actions-tagger@latest
-
-  deploy-release:
+  deploy:
+    needs: release
+    if: needs.release.outputs.tag != ""
     runs-on: ubuntu-latest
+
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+
+    env:
+      IMAGE: gcr.io/${{ vars.GOOGLE_PROJECT }}/${{ vars.SERVICE_ID }}
+      TAG: ${{ needs.release.outputs.tag_name }}
 
     outputs:
       url: ${{ steps.deploy.outputs.url }}
 
-    environment: staging
+    steps:
+      - uses: google-github-actions/auth@v1
+        id: auth
+        with:
+          token_format: access-token
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
-    permissions:
-      contents: write
-      id-token: write
+      - uses: docker/login-action@v2
+        with:
+          registry: gcr.io
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-    needs: make-release
-    if: needs.make-release.outputs.tag_name != ''
+      - uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.TAG }}
 
-    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@v1
-    with:
-      image-name: ${{ env.IMAGE_NAME }}
-      branch-or-tag: ${{ needs.release.outputs.tag_name }}
-      latest: true
-      service-id: ${{ env.SERVICE_ID }}
+      - uses: google-github-actions/deploy-cloudrun@v0
+        id: deploy
+        with:
+          service: ${{ vars.SERVICE_ID }}
+          region: ${{ vars.REGION }}
+          image: ${{ env.IMAGE }}:${{ env.TAG }}
 
-  test-release:
+  test:
+    needs: deploy
     runs-on: ubuntu-latest
-
-    needs: deploy-release
 
     steps:
     - uses: actions/checkout@v3
@@ -78,6 +92,6 @@ jobs:
       env:
         SELENIUM_DRIVER: remote
         SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
-        E2E_TEST_CONSENT_API_URL: ${{ needs.deploy-release.outputs.url }}
+        E2E_TEST_CONSENT_API_URL: ${{ needs.deploy.outputs.url }}
         E2E_TEST_GOVUK_URL: https://sde-prototype-govuk-j4f7bdslta-nw.a.run.app/
         E2E_TEST_HAAS_URL: https://haas-j4f7bdslta-nw.a.run.app/
