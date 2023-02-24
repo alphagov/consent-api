@@ -50,7 +50,7 @@ jobs:
     needs: make-release
     if: needs.make-release.outputs.tag_name != ''
 
-    uses: alphagov/consent-api/.github/workflows/reusable/build-and-deploy.yaml@v1
+    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@v1
     secrets: inherit
     with:
       image-name: ${{ env.IMAGE_NAME }}
