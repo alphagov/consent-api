@@ -10,18 +10,21 @@ permissions:
   contents: write
   issues: write
   checks: read
-
-env:
-  IMAGE_NAME: gcr.io/sde-consent-api/consent-api
-  SERVICE_ID: consent-api
+  id-token: write
 
 jobs:
 
   deploy-request:
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
-    outputs:
-      branch-or-tag: ${{ steps.branch-deploy.outputs.ref }}
+
+    environment:
+      name: ${{ steps.branch-deploy.outputs.environment }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    env:
+      IMAGE: gcr.io/${{ vars.GOOGLE_PROJECT }}/${{ vars.SERVICE_ID }}
+
     steps:
       - uses: github/branch-deploy@v4.3.0
         id: branch-deploy
@@ -30,19 +33,32 @@ jobs:
           allow_forks: false
           environment: dev
 
-  build-and-deploy:
-    needs: deploy-request
-    environment: ${{ needs.deploy-request.outputs.environment }}
-    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@80199b3c
-    with:
-      image-name: ${{ env.IMAGE_NAME }}
-      branch-or-tag: ${{ needs.deploy-request.outputs.branch-or-tag }}
-      service-id: ${{ env.SERVICE_ID }}
-
-  update-deployment-url:
-    needs: [deploy-request, build-and-deploy]
-    environment:
-      name: ${{ needs.deploy-request.outputs.environment }}
-      url: ${{ needs.build-and-deploy.outputs.url }}
-    steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.branch-deploy.outputs.ref }}
+
+      - uses: google-github-actions/auth@v1
+        id: auth
+        with:
+          token_format: access-token
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: docker/login-action@v2
+        with:
+          registry: gcr.io
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: |
+            ${{ format("{0}:{1}", env.IMAGE, steps.branch-deploy.outputs.ref) }}
+
+      - uses: google-github-actions/deploy-cloudrun@v0
+        id: deploy
+        with:
+          service: ${{ vars.SERVICE_ID }}
+          region: ${{ vars.REGION }}
+          image: ${{ env.IMAGE }}:${{ steps.branch-deploy.outputs.ref }}
