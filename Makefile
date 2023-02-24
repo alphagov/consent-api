@@ -7,6 +7,9 @@ DOCKER_DB_URL ?= postgresql://host.docker.internal:5432/$(APP_NAME)
 ENV ?= development
 PORT ?= 8000
 SELENIUM_DRIVER ?= chrome
+SELENIUM_REMOTE_URL := $(shell \
+		echo $${SELENIUM_REMOTE_URL:+--splinter-remote-url $${SELENIUM_REMOTE_URL}} \
+)
 
 .PHONY: clean
 clean:
@@ -42,6 +45,7 @@ test-e2e:
 		-W ignore::DeprecationWarning \
 		-m end_to_end \
 		--splinter-webdriver $(SELENIUM_DRIVER) \
+		$(SELENIUM_REMOTE_URL) \
 		--splinter-headless
 
 .PHONY: test-coverage
