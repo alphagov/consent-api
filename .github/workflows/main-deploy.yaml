@@ -30,7 +30,7 @@ jobs:
 
   deploy:
     needs: release
-    if: needs.release.outputs.tag != ""
+    if: needs.release.outputs.tag != ''
     runs-on: ubuntu-latest
 
     environment:
