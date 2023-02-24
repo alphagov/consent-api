@@ -36,6 +36,9 @@ jobs:
         bump_version_scheme: patch
         use_github_release_notes: true
 
+    - name: Keep major version tags up-to-date
+      uses: Actions-R-Us/actions-tagger@latest
+
   deploy-release:
     name: Deploy release
     runs-on: ubuntu-latest

@@ -34,7 +34,7 @@ jobs:
     name: Deploy to GCR
     needs: branch-deploy
     environment: ${{ needs.branch-deploy.outputs.environment }}
-    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@8cc1756
+    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@v1
     secrets: inherit
     with:
       image-name: ${{ env.IMAGE_NAME }}
