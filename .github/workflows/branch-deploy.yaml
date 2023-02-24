@@ -11,51 +11,40 @@ permissions:
   issues: write
   checks: read
 
-# env:
-#   IMAGE_NAME: gcr.io/sde-consent-api/consent-api
-#   SERVICE_ID: consent-api
+env:
+  IMAGE_NAME: gcr.io/sde-consent-api/consent-api
+  SERVICE_ID: consent-api
 
 jobs:
 
   branch-deploy:
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
-    # outputs:
-    #   branch-or-tag: ${{ steps.branch-deploy.outputs.ref }}
+    outputs:
+      branch-or-tag: ${{ steps.branch-deploy.outputs.ref }}
     steps:
       - uses: github/branch-deploy@v4.3.0
         id: branch-deploy
         with:
           trigger: ".deploy"
-          # allow_forks: false
+          allow_forks: false
           environment: dev
+
+  build-and-deploy:
+    name: Deploy to GCR
+    needs: branch-deploy
+    environment: ${{ needs.branch-deploy.outputs.environment }}
+    uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@8cc1756
+    secrets: inherit
+    with:
+      image-name: ${{ env.IMAGE_NAME }}
+      branch-or-tag: ${{ needs.branch-deploy.outputs.branch-or-tag }}
+      service-id: ${{ env.SERVICE_ID }}
+
+  update-deployment-url:
+    needs: [branch-deploy, build-and-deploy]
+    environment:
+      name: ${{ needs.branch-deploy.outputs.environment }}
+      url: ${{ needs.build-and-deploy.outputs.url }}
+    steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ steps.branch-deploy.outputs.ref }}
-      - name: fake noop deploy
-        if: ${{ steps.branch-deploy.outputs.continue == 'true' && steps.branch-deploy.outputs.noop == 'true' }}
-        run: echo "I am doing a fake noop deploy"
-
-      - name: fake regular deploy
-        if: ${{ steps.branch-deploy.outputs.continue == 'true' && steps.branch-deploy.outputs.noop != 'true' }}
-        run: echo "I am doing a fake regular deploy"
-
-
-  # build-and-deploy:
-  #   name: Deploy to GCR
-  #   needs: branch-deploy
-  #   environment: ${{ needs.branch-deploy.outputs.environment }}
-  #   uses: alphagov/consent-api/.github/workflows/build-and-deploy.yaml@8cc1756
-  #   secrets: inherit
-  #   with:
-  #     image-name: ${{ env.IMAGE_NAME }}
-  #     branch-or-tag: ${{ needs.branch-deploy.outputs.branch-or-tag }}
-  #     service-id: ${{ env.SERVICE_ID }}
-
-  # update-deployment-url:
-  #   needs: [branch-deploy, build-and-deploy]
-  #   environment:
-  #     name: ${{ needs.branch-deploy.outputs.environment }}
-  #     url: ${{ needs.build-and-deploy.outputs.url }}
-  #   steps:
-  #     - uses: actions/checkout@v3
