@@ -1,0 +1,97 @@
+name: Deploy to Google Cloud Run
+
+on:
+  workflow_call:
+    inputs:
+      google_project:
+        description: "Google Cloud project ID"
+        required: true
+        type: string
+      service:
+        description: "Google Cloud Run service ID"
+        required: true
+        type: string
+      region:
+        description: "Google Cloud region (default 'europe-west2')"
+        required: false
+        type: string
+        default: "europe-west2"
+      image_name:
+        description: "Name of the docker image"
+        required: true
+        type: string
+      tag:
+        description: "The docker image tag (default 'latest')"
+        required: false
+        type: string
+        default: "latest"
+      environment:
+        description: "The Github environment to deploy with"
+        required: false
+        type: string
+        default: "staging"
+    secrets:
+      WIF_PROVIDER:
+        description: "Google Cloud Workload Identity Framework provider ID"
+        required: true
+        type: string
+      WIF_SERVICE_ACCOUNT:
+        description: "Google Cloud Workload Identity Framework service account email"
+        required: true
+        type: string
+
+    outputs:
+      url:
+        description: "URL of deployed service"
+        value: ${{ jobs.deploy.outputs.url }}
+
+jobs:
+  deploy:
+    name: Deploy to Google Cloud Run
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    permissions:
+      contents: write
+      id-token: write
+
+    env:
+      IMAGE: gcr.io/${{ inputs.google_project }}/${{ inputs.image_name }}
+
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: google-github-actions/auth@v1
+        id: auth
+        with:
+          token_format: access-token
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: docker/login-action@v2
+        with:
+          registry: gcr.io
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ inputs.TAG }}
+
+      - uses: google-github-actions/deploy-cloudrun@v0
+        id: deploy
+        with:
+          service: ${{ inputs.service }}
+          region: ${{ inputs.region }}
+          image: ${{ env.IMAGE }}:${{ inputs.tag }}

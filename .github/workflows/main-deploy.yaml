@@ -29,58 +29,23 @@ jobs:
         use_github_release_notes: true
 
   deploy:
+    uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
     needs: release
-    if: needs.release.outputs.tag != ''
-    runs-on: ubuntu-latest
-
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.url }}
-
-    env:
-      IMAGE: gcr.io/${{ vars.GOOGLE_PROJECT }}/${{ vars.SERVICE_ID }}
-      TAG: ${{ needs.release.outputs.tag_name }}
-
-    outputs:
-      url: ${{ steps.deploy.outputs.url }}
-
-    steps:
-      - uses: google-github-actions/auth@v1
-        id: auth
-        with:
-          token_format: access-token
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-      - uses: docker/login-action@v2
-        with:
-          registry: gcr.io
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - uses: docker/build-push-action@v3
-        with:
-          push: true
-          tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ env.TAG }}
-
-      - uses: google-github-actions/deploy-cloudrun@v0
-        id: deploy
-        with:
-          service: ${{ vars.SERVICE_ID }}
-          region: ${{ vars.REGION }}
-          image: ${{ env.IMAGE }}:${{ env.TAG }}
+    if: needs.release.outputs.tag_name != ''
+    with:
+      google_project: ${{ vars.GOOGLE_PROJECT }}
+      service: ${{ vars.SERVICE_ID }}
+      region: ${{ vars.REGION }}
+      image_name: ${{ vars.SERVICE_ID }}
+      tag: ${{ needs.release.outputs.tag_name }}
+      environment: staging
 
   test:
     needs: deploy
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
-
     - uses: Xotabu4/selenoid-github-action@v2
-
     - uses: actions/setup-python@v4
       with:
         python-version-file: '.python-version'
