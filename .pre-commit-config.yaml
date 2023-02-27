@@ -1,6 +1,7 @@
 ci:
   autoupdate_commit_msg: |
     [pre-commit.ci] pre-commit autoupdate [norelease]
+  skip: [pytest]
 
 exclude: ^migrations/
 
@@ -112,3 +113,10 @@ repos:
     rev: v8.34.0
     hooks:
       - id: eslint
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: make test
+        language: python
