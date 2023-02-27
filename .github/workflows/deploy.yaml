@@ -1,124 +1,95 @@
-name: Consent API Deployment
+name: Deploy to Google Cloud Run
 
 on:
-  push:
-    branches: ['main']
+  workflow_call:
+    inputs:
+      google_project:
+        description: "Google Cloud project ID"
+        required: true
+        type: string
+      service:
+        description: "Google Cloud Run service ID"
+        required: true
+        type: string
+      region:
+        description: "Google Cloud region (default 'europe-west2')"
+        required: false
+        type: string
+        default: "europe-west2"
+      image_name:
+        description: "Name of the docker image"
+        required: true
+        type: string
+      tag:
+        description: "The docker image tag (default 'latest')"
+        required: false
+        type: string
+        default: "latest"
+      environment:
+        description: "The Github environment to deploy with"
+        required: false
+        type: string
+        default: "staging"
+    secrets:
+      WIF_PROVIDER:
+        description: "Google Cloud Workload Identity Framework provider ID"
+        required: true
+      WIF_SERVICE_ACCOUNT:
+        description: "Google Cloud Workload Identity Framework service account email"
+        required: true
 
-env:
-  REGISTRY: gcr.io
-  PROJECT_ID: sde-consent-api
-  SERVICE_ID: consent-api
-  IMAGE_NAME: gcr.io/sde-consent-api/consent-api
-  REGION: europe-west2
+    outputs:
+      url:
+        description: "URL of deployed service"
+        value: ${{ jobs.deploy.outputs.url }}
 
 jobs:
-
-  release:
-    name: Create a release
+  deploy:
+    name: Deploy to Google Cloud Run
     runs-on: ubuntu-latest
 
-    outputs:
-      tag_name: ${{ steps.release.outputs.tag_name }}
-
-    permissions:
-      contents: write
-      id-token: write
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Bump version and push tag
-      id: release
-      uses: rymndhng/release-on-push-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        bump_version_scheme: patch
-        use_github_release_notes: true
-
-  deploy-release:
-    name: Deploy release
-    runs-on: ubuntu-latest
-
-    outputs:
+    environment:
+      name: ${{ inputs.environment }}
       url: ${{ steps.deploy.outputs.url }}
 
     permissions:
       contents: write
       id-token: write
 
-    needs: release
-    if: needs.release.outputs.tag_name != ''
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Authenticate to Google Cloud
-      id: auth
-      uses: google-github-actions/auth@v1
-      with:
-        token_format: access_token
-        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-    - name: Login to Google Container Registry
-      id: docker-auth
-      uses: docker/login-action@v2
-      with:
-        registry: gcr.io
-        username: oauth2accesstoken
-        password: '${{ steps.auth.outputs.access_token }}'
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v3
-      with:
-        push: true
-        tags: |
-          ${{ env.IMAGE_NAME }}:latest
-          ${{ env.IMAGE_NAME }}:${{ needs.release.outputs.tag_name }}
-
-    - name: Deploy to Cloud Run
-      id: deploy
-      uses: google-github-actions/deploy-cloudrun@v0
-      with:
-        service: ${{ env.SERVICE_ID }}
-        region: ${{ env.REGION }}
-        image: ${{ env.IMAGE_NAME }}:${{ needs.release.outputs.tag_name }}
-
-  test-release:
-    name: Test release
-    runs-on: ubuntu-latest
-
-    needs: deploy-release
-
     env:
-      E2E_TEST_CONSENT_API_URL: ${{ needs.deploy-release.outputs.url }}
-      E2E_TEST_GOVUK_URL: https://sde-prototype-govuk-j4f7bdslta-nw.a.run.app/
-      E2E_TEST_HAAS_URL: https://haas-j4f7bdslta-nw.a.run.app/
+      IMAGE: gcr.io/${{ inputs.google_project }}/${{ inputs.image_name }}
+
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.tag }}
 
-    - name: Start Selenoid
-      uses: Xotabu4/selenoid-github-action@v2
+      - uses: google-github-actions/auth@v1
+        id: auth
+        with:
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version-file: '.python-version'
-        cache: pip
+      - uses: docker/login-action@v2
+        with:
+          registry: gcr.io
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-    - name: Install dependencies
-      run: |
-        python -m pip install \
-          -r requirements.txt \
-          -r requirements-ci.txt
+      - uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ inputs.TAG }}
 
-    - name: Run tests
-      run: |
-        pytest \
-          -m end_to_end \
-          -W ignore::DeprecationWarning \
-          --splinter-webdriver remote \
-          --splinter-remote-url http://localhost:4444/wd/hub \
-          --splinter-headless
+      - uses: google-github-actions/deploy-cloudrun@v0
+        id: deploy
+        with:
+          service: ${{ inputs.service }}
+          region: ${{ inputs.region }}
+          image: ${{ env.IMAGE }}:${{ inputs.tag }}

@@ -1,0 +1,53 @@
+name: Deploy PR branch
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: write
+  deployments: write
+  contents: write
+  issues: write
+  checks: read
+  id-token: write
+
+jobs:
+
+  request:
+    if: ${{ github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+
+    outputs:
+      continue: ${{ steps.branch-deploy.outputs.continue }}
+      environment: ${{ steps.branch-deploy.outputs.environment }}
+      noop: ${{ steps.branch-deploy.outputs.noop }}
+      ref: ${{ steps.branch-deploy.outputs.ref }}
+
+    steps:
+      - uses: github/branch-deploy@v4.3.0
+        id: branch-deploy
+        with:
+          trigger: ".deploy"
+          allow_forks: false
+          environment: dev
+
+  deploy:
+    uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
+    needs: request
+    if: ${{ needs.request.outputs.continue == 'true' && needs.request.outputs.noop != 'true' }}
+    with:
+      google_project: ${{ vars.GOOGLE_PROJECT }}
+      service: dev-${{ vars.SERVICE_ID }}
+      region: ${{ vars.REGION }}
+      image_name: ${{ vars.IMAGE_NAME }}
+      tag: ${{ needs.request.outputs.ref }}
+      environment: ${{ needs.request.outputs.environment }}
+    secrets: inherit
+
+  dry-run:
+    needs: request
+    if: ${{ needs.request.outputs.continue == 'true' && needs.request.outputs.noop == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TODO - preview deployment"
