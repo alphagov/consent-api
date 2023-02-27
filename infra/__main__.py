@@ -130,10 +130,9 @@ github_service_account_binding = gcp.serviceaccount.IAMBinding(
     service_account_id=github_service_account.name,
 )
 
-# TODO don't use the default service account
 github_cloudrun_binding = gcp.serviceaccount.IAMBinding(
     "cloudrun-binding",
-    members=[github_oidc_member],
+    members=[github_service_account.member],
     role="roles/iam.serviceAccountUser",
     service_account_id=gcp.compute.get_default_service_account().name,
 )
@@ -157,24 +156,12 @@ github_gcr_iam_binding = gcp.storage.BucketIAMBinding(
     role=github_access_to_storage_role.name,
 )
 
-github_cloudrun_deploy_role = gcp.projects.IAMCustomRole(
-    "cloudrun-deploy-role",
-    permissions=[
-        "run.services.get",
-        "run.services.create",
-        "run.services.update",
-        "run.services.delete",
-    ],
-    role_id="cloudrunDeploy",
-    title="Deploy Cloud Run Services",
-)
-
 github_allow_deploy = gcp.cloudrun.IamBinding(
     "cloudrun-binding",
     location=cloudrun_service.location,
     project=cloudrun_service.project,
     service=cloudrun_service.name,
-    role=github_cloudrun_deploy_role.name,
+    role="roles/run.admin",
     members=[github_service_account.member],
 )
 
