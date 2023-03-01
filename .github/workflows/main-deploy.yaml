@@ -53,9 +53,9 @@ jobs:
   #       python-version-file: '.python-version'
   #       cache: pip
 
-  #   - run: make deps
+  #   - run: make install
 
-  #   - run: make test-e2e
+  #   - run: make test-end-to-end
   #     env:
   #       SELENIUM_DRIVER: remote
   #       SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub

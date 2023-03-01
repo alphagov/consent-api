@@ -118,6 +118,14 @@ Consent.setStatus(
 
 ## Development
 
+### Install
+
+Clone the repository, then install dependencies with the following command:
+
+```
+make install
+```
+
 ### Testing
 
 #### Unit tests
@@ -125,24 +133,17 @@ Consent.setStatus(
 Run unit tests with the following command:
 
 ```
-pytest -m unit
-```
-
-#### Integration tests
-
-Run integration tests with the following command:
-
-```
-pytest -m integration
+make test
 ```
 
 #### End-to-end tests
 
 To run end-to-end tests you will need Chrome or Firefox installed. Specify which you
-want to use for running tests by setting the `SELENIUM_DRIVER` environment variable, eg:
+want to use for running tests by setting the `SELENIUM_DRIVER` environment variable
+(defaults to `chrome`), eg:
 
 ```
-export SELENIUM_DRIVER=chrome
+export SELENIUM_DRIVER=firefox
 ```
 
 You also need a running instance of the Consent API and instances of the [SDE Prototype
@@ -163,7 +164,7 @@ Due to CORS restrictions, the tests will fail if the URL domain is `localhost` o
 Run the tests with the following command:
 
 ```
-pytest --splinter-driver $SELENIUM_DRIVER --splinter-headless -m end_to_end
+make test-end-to-end
 ```
 
 ### Branching

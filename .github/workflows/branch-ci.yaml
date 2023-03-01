@@ -35,8 +35,8 @@ jobs:
           python-version-file: '.python-version'
           cache: pip
 
-      - run: make deps
+      - run: make install
 
-      - run: make run-migrations test-coverage
+      - run: make migrations test-coverage
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
