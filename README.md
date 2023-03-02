@@ -43,7 +43,7 @@ testing), you can add a `data-consent-api-url` attribute to the `body` tag in
 your HTML file, eg:
 
 ```html
-  <body data-consent-api-url="https://consent-api.example.com/">
+  <body data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/">
 ```
 
 

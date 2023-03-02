@@ -7,7 +7,7 @@
   var apiUrl = (function ($el) {
     return $el
       ? $el.dataset.consentApiUrl.replace(/\/?$/, '/')
-      : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/'
+      : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
   })(document.querySelector('[data-consent-api-url]'))
 
   function Consent() {
