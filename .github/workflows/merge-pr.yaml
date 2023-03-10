@@ -1,0 +1,43 @@
+name: Merge PR branch to main
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+
+  tag-release:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    outputs:
+      tag_name: ${{ steps.release.outputs.tag_name }}
+
+    steps:
+      - uses: rymndhng/release-on-push-action@master
+        id: release
+        with:
+          bump_version_scheme: patch
+          use_github_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-to-staging:
+    uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
+    needs: release
+    if: needs.release.outputs.tag_name != ''
+    with:
+      service: staging-${{ vars.SERVICE_ID }}
+      region: ${{ vars.REGION }}
+      image_name: ${{ vars.DOCKER_IMAGE }}
+      tag: ${{ needs.release.outputs.tag_name }}
+
+  smoke-test:
+    needs: deploy-to-staging
+    steps:
+      - run: echo "TODO Smoke tests"
+
+  load-tests:
+    needs: smoke-test
+    steps:
+      - run: echo "TODO Load tests"

@@ -1,5 +1,7 @@
 """Fixtures for all tests."""
 
+import os
+
 import pytest
 import requests
 import sqlalchemy
@@ -64,6 +66,16 @@ def splinter_driver_kwargs(splinter_webdriver, splinter_driver_kwargs):
                 "options": Options(),
             }
         )
+        version = os.getenv("SPLINTER_REMOTE_BROWSER_VERSION", None)
+        if version:
+            capabilities = kwargs.get("desired_capabilities", {})
+            capabilities.update(
+                {
+                    "browserName": "chrome",
+                    "version": version,
+                }
+            )
+            kwargs.update({"desired_capabilities": capabilities})
     return kwargs
 
 
