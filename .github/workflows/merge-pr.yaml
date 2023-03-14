@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  tag-release:
+  release:
     runs-on: ubuntu-latest
     environment: staging
 
