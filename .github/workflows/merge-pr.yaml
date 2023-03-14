@@ -31,6 +31,7 @@ jobs:
       region: ${{ vars.REGION }}
       image_name: ${{ vars.DOCKER_IMAGE }}
       tag: ${{ needs.release.outputs.tag_name }}
+    secrets: inherit
 
   smoke-test:
     needs: deploy-to-staging
