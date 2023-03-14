@@ -143,6 +143,7 @@ github_access_to_storage_role = gcp.projects.IAMCustomRole(
         "storage.buckets.get",
         "storage.objects.create",
         "storage.objects.delete",
+        "storage.objects.get",
         "storage.objects.list",
     ],
     role_id="pushToGCR",
