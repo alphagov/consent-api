@@ -2,19 +2,23 @@
 export
 
 APP_NAME ?= consent_api
-DATABASE_URL ?= postgresql://localhost:5432:$(APP_NAME)
+FLASK_APP ?= $(APP_NAME):app
+DATABASE_URL ?= postgresql://localhost:5432/$(APP_NAME)
 DOCKER_DB_URL ?= postgresql://host.docker.internal:5432/$(APP_NAME)
+DOCKER_IMAGE ?= gcr.io/sde-consent-api/consent-api
+TAG ?= latest
 ENV ?= development
 PORT ?= 8000
 SELENIUM_DRIVER ?= chrome
-SELENIUM_REMOTE_URL := $(shell \
+SPLINTER_REMOTE_BROWSER_VERSION ?= ""
+SPLINTER_REMOTE_URL := $(shell \
 		echo $${SELENIUM_REMOTE_URL:+--splinter-remote-url $${SELENIUM_REMOTE_URL}} \
 )
 
 ## clean: Remove temporary files
 .PHONY: clean
 clean:
-	find . \( -name '__pycache__' -and -not -name "venv" \) -d -prune -exec rm -r {} +
+	find . \( -name '__pycache__' -and -not -name "venv" \) -depth -prune -exec rm -r {} +
 
 ## install: Install dependencies
 .PHONY: install
@@ -45,12 +49,22 @@ test:
 ## test-end-to-end: Run webdriver tests
 .PHONY: test-end-to-end
 test-end-to-end: migrations
+	python consent_api/tests/wait_for_url.py $(E2E_TEST_CONSENT_API_URL)
+	python consent_api/tests/wait_for_url.py $(E2E_TEST_GOVUK_URL)
+	python consent_api/tests/wait_for_url.py $(E2E_TEST_HAAS_URL)
 	pytest \
 		-W ignore::DeprecationWarning \
 		-m end_to_end \
 		--splinter-webdriver $(SELENIUM_DRIVER) \
-		$(SELENIUM_REMOTE_URL) \
+		$(SPLINTER_REMOTE_URL) \
 		--splinter-headless
+
+.PHONY: test-all
+test-all: migrations test test-end-to-end
+
+.PHONY: test-end-to-end-docker
+test-end-to-end-docker:
+	docker compose up --exit-code-from test
 
 .PHONY: test-coverage
 test-coverage:
@@ -64,18 +78,19 @@ run:
 ## docker-image: Build a Docker image
 .PHONY: docker-image
 docker-image: clean
-	docker buildx build --platform linux/amd64 -t $(APP_NAME) .
+	docker buildx build --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
 
 ## docker-run: Start a Docker container
 .PHONY: docker-run
 docker-run:
 	docker run \
-		-it \
+		--interactive \
+		--tty \
 		--rm \
 		--env DATABASE_URL="$(DOCKER_DB_URL)" \
 		--env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" \
-		-p $(PORT):$(PORT) \
-		$(APP_NAME)
+		--ports $(PORT):$(PORT) \
+		$(DOCKER_IMAGE)
 
 ## help: Show this message
 .PHONY: help

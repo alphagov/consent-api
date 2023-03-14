@@ -138,6 +138,44 @@ make test
 
 #### End-to-end tests
 
+##### Running in Docker Compose
+
+You will need to build a Docker image to run the tests against, using the
+following command:
+
+```
+make docker-image
+```
+
+You also need to have the Chrome Docker image already on your system, which you
+can do with the following command:
+
+```
+docker pull selenoid/chrome:110.0
+```
+
+> **Note**
+> Currently, Selenoid does not provide a Chrome image that works on Apple M1 hosts. As a
+> workaround, you can use a third-party Chromium image:
+>
+> ```
+> docker pull sskorol/selenoid_chromium_vnc:100.0
+> ```
+>
+> Then set the following environment variable:
+>
+> ```
+> SPLINTER_REMOTE_BROWSER_VERSION=sskorol/selenoid_chromium_vnc:100.0
+
+The easiest way to run the end-to-end tests is in Docker Compose using the following
+command:
+
+```
+make test-end-to-end-docker
+```
+
+##### Running locally
+
 To run end-to-end tests you will need Chrome or Firefox installed. Specify which you
 want to use for running tests by setting the `SELENIUM_DRIVER` environment variable
 (defaults to `chrome`), eg:

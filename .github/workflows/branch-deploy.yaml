@@ -37,10 +37,9 @@ jobs:
     needs: request
     if: ${{ needs.request.outputs.continue == 'true' && needs.request.outputs.noop != 'true' }}
     with:
-      google_project: ${{ vars.GOOGLE_PROJECT }}
       service: dev-${{ vars.SERVICE_ID }}
       region: ${{ vars.REGION }}
-      image_name: ${{ vars.IMAGE_NAME }}
+      image_name: ${{ vars.DOCKER_IMAGE }}
       tag: ${{ needs.request.outputs.ref }}
       environment: ${{ needs.request.outputs.environment }}
     secrets: inherit
