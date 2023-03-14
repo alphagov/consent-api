@@ -17,7 +17,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/PyCQA/autoflake
-    rev: v2.0.1
+    rev: v2.0.2
     hooks:
       - id: autoflake
         args:
@@ -93,7 +93,7 @@ repos:
         entry: djlint --profile jinja --reformat --indent 2 --ignore "J004,H006,H017" --quiet
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.1
+    rev: v1.1.1
     hooks:
       - id: mypy
         additional_dependencies:
@@ -110,7 +110,7 @@ repos:
         types_or: ["javascript", "css"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.35.0
+    rev: v8.36.0
     hooks:
       - id: eslint
 
