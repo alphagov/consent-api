@@ -32,6 +32,9 @@ jobs:
       image_name: ${{ vars.DOCKER_IMAGE }}
       tag: ${{ needs.release.outputs.tag_name }}
     secrets: inherit
+    permissions:
+      contents: write
+      id-token: write
 
   smoke-test:
     needs: deploy-to-staging
