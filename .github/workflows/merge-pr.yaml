@@ -34,10 +34,12 @@ jobs:
 
   smoke-test:
     needs: deploy-to-staging
+    runs-on: ubuntu-latest
     steps:
       - run: echo "TODO Smoke tests"
 
   load-tests:
     needs: smoke-test
+    runs-on: ubuntu-latest
     steps:
       - run: echo "TODO Load tests"
