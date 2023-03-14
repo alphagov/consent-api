@@ -1,7 +1,11 @@
 __pycache__/
-requirements-*.txt
-consent_api/tests/
+requirements/development
+requirements/infra
 coverage.xml
 .coverage
 htmlcov
-consent_api/client
+client/
+consent_api.tests.test_end_to_end/
+.git/
+.github/
+.pytest_cache/

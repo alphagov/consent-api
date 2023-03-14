@@ -1,0 +1,90 @@
+networks:
+  e2e:
+    name: e2e
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.5.254
+
+services:
+  db:
+    container_name: db
+    networks:
+      - e2e
+    image: postgres:14
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 2s
+      timeout: 2s
+      retries: 10
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+  consent-api:
+    container_name: consent-api
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      GUNICORN_CMD_ARGS: "--bind=0.0.0.0:80"
+
+  fake_govuk:
+    container_name: fake_govuk
+    networks:
+      - e2e
+    image: "gcr.io/sde-consent-api/fake_govuk:latest"
+    environment:
+      CONSENT_API_URL: "http://consent-api/api/v1/consent/"
+      GUNICORN_CMD_ARGS: "--bind=0.0.0.0:80"
+      HAAS_URL: "http://haas/"
+
+  haas:
+    container_name: haas
+    networks:
+      - e2e
+    image: "gcr.io/sde-consent-api/haas:latest"
+    environment:
+      CONSENT_API_URL: "http://consent-api/api/v1/consent/"
+      GUNICORN_CMD_ARGS: "--bind=0.0.0.0:80"
+
+  selenoid:
+    container_name: selenoid
+    networks:
+      - e2e
+    image: "aerokube/selenoid:latest-release"
+    volumes:
+      - "./selenoid/config:/etc/selenoid/"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "$PWD/selenoid/opt:/opt/selenoid/video"
+      - "$PWD/selenoid/opt:/opt/selenoid/logs"
+    environment:
+      OVERRIDE_VIDEO_OUTPUT_DIR: "$PWD/selenoid/opt"
+    command: ["-service-startup-timeout", "1m", "-container-network", "e2e"]
+    ports:
+      - "4444:4444"
+
+  test:
+    container_name: test
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
+    entrypoint: ["make", "test-all"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      E2E_TEST_CONSENT_API_URL: "http://consent-api"
+      E2E_TEST_GOVUK_URL: "http://fake_govuk"
+      E2E_TEST_HAAS_URL: "http://haas"
+      SELENIUM_DRIVER: remote
+      SELENIUM_REMOTE_URL: http://selenoid:4444/wd/hub/
+      SPLINTER_REMOTE_BROWSER_VERSION: "${SPLINTER_REMOTE_BROWSER_VERSION}"
+    depends_on:
+      - consent-api
+      - fake_govuk
+      - haas
+      - selenoid

@@ -19,7 +19,8 @@ FROM python:3.10-slim@sha256:030ead045da5758362ae198e9025671f22490467312dbad9af6
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    libpq-dev
+      libpq-dev \
+      make
 
 RUN groupadd -g 999 app && \
     useradd -r -u 999 -g app app
@@ -27,12 +28,15 @@ USER 999
 
 WORKDIR /home/app
 
-COPY --from=build /home/app/venv ./venv
-COPY consent_api/ consent_api/
-COPY migrations/ migrations/
+COPY --chown=999:999 --from=build /home/app/venv ./venv
+COPY --chown=999:999 consent_api/ consent_api/
+COPY --chown=999:999 migrations/ migrations/
+COPY --chown=999:999 Makefile pytest.ini .
 
+ENV APP_NAME="consent_api"
+ENV FLASK_APP="$APP_NAME:app"
+ENV DATABASE_URL="postgresql://host.docker.internal:5432/$APP_NAME"
 ENV PATH="/home/app/venv/bin:$PATH"
-ENV FLASK_APP="consent_api:app"
 ENV PYTHONUNBUFFERED="True"
 
 CMD flask db upgrade && gunicorn consent_api:app
