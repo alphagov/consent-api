@@ -60,10 +60,6 @@
         noResponse || !acceptedAdditionalCookies
       this.$module.confirmReject.hidden =
         noResponse || acceptedAdditionalCookies
-
-      // XXX this prevents the banner from displaying in future whether or not the user
-      // interacts with it - is this what we want?
-      Utils.setCookie('cookies_preferences_set', 'true', { days: 365 })
     }
   }
 
