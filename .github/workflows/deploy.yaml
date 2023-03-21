@@ -26,17 +26,20 @@ on:
         required: false
         type: string
         default: "staging"
-      env_vars:
-        description: "Environment variables to pass to deployment"
+      database_name:
+        description: "Override the deployment database name (for branch deployments)"
         required: false
         type: string
-        default: ""
+        default: "consent-api"
     secrets:
       WIF_PROVIDER:
         description: "Google Cloud Workload Identity Federation provider ID"
         required: true
       WIF_SERVICE_ACCOUNT:
         description: "Google Cloud Workload Identity Federation service account email"
+        required: true
+      DATABASE_URL_TEMPLATE:
+        description: "DATABASE_URL template, allowing overriding the database name"
         required: true
 
     outputs:
@@ -90,10 +93,14 @@ jobs:
             ${{ inputs.image_name }}:latest
             ${{ inputs.image_name }}:${{ inputs.tag }}
 
+      - id: db-url
+        run: |
+          echo "env_vars=${ ${{ inputs.database_name }}:+DATABASE_URL=${{ format(secrets.DATABASE_URL_TEMPLATE, inputs.database_name) }} }" >> $GITHUB_OUTPUT
+
       - uses: google-github-actions/deploy-cloudrun@v0
         id: deploy
         with:
           service: ${{ inputs.service }}
           region: ${{ inputs.region }}
           image: ${{ inputs.image_name }}:${{ inputs.tag }}
-          env_vars: ${{ inputs.env_vars }}
+          env_vars: ${{ steps.db-url.outputs.env_vars }}
