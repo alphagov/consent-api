@@ -42,8 +42,7 @@ jobs:
       image_name: ${{ vars.DOCKER_IMAGE }}
       tag: ${{ needs.request.outputs.ref }}
       environment: ${{ needs.request.outputs.environment }}
-      env_vars:
-        DATABASE_URL=${{ format(secrets.DEV_DB_URL_TEMPLATE, needs.request.outputs.ref) }}
+      database_name: ${{ needs.request.outputs.ref }}
     secrets: inherit
 
   dry-run:
