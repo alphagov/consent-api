@@ -93,8 +93,11 @@ jobs:
             ${{ inputs.image_name }}:${{ inputs.tag }}
 
       - id: db-url
+        env:
+          DB_NAME: ${{ inputs.database_name }}
+          DATABASE_URL: ${{ format(secrets.DATABASE_URL_TEMPLATE, inputs.database_name) }}
         run: |
-          echo "env_vars=${ ${{ inputs.database_name }}:+DATABASE_URL=${{ format(secrets.DATABASE_URL_TEMPLATE, inputs.database_name) }} }" >> $GITHUB_OUTPUT
+          echo "env_vars=${DB_NAME:+DATABASE_URL=${DATABASE_URL}}" >> $GITHUB_OUTPUT
 
       - uses: google-github-actions/deploy-cloudrun@v0
         id: deploy
