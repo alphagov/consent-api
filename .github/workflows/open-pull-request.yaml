@@ -6,7 +6,6 @@ jobs:
 
   build-test-push:
     runs-on: ubuntu-latest
-    environment: staging
 
     env:
       DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}:${{ github.head_ref }}
