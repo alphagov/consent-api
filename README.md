@@ -46,6 +46,13 @@ your HTML file, eg:
   <body data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/">
 ```
 
+### Content Security Policy
+
+If your web site is served with a [`Content-Security-Policy` HTTP header or `<meta>` element](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP), you may need to modify it to allow the client JS to access the Consent API. The value of the header or meta element should contain the following:
+
+```
+connect-src 'self' https://consent-api-nw.a.run.app/api/v1/consent [... other site URLs separated by spaces];
+```
 
 ## Usage
 
