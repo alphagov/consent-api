@@ -54,6 +54,14 @@ If your web site is served with a [`Content-Security-Policy` HTTP header or `<me
 connect-src 'self' https://consent-api-nw.a.run.app/api/v1/consent [... other site URLs separated by spaces];
 ```
 
+### Identifying links that will share consent
+
+The client Javascript automatically adds a URL parameter to links that have a `data-consent-share="share"` data attribute. **Without this data attribute, the consent status will not be shared with the destination website.** See the following example:
+
+```html
+<a href="https://other-domain.com/destination/page" data-consent-share="share">Go to other-domain</a>
+```
+
 ## Usage
 
 The client Javascript adds a `Consent` object to the `window`, allowing you to
