@@ -35,19 +35,10 @@ jobs:
   deploy:
     uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
     needs: request
-    if: ${{ needs.request.outputs.continue == 'true' && needs.request.outputs.noop != 'true' }}
     with:
-      service: ${{ vars.SERVICE_ID }}-${{ needs.request.outputs.ref }}
-      region: ${{ vars.REGION }}
       image_name: ${{ vars.DOCKER_IMAGE }}
       tag: ${{ needs.request.outputs.ref }}
+      is_branch: true
       environment: ${{ needs.request.outputs.environment }}
-      database_name: ${{ needs.request.outputs.ref }}
+      noop: ${{ needs.request.outputs.noop == 'true' }}
     secrets: inherit
-
-  dry-run:
-    needs: request
-    if: ${{ needs.request.outputs.continue == 'true' && needs.request.outputs.noop == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "TODO - preview deployment"
