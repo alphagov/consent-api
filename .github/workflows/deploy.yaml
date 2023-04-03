@@ -3,15 +3,6 @@ name: Deploy to Google Cloud Run
 on:
   workflow_call:
     inputs:
-      service:
-        description: "Google Cloud Run service ID"
-        required: true
-        type: string
-      region:
-        description: "Google Cloud region (default 'europe-west2')"
-        required: false
-        type: string
-        default: "europe-west2"
       image_name:
         description: "Docker image name"
         required: true
@@ -21,25 +12,25 @@ on:
         required: false
         type: string
         default: "latest"
+      is_branch:
+        description: "Deploying a unmerged branch"
+        required: false
+        type: boolean
       environment:
         description: "The Github environment to deploy with"
         required: false
         type: string
         default: "staging"
-      database_name:
-        description: "Override the deployment database name (for branch deployments)"
+      noop:
+        description: "Do not actually perform the deployment"
         required: false
-        type: string
-        default: "consent-api"
+        type: boolean
     secrets:
       WIF_PROVIDER:
         description: "Google Cloud Workload Identity Federation provider ID"
         required: true
       WIF_SERVICE_ACCOUNT:
         description: "Google Cloud Workload Identity Federation service account email"
-        required: true
-      DATABASE_URL_TEMPLATE:
-        description: "DATABASE_URL template, allowing overriding the database name"
         required: true
 
     outputs:
@@ -92,17 +83,17 @@ jobs:
             ${{ inputs.image_name }}:latest
             ${{ inputs.image_name }}:${{ inputs.tag }}
 
-      - id: db-url
-        env:
-          DB_NAME: ${{ inputs.database_name }}
-          DATABASE_URL: ${{ format(secrets.DATABASE_URL_TEMPLATE, inputs.database_name) }}
-        run: |
-          echo "env_vars=${DB_NAME:+DATABASE_URL=${DATABASE_URL}}" >> $GITHUB_OUTPUT
-
-      - uses: google-github-actions/deploy-cloudrun@v0
-        id: deploy
+      - uses: actions/setup-python@v4
         with:
-          service: ${{ inputs.service }}
-          region: ${{ inputs.region }}
-          image: ${{ inputs.image_name }}:${{ inputs.tag }}
-          env_vars: ${{ steps.db-url.outputs.env_vars }}
+          python-version-file: ".python-version"
+          cache: "pip"
+
+      - uses: pulumi/actions@v4
+
+      - run: |
+          python infra/deploy-service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
+        env:
+          ENV: ${{ inputs.environment }}
+          BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.tag) || '' }}
+          TAG: ${{ format('--tag {0}', inputs.tag) }}
+          PREVIEW: ${{ inputs.noop && '--preview' || '' }}

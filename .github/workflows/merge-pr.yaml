@@ -31,8 +31,6 @@ jobs:
     needs: release
     if: needs.release.outputs.tag_name != ''
     with:
-      service: staging-${{ vars.SERVICE_ID }}
-      region: ${{ vars.REGION }}
       image_name: ${{ vars.DOCKER_IMAGE }}
       tag: ${{ needs.release.outputs.tag_name }}
     secrets: inherit
