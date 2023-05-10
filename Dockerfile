@@ -34,10 +34,9 @@ COPY --chown=999:999 migrations/ migrations/
 COPY --chown=999:999 Makefile pytest.ini .
 
 ENV APP_NAME="consent_api"
-ENV FLASK_APP="$APP_NAME:app"
-ENV DATABASE_URL="postgresql://host.docker.internal:5432/$APP_NAME"
+ENV DATABASE_URL="postgresql+asyncpg://postgres@host.docker.internal:5432/$APP_NAME"
 ENV PATH="/home/app/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED="True"
 
-CMD flask db upgrade && gunicorn consent_api:app
+CMD alembic --config migrations/alembic.ini upgrade head && uvicorn ${APP_NAME}:app --host="0.0.0.0" --port ${PORT:-8000}
 HEALTHCHECK CMD python -c "import urllib.request as r; r.urlopen('http://localhost:${PORT:-8000}/health')"

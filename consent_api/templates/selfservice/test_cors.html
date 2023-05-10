@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test CORS</title>
+  </head>
+  <body>
+    <pre id="response"></pre>
+    <script>
+            var xhr = new XMLHttpRequest()
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === xhr.DONE && (xhr.status === 0 || (xhr.status >=
+                    200 && xhr.status < 400))) {
+                    document.querySelector("#response").innerHTML = xhr.responseText
+                }
+            }
+            xhr.open("GET",
+                "http://mini.local:8000/api/v1/consent/VYE9i_7fTtubk0MIhUFX6w")
+            xhr.send(null)
+    </script>
+  </body>
+</html>
