@@ -45,7 +45,7 @@ repos:
           - "--ensure-newline-before-comments"
 
   - repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.1
+    rev: v1.7.2
     hooks:
       - id: docformatter
         args:
@@ -80,12 +80,12 @@ repos:
       - id: flynt
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.7.0
     hooks:
       - id: pyupgrade
 
   - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.29.0
+    rev: v1.31.0
     hooks:
       - id: djlint-jinja
         types_or: ["html"]
@@ -109,6 +109,6 @@ repos:
         types_or: ["javascript", "css"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.41.0
+    rev: v8.43.0
     hooks:
       - id: eslint
