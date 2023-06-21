@@ -1,35 +1,23 @@
 ;(function () {
   'use strict'
 
-  var uidKey = 'consent_uid'
+  var uidKey = 'single_consent_uid'
   var uidFromCookie = findByKey(uidKey, document.cookie.split(';'))
   var uidFromUrl = findByKey(uidKey, parseUrl(location.href).params)
   var apiUrl = (function ($el) {
     return $el
-      ? $el.dataset.consentApiUrl.replace(/\/?$/, '/')
+      ? $el.dataset.singleConsentApiUrl.replace(/\/?$/, '/')
       : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
-  })(document.querySelector('[data-consent-api-url]'))
+  })(document.querySelector('[data-single-consent-api-url]'))
   var originPattern = /^(https?:)?\/\/([^:/]+)(?::(\d+))?/
 
-  function Consent() {
+  function SingleConsent() {
     // one year in milliseconds
     this.COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
-    this.ACCEPT_ALL = {
-      essential: true,
-      campaigns: true,
-      settings: true,
-      usage: true,
-    }
-    this.REJECT_ALL = {
-      essential: true,
-      campaigns: false,
-      settings: false,
-      usage: false,
-    }
     this.eventListeners = []
   }
 
-  Consent.prototype.init = function () {
+  SingleConsent.prototype.init = function () {
     // hide uid URL parameter
     history.replaceState(null, null, removeUrlParameter(location.href, uidKey))
 
@@ -49,11 +37,11 @@
     }
   }
 
-  Consent.prototype.onStatusLoaded = function (callback) {
+  SingleConsent.prototype.onStatusLoaded = function (callback) {
     this.eventListeners.push(callback)
   }
 
-  Consent.prototype.setStatus = function (status) {
+  SingleConsent.prototype.setStatus = function (status) {
     if (status) {
       request(
         apiUrl.concat(this.uid || ''),
@@ -70,9 +58,9 @@
     }
   }
 
-  function setUid(consent, uid) {
-    if (uid && uid !== consent.uid) {
-      consent.uid = uid
+  function setUid(singleConsent, uid) {
+    if (uid && uid !== singleConsent.uid) {
+      singleConsent.uid = uid
 
       // add uid URL parameter to consent sharing links
       var links = document.querySelectorAll('a[href]')
@@ -89,7 +77,7 @@
         .concat('=', uid)
         .concat(
           '; path=/',
-          '; max-age='.concat(Consent.COOKIE_LIFETIME),
+          '; max-age='.concat(SingleConsent.COOKIE_LIFETIME),
           document.location.protocol === 'https:' ? '; Secure' : ''
         )
     }
@@ -174,7 +162,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    window.Consent = new Consent()
-    window.Consent.init()
+    window.SingleConsent = new SingleConsent()
+    window.SingleConsent.init()
   })
 })()
