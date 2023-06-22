@@ -1,135 +1,48 @@
-# Single Consent API
+# Single Consent
 
-This is a HTTP API and simple frontend app, which holds user consent to cookies in a
-central database.
+The Single Consent service enables easily sharing a user's consent or rejection
+of cookies across different websites. This ensures a seamless user experience by
+remembering a user's preferences without repeatedly asking for consent.
 
-This enables web services to share user consent status across multiple domains.
+## How does it work?
 
+1. **Cookie Consent**: When you visit a Single Consent enabled website, you may
+   encounter a pop-up or banner asking for your consent to use cookies.
+
+2. **Unique ID**: If you respond, your consent to (or refusal of) cookies is
+   then submitted to the Single Consent service, which assigns you a randomly
+   generated unique ID. This ID does not contain any personal information about
+   you.
+
+3. **Central Database**: Your consent data is then associated with your unique
+   ID and stored in the central Single Consent database.
+
+4. **Javascript Client**: The website receives your unique ID via the Single
+   Consent client, a small piece of Javascript code embedded in the website.
+
+5. **Link Decoration**: The client automatically appends your
+   unique ID as a parameter to the links you click on which lead to other
+   Single Consent enabled websites.
+
+6. **Consent Lookup**: When a Single Consent enabled website receives a request
+   with a URL containing your unique ID, it uses this ID to look up your consent
+   data in the central database. Using this data, the website can respect your
+   preferences and avoid asking for consent again.
+
+7. **Revoking Consent**: If you change your mind and refuse (or grant) consent
+   to use cookies, you can modify your cookie settings on the current website
+   and it will submit the updated data to the central database, making all other
+   Single Consent enabled websites aware of your changed preferences.
+
+8. **ID Cookie**: The Single Consent client also stores your unique ID in a
+   cookie for the current website, so that if you return to the site without
+   clicking a link (eg via a bookmark, or typing in the URL to the address bar
+   in your browser), your consent preferences will be remembered.
 
 ## Installation
 
-In order to set first-party cookies, the client Javascript must be served with
-your application. One way to do this is to install it with `npm`. Add the
-following to the `dependencies` section of your `package.json`:
-
-```json
-"@alphagov/consent-api": "alphagov/consent-api#semver:1.7.1",
-```
-
-Alternatively, you can [download the client Javascript](client/src/consent.js)
-and save it with your web application source code.
-
-The client script needs to be loaded on any page that could be an entry point to
-your web application, allows modifying cookie consent, or provides a link to
-another domain with which you want to share cookie consent status. It is
-probably easiest to add the script to a base template used for all pages.
-
-It is common practice to add Javascript tags just before the end `</body>` tag,
-eg:
-
-```html
-    ...
-
-    <script src="{path_to_client_js}/consent.js"></script>
-  </body>
-</html>
-```
-
-
-## Configuration
-
-If you need to direct the client to an alternative API (for example, during
-testing), you can add a `data-consent-api-url` attribute to the `body` tag in
-your HTML file, eg:
-
-```html
-  <body data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/">
-```
-
-### Content Security Policy
-
-If your web site is served with a [`Content-Security-Policy` HTTP header or `<meta>` element](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP), you may need to modify it to allow the client JS to access the Consent API. The value of the header or meta element should contain the following:
-
-```
-connect-src 'self' https://consent-api-nw.a.run.app/api/v1/consent [... other site URLs separated by spaces];
-```
-
-### Identifying links that will share consent
-
-The client Javascript automatically adds a URL parameter to links that have a `data-consent-share="share"` data attribute. **Without this data attribute, the consent status will not be shared with the destination website.** See the following example:
-
-```html
-<a href="https://other-domain.com/destination/page" data-consent-share="share">Go to other-domain</a>
-```
-
-## Usage
-
-The client Javascript adds a `Consent` object to the `window`, allowing you to
-call its methods from your own script.
-
-### Methods
-
-#### onStatusLoaded
-
-Add a callback function to be invoked when the client receives a consent status
-from the API. The consent status is automatically requested on page load, and if
-the API responds, the callback will be invoked with the consent status object as
-an argument.
-
-##### Arguments
-
-<table>
-<tr valign="top"><th align="left"><code>callback</code> (required)</th><td align="left">A callback function which will be called
-with the consent status object as an argument.</td></tr>
-</table>
-
-##### Example
-
-```javascript
-Consent.onStatusLoaded((status) => {
-  console.log("Consent Status:")
-  console.log(`- Essential cookies (${status.essential})`)
-  console.log(`- Campaign cookies (${status.campaigns})`)
-  console.log(`- Settings cookies (${status.settings})`)
-  console.log(`- Usage cookies (${status.usage})`)
-})
-```
-
-#### setStatus
-
-Set the current user's consent status in the API, to be shared with other
-domains. The method returns immediately, but is processed asynchronously. When
-the API has been successfully updated, the callback method is invoked (if
-provided).
-
-##### Arguments
-
-<table>
-<tr valign="top"><th align="left"><code>status</code> (required)</th><td align="left">A consent status JSON object. Eg:
-<pre>
-{
-  "essential": true,
-  "campaigns": false,
-  "settings": false,
-  "usage": false
-}
-</pre>
-</td></tr>
-<tr valign="top"><th align="left"><code>callback</code></th><td align="left">An
-optional callback function which will be called
-with the consent status as an argument.</td></tr>
-</table>
-
-##### Example
-
-```javascript
-Consent.setStatus(
-  acceptAllCookies,
-  (status) => {
-    console.log("Consent status successfully updated to", status)
-  }
-)
-```
+To make use of the Single Consent service on your website, please see the
+[Single Consent client Quick Start documentation](client/README.md)
 
 ## Development
 
@@ -237,3 +150,15 @@ This project uses [Github Flow](https://githubflow.github.io/).
 
 New features are developed on feature branches, which must be rebased on the main branch
 and squashed before merging to main.
+
+## License
+
+Unless stated otherwise, the codebase is released under the MIT License. This covers
+both the codebase and any sample code in the documentation. The documentation is &copy;
+Crown copyright and availabe under the terms of the Open Government 3.0 licence.
+
+## Contact the team
+
+The Single Consent service is maintained by a team at Government Digital
+Service. If you want to know more about the service, please email the Data
+Infrastructure team or get in touch with them on Slack.
