@@ -77,10 +77,21 @@ async def test_update_consent(client, db_session):
         data=CookieConsent.REJECT_ALL.dict(),
     )
     assert response.status_code == 200
-    print(f"{response.json()=}")
     response_json = response.json()
     assert response_json["uid"] == existing.uid
     assert response_json["status"] == CookieConsent.REJECT_ALL.dict()
 
     uc = (await get_user_consent(existing.uid, db_session)).first()
     assert uc.consent == CookieConsent.REJECT_ALL.dict()
+
+
+@pytest.mark.asyncio
+async def test_get_known_origins(client, db_session):
+    """Test getting the list of known origins."""
+    origins_url = consent_api_url("").replace("/consent/", "/origins/")
+
+    response = client.get(origins_url)
+    assert response.status_code == 200
+    response_json = response.json()
+    assert isinstance(response_json, list)
+    assert len(response_json) == 0

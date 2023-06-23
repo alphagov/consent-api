@@ -1,3 +1,6 @@
 [tool.flake8]
     max-line-length = 88
     extend-immutable-calls = "Depends,Form"
+
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = ["Depends,Form"]

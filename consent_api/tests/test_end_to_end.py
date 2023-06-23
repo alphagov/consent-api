@@ -101,3 +101,6 @@ def test_connected_services(browser, govuk, haas, consent_api):
     # we can go back to the other domain and see consent status is shared
     govuk_cookies_page = govuk.cookies_page.get()
     assert govuk_cookies_page.get_settings() == CookieConsent(usage=True, settings=True)
+
+    # TODO follow another cross-origin link which is not Single Consent enabled
+    # and show that no UID was passed
