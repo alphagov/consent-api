@@ -1,23 +1,22 @@
 ;(function () {
   'use strict'
 
-  var uidKey = 'single_consent_uid'
+  var uidKey = 'consent_uid'
   var uidFromCookie = findByKey(uidKey, document.cookie.split(';'))
   var uidFromUrl = findByKey(uidKey, parseUrl(location.href).params)
   var apiUrl = (function ($el) {
     return $el
-      ? $el.dataset.singleConsentApiUrl.replace(/\/?$/, '/')
+      ? $el.dataset.consentApiUrl.replace(/\/?$/, '/')
       : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
-  })(document.querySelector('[data-single-consent-api-url]'))
-  var originPattern = /^(https?:)?\/\/([^:/]+)(?::(\d+))?/
+  })(document.querySelector('[data-consent-api-url]'))
 
-  function SingleConsent() {
+  function Consent() {
     // one year in milliseconds
     this.COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
     this.eventListeners = []
   }
 
-  SingleConsent.prototype.init = function () {
+  Consent.prototype.init = function () {
     // hide uid URL parameter
     history.replaceState(null, null, removeUrlParameter(location.href, uidKey))
 
@@ -37,11 +36,11 @@
     }
   }
 
-  SingleConsent.prototype.onStatusLoaded = function (callback) {
+  Consent.prototype.onStatusLoaded = function (callback) {
     this.eventListeners.push(callback)
   }
 
-  SingleConsent.prototype.setStatus = function (status) {
+  Consent.prototype.setStatus = function (status) {
     if (status) {
       request(
         apiUrl.concat(this.uid || ''),
@@ -58,18 +57,25 @@
     }
   }
 
-  function setUid(singleConsent, uid) {
-    if (uid && uid !== singleConsent.uid) {
-      singleConsent.uid = uid
+  function setUid(consent, uid) {
+    if (uid && uid !== consent.uid) {
+      consent.uid = uid
 
-      // add uid URL parameter to consent sharing links
-      var links = document.querySelectorAll('a[href]')
-      Array.prototype.forEach.call(links, function (link) {
-        if (isCrossOrigin(link.href)) {
-          link.addEventListener('click', function (event) {
-            event.target.href = addUrlParameter(event.target.href, uidKey, uid)
-          })
-        }
+      // fetch known origins
+      request(apiUrl.replace('/consent/', '/origins/'), {}, function (origins) {
+        // add uid URL parameter to consent sharing links
+        var links = document.querySelectorAll('a[href]')
+        Array.prototype.forEach.call(links, function (link) {
+          if (isCrossOrigin(link) && origins.indexOf(origin(link)) >= 0) {
+            link.addEventListener('click', function (event) {
+              event.target.href = addUrlParameter(
+                event.target.href,
+                uidKey,
+                uid
+              )
+            })
+          }
+        })
       })
 
       // set uid cookie
@@ -77,7 +83,7 @@
         .concat('=', uid)
         .concat(
           '; path=/',
-          '; max-age='.concat(SingleConsent.COOKIE_LIFETIME),
+          '; max-age='.concat(Consent.COOKIE_LIFETIME),
           document.location.protocol === 'https:' ? '; Secure' : ''
         )
     }
@@ -149,20 +155,24 @@
     }
   }
 
-  function isCrossOrigin(url) {
-    var match = url.match(originPattern)
-    if (match) {
-      return (
-        (match[1] && match[1] !== window.location.protocol) ||
-        (match[2] && match[2] !== window.location.hostname) ||
-        (match[3] || '80') !== (window.location.port || '80')
-      )
+  function isCrossOrigin(link) {
+    return (
+      link.protocol !== window.location.protocol ||
+      link.hostname !== window.location.hostname ||
+      (link.port || '80') !== (window.location.port || '80')
+    )
+  }
+
+  function origin(link) {
+    var origin = link.protocol.concat('//', link.hostname)
+    if (link.port && link.port !== '80') {
+      origin = origin.concat(':', link.port)
     }
-    return false
+    return origin
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    window.SingleConsent = new SingleConsent()
-    window.SingleConsent.init()
+    window.Consent = new Consent()
+    window.Consent.init()
   })
 })()

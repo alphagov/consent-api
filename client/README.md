@@ -77,7 +77,7 @@ exampleCookieConsentStatusObject = {
   "campaigns": false,
 }
 
-SingleConsent.setStatus(exampleCookieConsentStatusObject)
+Consent.setStatus(exampleCookieConsentStatusObject)
 ```
 
 The structure of the consent data object is currently based on the
@@ -91,11 +91,11 @@ The client connects to the Single Consent service Production environment by
 default.
 
 If you need to direct the client to an alternative URL (for example, during
-testing), you can add a `data-single-consent-api-url` attribute to the `body` tag in
+testing), you can add a `data-consent-api-url` attribute to the `body` tag in
 your HTML file, eg:
 
 ```html
-<body data-single-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/">
+<body data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/">
 ```
 
 #### Content Security Policy
@@ -111,7 +111,7 @@ connect-src 'self' https://consent-api-nw.a.run.app/api/v1/consent [... other si
 
 ## API
 
-The client Javascript adds a `SingleConsent` object to the `window`, allowing you to
+The client Javascript adds a `Consent` object to the `window`, allowing you to
 call its methods from your own script.
 
 ### Methods
@@ -133,7 +133,7 @@ with the consent status object as an argument.</td></tr>
 ##### Example
 
 ```javascript
-SingleConsent.onStatusLoaded((status) => {
+Consent.onStatusLoaded((status) => {
   console.log("Consent Status:")
   console.log(`- Essential cookies (${status.essential})`)
   console.log(`- Campaign cookies (${status.campaigns})`)
@@ -170,7 +170,7 @@ with the consent status as an argument.</td></tr>
 ##### Example
 
 ```javascript
-SingleConsent.setStatus(
+Consent.setStatus(
   acceptAllCookies,
   (status) => {
     console.log("Consent status successfully updated to", status)

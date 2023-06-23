@@ -105,3 +105,16 @@ class UserConsent(Timestamped, SQLModel, table=True):
             "uid": self.uid,
             "status": self.consent,
         }
+
+
+class Origin(Timestamped, SQLModel, table=True):
+    """
+    Origin represents a service origin (scheme, domain name, port number).
+
+    The list of known origins is sent to the client to enable automatic decoration of
+    links.
+    """
+
+    __tablename__: str = "origin"  # type: ignore
+
+    origin: str = Field(primary_key=True)

@@ -1,31 +1,60 @@
 """Consent REST API."""
 
 from typing import Annotated
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Header
+from fastapi import Request
 from fastapi import Response
+from fastapi_etag import Etag
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import ScalarResult
+from sqlalchemy.sql import functions
 from sqlmodel import col
 from sqlmodel import select
 
 from consent_api.database import AsyncSession
+from consent_api.database import db_context
 from consent_api.database import db_session
 from consent_api.models import CookieConsent
+from consent_api.models import Origin
 from consent_api.models import UserConsent
 from consent_api.util import generate_uid
 
-router = APIRouter(
-    prefix="/api/v1/consent",
-)
-get = router.get
-post = router.post
+consent = APIRouter()
+
+
+async def origins_etag(request: Request) -> str:
+    """Generate an ETag from the last update to the origins table."""
+    async with db_context() as db:
+        return str(await db.scalar(select(functions.max(Origin.updated_at))))
+
+
+async def register_origin(
+    origin: str | None,
+    db: AsyncSession,
+) -> None:
+    """Add an origin to the known origins list."""
+    # normalize
+    if origin:
+        if origin.endswith(":80"):
+            origin = origin[:-3]
+        async with db.begin():
+            await db.execute(
+                insert(Origin).values(origin=origin).on_conflict_do_nothing()
+            )
+
+
+async def get_known_origins(db: AsyncSession) -> ScalarResult:
+    """Fetch known origins from the database."""
+    async with db:
+        return await db.scalars(select(col(Origin.origin)))
 
 
 async def get_user_consent(
-    uid: Optional[str],
-    db: AsyncSession = Depends(db_session),
+    uid: str | None,
+    db: AsyncSession,
 ) -> ScalarResult:
     """Fetch consent status from the database."""
     query = select(UserConsent).order_by(
@@ -37,24 +66,27 @@ async def get_user_consent(
         return await db.scalars(query)
 
 
-@get("/")
+@consent.get("/")
 async def get_all_consent_statuses(
     db: AsyncSession = Depends(db_session),
+    origin: Annotated[str | None, Header()] = None,
 ) -> list[UserConsent]:
     """Get all consent statuses."""
+    await register_origin(origin, db)
     return list(await get_user_consent(None, db))
 
 
 Consent = Annotated[CookieConsent, Depends(CookieConsent.as_form)]
 
 
-@post("/", status_code=201)
+@consent.post("/", status_code=201)
 async def create_consent_status(
-    response: Response,
     consent: Consent,
     db: AsyncSession = Depends(db_session),
+    origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent:
     """Create a new user with a generated UID and the specified consent status."""
+    await register_origin(origin, db)
     user_consent = UserConsent(uid=generate_uid(), consent=consent)
     async with db:
         db.add(user_consent)
@@ -63,12 +95,13 @@ async def create_consent_status(
     return user_consent
 
 
-@get("/{uid}")
+@consent.get("/{uid}")
 async def get_consent_status(
     uid: str,
     response: Response,
     db: AsyncSession = Depends(db_session),
-) -> Optional[UserConsent]:
+    origin: Annotated[str | None, Header()] = None,
+) -> UserConsent | None:
     """Fetch a specified user's consent status."""
     status = (await get_user_consent(uid, db)).first()
     if not status:
@@ -76,13 +109,15 @@ async def get_consent_status(
     return status
 
 
-@post("/{uid}")
+@consent.post("/{uid}")
 async def set_consent_status(
     uid: str,
     consent: Consent,
     db: AsyncSession = Depends(db_session),
-) -> Optional[UserConsent]:
+    origin: Annotated[str | None, Header()] = None,
+) -> UserConsent | None:
     """Update a specified user's consent status."""
+    await register_origin(origin, db)
     async with db:
         user_consent = (await get_user_consent(uid, db)).first()
         if user_consent:
@@ -91,3 +126,17 @@ async def set_consent_status(
             await db.commit()
             return user_consent
     return None
+
+
+origins = APIRouter()
+
+
+@origins.get("/", dependencies=[Depends(Etag(origins_etag))])
+async def known_origins(db: AsyncSession = Depends(db_session)) -> list[str]:
+    """Fetch the list of known origins."""
+    return list(await get_known_origins(db))
+
+
+router = APIRouter(prefix="/api/v1")
+router.include_router(consent, prefix="/consent")
+router.include_router(origins, prefix="/origins")

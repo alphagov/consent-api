@@ -97,14 +97,18 @@
     <section class="team">
       <div class="grid-row">
         <div class="grid-col-one-half">
-          <h2>Customise your cookie banner</h2>
+          <h2>The team</h2>
           <p>
-            Use the default GOV.UK cookie banner text content, or easily apply
-            your own, with no technical knowledge needed.
+            The Single Consent API is built by the Government Digital Service and is
+            supported sometimes.
+          </p>
+          <p>
+            <a href="{{ url_for("contact_us") }}">Contact us</a> if you have a question or
+            want to give feedback.
           </p>
         </div>
         <div class="grid-col-one-half">
-          <img src="{{ url_for("static", path="team.jpg") }}"
+          <img src="{{ url_for('static', path='team.jpg') }}"
                alt="A photo of the Single Consent API team working together at a computer.">
         </div>
       </div>
