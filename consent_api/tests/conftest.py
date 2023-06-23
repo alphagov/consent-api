@@ -1,58 +1,66 @@
 """Fixtures for all tests."""
 
+import json
 import os
 
+import httpx
 import pytest
-import requests
-import sqlalchemy
+from fastapi.testclient import TestClient
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import SQLModel
 
+from consent_api import app
+from consent_api.database import db_session as _db_session
+from consent_api.models import CookieConsent
 from consent_api.tests.api import ConsentAPI
 from consent_api.tests.pom import fake_govuk
 from consent_api.tests.pom import haas as haas_
 
-TEST_DATABASE_URI = "sqlite:///:memory:"
+TEST_DATABASE_URI = "sqlite+aiosqlite:///:memory:"
 
 
-@pytest.fixture(scope="session")
-def app():
-    """Get the app instance for use by pytest-flask."""
-    from consent_api import app  # noqa
+@pytest.fixture(name="db_session")
+async def db_session_fixture():
+    """Get database session fixture."""
 
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = TEST_DATABASE_URI
+    def custom_json_serializer(o):
+        if isinstance(o, CookieConsent):
+            return json.dumps(o.dict())
+        return json.dumps(o)
 
-    ctx = app.app_context()
-    ctx.push()
+    engine = create_async_engine(
+        TEST_DATABASE_URI,
+        future=True,
+        connect_args={"check_same_thread": False},
+        json_serializer=custom_json_serializer,
+    )
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+    async_session = sessionmaker(engine, class_=AsyncSession)
+    session = async_session()
 
+    yield session
+
+    await session.close()
+
+
+@pytest.fixture(name="app")
+def app_fixture(db_session):
+    """Get app fixture."""
+    app.dependency_overrides[_db_session] = lambda: db_session
     yield app
-
-    ctx.pop()
-
-
-@pytest.fixture(scope="session")
-def db(app):
-    """Create a test database and drop it when tests are done."""
-    from consent_api import db as _db
-
-    yield _db
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
-def db_session(db, request):
-    """Create a new database session for a test."""
-    connection = db.engine.connect()
-    transaction = connection.begin()
-
-    session_factory = sqlalchemy.orm.sessionmaker(bind=connection)
-    db.session = sqlalchemy.orm.scoped_session(session_factory)
-
-    yield db.session
-
-    transaction.rollback()
-    connection.close()
-    db.session.remove()
+def client(app):
+    """Get test client fixture."""
+    client = TestClient(app)
+    yield client
 
 
 @pytest.fixture(scope="session")
@@ -94,8 +102,8 @@ def browser(browser):
 def get_response_ok(url):
     """Return True if a GET request to the URL responds successfully."""
     try:
-        return 200 <= requests.get(url).status_code < 400
-    except requests.exceptions.ConnectionError:
+        return 200 <= httpx.get(url).status_code < 400
+    except httpx.ConnectError:
         return False
 
 

@@ -1,12 +1,11 @@
 """Load tests."""
-import json
 
 from locust import HttpUser
 from locust import task
 
 from consent_api.models import CookieConsent
 
-accept_cookies = json.dumps(CookieConsent.ACCEPT_ALL.json)
+accept_cookies = CookieConsent.ACCEPT_ALL.dict()
 
 
 class NewUser(HttpUser):
@@ -17,7 +16,7 @@ class NewUser(HttpUser):
         """Accept all cookies."""
         self.client.post(
             "/api/v1/consent/",
-            data={"status": accept_cookies},
+            data=accept_cookies,
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
             },

@@ -1,13 +1,13 @@
 """Forms for self-service."""
-from flask_wtf import FlaskForm
 from wtforms import EmailField
+from wtforms import Form
 from wtforms import PasswordField
 from wtforms import StringField
 from wtforms import TelField
 from wtforms.validators import DataRequired
 
 
-class SignUpForm(FlaskForm):
+class SignUpForm(Form):
     """Form for creating a new account."""
 
     name = StringField(
@@ -31,7 +31,7 @@ class SignUpForm(FlaskForm):
     )
 
 
-class SignInForm(FlaskForm):
+class SignInForm(Form):
     """Log in form."""
 
     email = EmailField(
@@ -44,7 +44,7 @@ class SignInForm(FlaskForm):
     )
 
 
-class ServiceForm(FlaskForm):
+class ServiceForm(Form):
     """Service form."""
 
     domain = StringField(

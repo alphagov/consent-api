@@ -1,43 +1,28 @@
-"""Consent API Flask app."""
-from dataclasses import dataclass
+"""FastAPI app."""
 
-from flask import Flask
-from flask import render_template
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware import Middleware
+from starlette.middleware.sessions import SessionMiddleware
 
+from consent_api import config
+from consent_api.routers import consent
+from consent_api.routers import self_service
 
-@dataclass
-class ErrorPageHandler:
-    """Renders an error page."""
+app = FastAPI(
+    middleware=[
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+        ),
+        Middleware(
+            SessionMiddleware,
+            secret_key=config.SECRET_KEY,
+        ),
+    ],
+)
+app.include_router(consent.router)
+app.include_router(self_service.router)
 
-    code: int
-    template: str
-
-    def __call__(self, _) -> tuple[str, int]:
-        """Render an error page for the specified error code."""
-        return render_template(self.template, code=self.code), self.code
-
-
-app = Flask(__name__)
-app.config.from_object("consent_api.config")
-
-# assign error page handlers to all error status codes we care about
-for template, codes in {
-    "errors/403.html": [403],
-    "errors/404.html": [404],
-    "errors/4xx.html": [401, 405, 406, 408, 409],
-    "errors/503.html": [503],
-    "errors/5xx.html": [500, 501, 502, 504, 505],
-}.items():
-    for code in codes:
-        app.register_error_handler(code, ErrorPageHandler(code, template))
-
-db = SQLAlchemy()
-db.init_app(app)
-
-migrate = Migrate()
-migrate.init_app(app, db)
-
-import consent_api.commands  # noqa
-import consent_api.views  # noqa
+app.mount("/static", StaticFiles(directory="consent_api/static"), name="static")

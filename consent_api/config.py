@@ -1,4 +1,4 @@
-"""Flask app configuration."""
+"""App configuration."""
 import os
 
 from dotenv import load_dotenv
@@ -12,7 +12,7 @@ SECRET_KEY = env.get("SECRET_KEY", os.urandom(24))
 
 SQLALCHEMY_DATABASE_URI = env.get(
     "DATABASE_URL",
-    "postgresql://localhost:5432/consent_api",
+    "postgresql+asyncpg://localhost:5432/consent_api",
 )
 
 CONSENT_EXPIRY_DAYS = 7

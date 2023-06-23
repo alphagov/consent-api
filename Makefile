@@ -2,9 +2,10 @@
 export
 
 APP_NAME ?= consent_api
-FLASK_APP ?= $(APP_NAME):app
 DATABASE_URL ?= postgresql://localhost:5432/$(APP_NAME)
-DOCKER_DB_URL ?= postgresql://host.docker.internal:5432/$(APP_NAME)
+DOCKER ?= docker
+DOCKER_BUILD ?= docker buildx build
+DOCKER_DB_URL ?= postgresql+asyncpg://postgres@host.docker.internal:5432/$(APP_NAME)
 DOCKER_IMAGE ?= gcr.io/sde-consent-api/consent-api
 TAG ?= latest
 ENV ?= development
@@ -39,7 +40,11 @@ fix:
 
 .PHONY: migrations
 migrations:
-	flask db upgrade
+	alembic --config migrations/alembic.ini upgrade head
+
+.PHONY: new-migration
+new-migration:
+	alembic --config migrations/alembic.ini revision --autogenerate
 
 ## test: Run tests
 .PHONY: test
@@ -64,7 +69,7 @@ test-all: migrations test test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:
-	docker compose up --exit-code-from test
+	$(DOCKER) compose up --exit-code-from test
 
 .PHONY: test-coverage
 test-coverage:
@@ -73,23 +78,23 @@ test-coverage:
 ## run: Run development server
 .PHONY: run
 run:
-	flask --debug run --debugger --reload --host "0.0.0.0" --port $(PORT)
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT)
 
 ## docker-image: Build a Docker image
 .PHONY: docker-image
 docker-image: clean
-	docker buildx build --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
+	$(DOCKER_BUILD) --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
 
 ## docker-run: Start a Docker container
 .PHONY: docker-run
 docker-run:
-	docker run \
+	$(DOCKER) run \
 		--interactive \
 		--tty \
 		--rm \
 		--env DATABASE_URL="$(DOCKER_DB_URL)" \
-		--env GUNICORN_CMD_ARGS="--bind=0.0.0.0:$(PORT)" \
-		--ports $(PORT):$(PORT) \
+		--env PORT="$(PORT)" \
+		--publish $(PORT):$(PORT) \
 		$(DOCKER_IMAGE)
 
 ## help: Show this message

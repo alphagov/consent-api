@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% set body_classes -%}
+  product-page
+{%- endset %}
+{% block main %}
+  <div class="product-header">
+    <div class="width-container">
+      <div class="grid-row">
+        <div class="grid-col-two-thirds">
+          <h1>
+            Share cookie consent
+            <br>
+            across services
+          </h1>
+          <p>
+            Try the Shared Consent API now if you work in central government, a
+            local authority, or the NHS.
+          </p>
+          <div class="button-container">
+            <a class="button" href="{{ url_for("create_account") }}">Create an account</a>
+            or <a href="{{ url_for("login") }}">sign in</a> if you've used it before
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="width-container">
+    <section>
+      <div class="grid-row">
+        <div class="grid-col-one-half">
+          <h2>Customise your cookie banner</h2>
+          <p>
+            Use the default GOV.UK cookie banner text content, or easily apply
+            your own, with no technical knowledge needed.
+          </p>
+        </div>
+        <div class="grid-col-one-half">
+          <img src="{{ url_for("static", path="banner.png") }}" alt="">
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="grid-row">
+        <div class="grid-col-one-half">
+          <h2>Choose your consent categories</h2>
+          <p>
+            Select from predefined consent categories to maximise compatibility
+            across sites
+          </p>
+        </div>
+        <div class="grid-col-one-half">
+          <img src="{{ url_for("static", path="categories.png") }}" alt="">
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="grid-row">
+        <div class="grid-col-one-half">
+          <h2>Integrate the API with your web application</h2>
+          <p>
+            Simply add a Javascript tag to your HTML, or access the API directly
+            in your back end code.
+          </p>
+        </div>
+        <div class="grid-col-one-half">
+          <img src="{{ url_for("static", path="coding-illustration.jpg") }}" alt="">
+        </div>
+      </div>
+    </section>
+    <section class="usage">
+      <h2>Who’s using the Single Consent API</h2>
+      <div class="grid-row">
+        <div class="grid-col-one-half">
+          <span class="visually-hidden">There are</span>
+          <div class="big-number">{{ "{:,}".format(num_orgs) }}</div>
+          {% if num_orgs == 1 %}
+            organisation
+          {% else %}
+            organisations
+          {% endif %}
+        </div>
+        <div class="grid-col-one-half">
+          <span class="visually-hidden">and</span>
+          <div class="big-number">{{ "{:,}".format(num_services) }}</div>
+          {% if num_services == 1 %}
+            service
+          {% else %}
+            services
+          {% endif %}
+          <span class="visually-hidden">using the Single Consent API.</span>
+        </div>
+      </div>
+      <p>
+        See the <a href="{{ url_for("list_clients") }}">list of services and organisations</a>.
+      </p>
+    </section>
+    <section class="team">
+      <div class="grid-row">
+        <div class="grid-col-one-half">
+          <h2>Customise your cookie banner</h2>
+          <p>
+            Use the default GOV.UK cookie banner text content, or easily apply
+            your own, with no technical knowledge needed.
+          </p>
+        </div>
+        <div class="grid-col-one-half">
+          <img src="{{ url_for("static", path="team.jpg") }}"
+               alt="A photo of the Single Consent API team working together at a computer.">
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}
