@@ -1,6 +1,10 @@
-[tool.flake8]
-    max-line-length = 88
-    extend-immutable-calls = "Depends,Form"
+[tool.ruff]
+extend-ignore = ["E203"]
+ignore-init-module-imports = true
+select = ["E", "F", "I", "B", "C4", "SIM", "N", "FLY", "UP"]
 
 [tool.ruff.flake8-bugbear]
-extend-immutable-calls = ["Depends,Form"]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Form"]
+
+[tool.ruff.isort]
+force-single-line = true

@@ -2,7 +2,7 @@
 export
 
 APP_NAME ?= consent_api
-DATABASE_URL ?= postgresql://localhost:5432/$(APP_NAME)
+DATABASE_URL ?= postgresql+asyncpg://localhost:5432/$(APP_NAME)
 DOCKER ?= docker
 DOCKER_BUILD ?= docker buildx build
 DOCKER_DB_URL ?= postgresql+asyncpg://postgres@host.docker.internal:5432/$(APP_NAME)
