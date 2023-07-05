@@ -38,5 +38,5 @@ ENV DATABASE_URL="postgresql+asyncpg://postgres@host.docker.internal:5432/$APP_N
 ENV PATH="/home/app/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED="True"
 
-CMD alembic --config migrations/alembic.ini upgrade head && uvicorn ${APP_NAME}:app --host="0.0.0.0" --port ${PORT:-8000} --proxy-headers
+CMD alembic --config migrations/alembic.ini upgrade head && uvicorn ${APP_NAME}:app --host="0.0.0.0" --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips="*"
 HEALTHCHECK CMD python -c "import urllib.request as r; r.urlopen('http://localhost:${PORT:-8000}/health')"
