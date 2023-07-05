@@ -2,8 +2,8 @@
 
 from typing import Annotated
 
+import fastapi
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import Header
 from fastapi import Request
 from fastapi import Response
@@ -68,7 +68,7 @@ async def get_user_consent(
 
 @consent.get("/")
 async def get_all_consent_statuses(
-    db: AsyncSession = Depends(db_session),
+    db: AsyncSession = fastapi.Depends(db_session),
     origin: Annotated[str | None, Header()] = None,
 ) -> list[UserConsent]:
     """Get all consent statuses."""
@@ -76,13 +76,13 @@ async def get_all_consent_statuses(
     return list(await get_user_consent(None, db))
 
 
-Consent = Annotated[CookieConsent, Depends(CookieConsent.as_form)]
+Consent = Annotated[CookieConsent, fastapi.Depends(CookieConsent.as_form)]
 
 
 @consent.post("/", status_code=201)
 async def create_consent_status(
     consent: Consent,
-    db: AsyncSession = Depends(db_session),
+    db: AsyncSession = fastapi.Depends(db_session),
     origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent:
     """Create a new user with a generated UID and the specified consent status."""
@@ -99,7 +99,7 @@ async def create_consent_status(
 async def get_consent_status(
     uid: str,
     response: Response,
-    db: AsyncSession = Depends(db_session),
+    db: AsyncSession = fastapi.Depends(db_session),
     origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent | None:
     """Fetch a specified user's consent status."""
@@ -113,7 +113,7 @@ async def get_consent_status(
 async def set_consent_status(
     uid: str,
     consent: Consent,
-    db: AsyncSession = Depends(db_session),
+    db: AsyncSession = fastapi.Depends(db_session),
     origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent | None:
     """Update a specified user's consent status."""
@@ -131,8 +131,8 @@ async def set_consent_status(
 origins = APIRouter()
 
 
-@origins.get("/", dependencies=[Depends(Etag(origins_etag))])
-async def known_origins(db: AsyncSession = Depends(db_session)) -> list[str]:
+@origins.get("/", dependencies=[fastapi.Depends(Etag(origins_etag))])
+async def known_origins(db: AsyncSession = fastapi.Depends(db_session)) -> list[str]:
     """Fetch the list of known origins."""
     return list(await get_known_origins(db))
 

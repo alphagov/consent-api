@@ -3,8 +3,8 @@
 from dataclasses import asdict
 from dataclasses import dataclass
 
+import fastapi
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import Form
 from fastapi import Request
 from fastapi.responses import HTMLResponse
@@ -63,7 +63,7 @@ class UserDetails:
 @post("/create-account")
 def post_create_account_form(
     request: Request,
-    user_details: UserDetails = Depends(),
+    user_details: UserDetails = fastapi.Depends(),
 ) -> Response:
     """Handle create account form submission."""
     request.session["user_details"] = asdict(user_details)
