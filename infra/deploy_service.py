@@ -19,7 +19,7 @@ def generate_password(length=20) -> pulumi.Output[str]:
     )
 
 
-def get_db_instance_id(env: str) -> str | None:
+def get_db_instance_id(env: str) -> str:
     """Get an existing database instance in the given environment (if one exists)."""
     result = subprocess.run(
         [
@@ -35,12 +35,10 @@ def get_db_instance_id(env: str) -> str | None:
             f"name:{env}-*",
         ],
         capture_output=True,
+        check=True,
         text=True,
     )
-    if result.returncode == 0:
-        return result.stdout.strip()
-
-    return None
+    return result.stdout.strip()
 
 
 class ConsentAPIStack:
@@ -83,7 +81,8 @@ class ConsentAPIStack:
 
         db_url: pulumi.Output = pulumi.Output.secret(
             pulumi.Output.format(
-                "postgresql://{user}:{password}@/{db}?host=/cloudsql/{connection}",
+                "{dialect}://{user}:{password}@/{db}?host=/cloudsql/{connection}",
+                dialect="postgresql+asyncpg",
                 user=db_user.name,
                 password=db_user.password,
                 db=db.name,

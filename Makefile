@@ -10,6 +10,9 @@ DOCKER_IMAGE ?= gcr.io/sde-consent-api/consent-api
 TAG ?= latest
 ENV ?= development
 PORT ?= 8000
+PREVIEW := $(shell \
+		echo $${PREVIEW:+--preview} \
+)
 SELENIUM_DRIVER ?= chrome
 SPLINTER_REMOTE_BROWSER_VERSION ?= ""
 SPLINTER_REMOTE_URL := $(shell \
@@ -31,17 +34,18 @@ install:
 .PHONY: check
 check:
 	black --check .
-	isort --check-only --profile=black --force-single-line-imports .
-	flake8 --max-line-length=88 --extend-ignore=E203 --exclude migrations
+	ruff check .
 
 .PHONY: fix
 fix:
 	pre-commit run --all-files
 
+## migrations: Run all database migrations
 .PHONY: migrations
 migrations:
 	alembic --config migrations/alembic.ini upgrade head
 
+## new-migration: Generate a new database migration from model code
 .PHONY: new-migration
 new-migration:
 	alembic --config migrations/alembic.ini revision --autogenerate
@@ -75,10 +79,10 @@ test-end-to-end-docker:
 test-coverage:
 	pytest -n=auto --cov --cov-report=xml --cov-report=term -W ignore::DeprecationWarning -m "not end_to_end"
 
-## run: Run development server
+## run: Run server
 .PHONY: run
 run:
-	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT)
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
 
 ## docker-image: Build a Docker image
 .PHONY: docker-image
@@ -96,6 +100,25 @@ docker-run:
 		--env PORT="$(PORT)" \
 		--publish $(PORT):$(PORT) \
 		$(DOCKER_IMAGE)
+
+## infra: Create/update a deployment environment
+.PHONY: infra
+infra:
+	python infra/setup_env.py -e $(ENV) $(PREVIEW)
+
+## infra-destroy: Destroy a deployment environment
+.PHONY: infra-destroy
+infra-destroy:
+	python infra/setup_env.py --destroy -e $(ENV) $(PREVIEW)
+
+## deploy: Deploy the service to an environment
+.PHONY: deploy
+deploy:
+	python infra/deploy_service.py -e $(ENV) $(PREVIEW) -b main
+
+.PHONY: destroy-deployment
+destroy-deployment:
+	python infra/deploy_service.py --destroy -e $(ENV) $(PREVIEW) -b main
 
 ## help: Show this message
 .PHONY: help
