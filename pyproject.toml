@@ -1,4 +1,8 @@
+[tool.black]
+extend-exclude = "^/migrations/"
+
 [tool.ruff]
+extend-exclude = ["migrations"]
 extend-ignore = ["E203"]
 ignore-init-module-imports = true
 select = ["E", "F", "I", "B", "C4", "SIM", "N", "FLY", "UP"]

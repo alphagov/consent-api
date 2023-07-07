@@ -113,10 +113,21 @@ class EnvironmentStack:
 
 def main():
     """Spin up (or down) the environment."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--destroy", action="store_true")
-    parser.add_argument("--preview", action="store_true")
-    parser.add_argument("-e", "--env", default="development")
+    parser = argparse.ArgumentParser(description="Spin up an environment")
+    parser.add_argument(
+        "--destroy", action="store_true", help="Destroy the environment"
+    )
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help=(
+            "Do not actually create or update the environment, but preview what "
+            "would be done"
+        ),
+    )
+    parser.add_argument(
+        "-e", "--env", default="development", help="Name of the environment"
+    )
 
     args = parser.parse_args()
 

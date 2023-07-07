@@ -59,12 +59,20 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
+      - uses: pulumi/actions@v4
+
+      - id: stack
+        run: |
+          outputs=$(pulumi stack output -j -s ${{ inputs.environment }})
+          echo WIF_SERVICE_ACCOUNT=$(echo $outputs | jq -r '.service_account') >> "$GITHUB_OUTPUT"
+          echo WIF_PROVIDER=$(echo $outputs | jq -r '.workload_identity_provider') >> "$GITHUB_OUTPUT"
+
       - uses: google-github-actions/auth@v1
         id: auth
         with:
           token_format: access_token
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ steps.stack.outputs.WIF_PROVIDER }}
+          service_account: ${{ steps.stack.outputs.WIF_SERVICE_ACCOUNT }}
 
       - uses: docker/setup-buildx-action@v2
 
@@ -88,10 +96,8 @@ jobs:
           python-version-file: ".python-version"
           cache: "pip"
 
-      - uses: pulumi/actions@v4
-
       - run: |
-          python infra/deploy-service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
+          python infra/deploy_service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
         env:
           ENV: ${{ inputs.environment }}
           BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.tag) || '' }}

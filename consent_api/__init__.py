@@ -8,6 +8,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from consent_api import config
 from consent_api.routers import consent
+from consent_api.routers import healthcheck
 from consent_api.routers import self_service
 
 app = FastAPI()
@@ -20,6 +21,7 @@ app.add_middleware(
     secret_key=config.SECRET_KEY,
 )
 app.include_router(consent.router)
+app.include_router(healthcheck.router)
 app.include_router(self_service.router)
 
 add_exception_handler(app)
