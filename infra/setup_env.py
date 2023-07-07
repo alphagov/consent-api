@@ -87,6 +87,13 @@ class EnvironmentStack:
             service_account_id=gcp.compute.get_default_service_account().name,
         )
 
+        gcp.projects.IAMMember(
+            "project",
+            member=github_service_account.member,
+            project="sde-consent-api",
+            role="roles/cloudsql.viewer",
+        )
+
         github_access_to_storage_role = gcp.projects.IAMCustomRole(
             "access-to-storage-role",
             permissions=[
