@@ -21,23 +21,30 @@ def generate_password(length=20) -> pulumi.Output[str]:
 
 def get_db_instance_id(env: str) -> str:
     """Get an existing database instance in the given environment (if one exists)."""
-    result = subprocess.run(
-        [
-            "gcloud",
-            "sql",
-            "instances",
-            "list",
-            "--project",
-            "sde-consent-api",
-            "--format",
-            "value(name)",
-            "--filter",
-            f"name:{env}-*",
-        ],
-        capture_output=True,
-        check=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "gcloud",
+                "sql",
+                "instances",
+                "list",
+                "--project",
+                "sde-consent-api",
+                "--format",
+                "value(name)",
+                "--filter",
+                f"name:{env}-*",
+            ],
+            check=True,
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+    except subprocess.CalledProcessError as err:
+        print("Failed getting existing database instance")
+        print(f"{err.returncode=}")
+        print(err.output)
+        raise
     return result.stdout.strip()
 
 
