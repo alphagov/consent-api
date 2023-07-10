@@ -16,7 +16,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/PyCQA/autoflake
-    rev: v2.1.1
+    rev: v2.2.0
     hooks:
       - id: autoflake
         args:
@@ -36,7 +36,7 @@ repos:
       - id: dodgy
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.275
+    rev: v0.0.277
     hooks:
       - id: ruff
         args:
@@ -44,7 +44,7 @@ repos:
           - "--exit-non-zero-on-fix"
 
   - repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.1
+    rev: v1.7.4
     hooks:
       - id: docformatter
         args:
@@ -60,14 +60,14 @@ repos:
       - id: black
 
   - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.29.0
+    rev: v1.31.1
     hooks:
       - id: djlint-jinja
         types_or: ["html"]
         entry: djlint --profile jinja --reformat --indent 2 --ignore "J004,H006,H017" --quiet
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
+    rev: v1.4.1
     hooks:
       - id: mypy
         additional_dependencies:
@@ -77,13 +77,13 @@ repos:
           - "--scripts-are-modules"
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.9-for-vscode
+    rev: v3.0.0
     hooks:
       - id: prettier
         exclude: consent_api/templates/
         types_or: ["javascript", "css"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.41.0
+    rev: v8.44.0
     hooks:
       - id: eslint
