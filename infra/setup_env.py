@@ -87,11 +87,44 @@ class EnvironmentStack:
             service_account_id=gcp.compute.get_default_service_account().name,
         )
 
+        github_deployment_role = gcp.projects.IAMCustomRole(
+            "deployment-role",
+            permissions=[
+                "cloudsql.databases.create",
+                "cloudsql.databases.delete",
+                "cloudsql.databases.get",
+                "cloudsql.databases.update",
+                "cloudsql.instances.get",
+                "cloudsql.instances.list",
+                "cloudsql.users.create",
+                "cloudsql.users.delete",
+                "cloudsql.users.get",
+                "cloudsql.users.list",
+                "cloudsql.users.update",
+                "resourcemanager.projects.get",
+                "run.services.create",
+                "run.services.delete",
+                "run.services.get",
+                "run.services.getIamPolicy",
+                "run.services.setIamPolicy",
+                "run.services.update",
+            ],
+            role_id=f"{self.env}_deploy",
+            title=f"{self.env.title()} deployment",
+        )
+
         gcp.projects.IAMMember(
-            "project",
+            "project-deployer",
             member=github_service_account.member,
             project="sde-consent-api",
-            role="roles/cloudsql.viewer",
+            role=github_deployment_role.name,
+        )
+
+        gcp.projects.IAMMember(
+            "project-cloudsql",
+            member=github_service_account.member,
+            project="sde-consent-api",
+            role="roles/cloudsql.admin",
         )
 
         github_access_to_storage_role = gcp.projects.IAMCustomRole(
