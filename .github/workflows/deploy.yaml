@@ -26,11 +26,8 @@ on:
         required: false
         type: boolean
     secrets:
-      WIF_PROVIDER:
-        description: "Google Cloud Workload Identity Federation provider ID"
-        required: true
-      WIF_SERVICE_ACCOUNT:
-        description: "Google Cloud Workload Identity Federation service account email"
+      PULUMI_ACCESS_TOKEN:
+        description: "Pulumi Access Token"
         required: true
 
     outputs:
