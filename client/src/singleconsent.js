@@ -40,7 +40,7 @@
     this.eventListeners.push(callback)
   }
 
-  Consent.prototype.setStatus = function (status) {
+  Consent.prototype.setStatus = function (status, callback) {
     if (status) {
       request(
         apiUrl.concat(this.uid || ''),
@@ -52,6 +52,9 @@
         function (response) {
           // get the current uid from the API if we don't already have one
           setUid(this, response.uid)
+          if (callback) {
+            callback()
+          }
         }.bind(this)
       )
     }
