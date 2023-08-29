@@ -37,7 +37,7 @@ if (consent_uid is set) then (yes)
   :Execute callback functions (eg hide cookie banner);
   stop
 
-|Main|  
+|Main|
 end fork
 else (no)
 endif
