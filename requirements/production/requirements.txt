@@ -4,6 +4,7 @@ asyncpg==0.27.0
 essentials==1.1.5
 fastapi==0.95.2
 fastapi-etag==0.4.0
+gunicorn==21.2.0
 httpx==0.24.1
 locust==2.15.1
 pytest==7.2.0
