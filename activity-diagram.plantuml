@@ -1,0 +1,56 @@
+@startuml
+|Main|
+start
+:Load site HTML;
+fork
+:Load other Javascripts;
+:Other Javascripts register callback functions;
+fork again
+:Load singleconsent.js file;
+:Read consent_uid from URL parameter, if exists;
+:Read consent_uid from cookie, if exists;
+end fork
+:DOMContentLoad event fires;
+split
+:Execute other JS event listeners;
+split again
+:instantiate and initialise Consent object;
+:Remove consent_uid URL parameter from address bar (if exists);
+if (consent_uid is set) then (yes)
+
+  :Request list of known partner domains;
+  fork
+  :Set consent_uid cookie;
+  label set_uid
+  |Main|
+  fork again
+  |Async|
+  :Add consent_uid URL parameter to cross-origin links;
+  stop
+  |Main|
+  end fork
+
+  :Query consent status for consent_uid;
+  fork
+
+  |Async|
+  :Execute callback functions (eg hide cookie banner);
+  stop
+
+|Main|
+end fork
+else (no)
+endif
+end split
+:Cookie banner JS calls setStatus;
+:POST consent status to API;
+fork
+|Async|
+:Receive consent_uid from API;
+-[#red]->
+goto set_uid
+stop
+|Main|
+end fork
+stop
+@enduml
