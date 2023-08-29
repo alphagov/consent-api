@@ -44,6 +44,17 @@ remembering a user's preferences without repeatedly asking for consent.
 To make use of the Single Consent service on your website, please see the
 [Single Consent client Quick Start documentation](client/README.md)
 
+### Running the API service
+
+#### Environment variables
+
+* `DATABASE_URL` (default is `postgresql+asyncpg://localhost:5432/consent_api`)
+* `ENV` (default is `development`)
+* `PORT` (default is `8000`)
+* `SECRET_KEY` (default is randomly generated)
+* You can configure the number of web server worker processes with the
+`WEB_CONCURRENCY` environment variable (default is 1)
+
 ## Development
 
 ### Install
