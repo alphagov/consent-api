@@ -54,6 +54,10 @@ new-migration:
 test:
 	pytest -x -n=auto --dist=loadfile -W ignore::DeprecationWarning -m "not end_to_end"
 
+.PHONY: test-client
+test-client:
+	npm test
+
 ## test-end-to-end: Run webdriver tests
 .PHONY: test-end-to-end
 test-end-to-end: migrations
@@ -68,7 +72,7 @@ test-end-to-end: migrations
 		--splinter-headless
 
 .PHONY: test-all
-test-all: migrations test test-end-to-end
+test-all: migrations test test-client test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:
@@ -119,6 +123,13 @@ deploy:
 .PHONY: destroy-deployment
 destroy-deployment:
 	python infra/deploy_service.py --destroy -e $(ENV) $(PREVIEW) -b main
+
+## dist: Build client distribution file
+.PHONY: dist
+dist:
+	@mkdir -p client/dist
+	$(shell echo ";(function () {\n\n$$(cat client/src/singleconsent.js)\n\n})();\n" > "client/dist/singleconsent.js")
+	@echo client/dist/singleconsent.js written
 
 ## help: Show this message
 .PHONY: help

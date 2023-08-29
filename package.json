@@ -6,7 +6,7 @@
   },
   "description": "Client code for the Cookie Consent Sharing API",
   "sideEffects": false,
-  "main": "client/src/consent_api_client.js",
+  "main": "client/dist/singleconsent.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alphagov/consent-api.git"
@@ -25,5 +25,17 @@
     "tabWidth": 2,
     "semi": false,
     "singleQuote": true
+  },
+  "dependencies": {
+    "jsdom": "^22.1.0",
+    "jsdom-global": "^3.0.2"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.6.1",
+    "jest-environment-jsdom": "^29.6.1",
+    "jest-environment-jsdom-global": "^4.0.0"
   }
 }
