@@ -81,11 +81,7 @@ function setUid(consent, uid) {
       Array.prototype.forEach.call(links, function (link) {
         if (isCrossOrigin(link) && origins.indexOf(origin(link)) >= 0) {
           link.addEventListener('click', function (event) {
-            event.target.href = addUrlParameter(
-              event.target.href,
-              uidKey,
-              uid
-            )
+            event.target.href = addUrlParameter(event.target.href, uidKey, uid)
           })
         }
       })
