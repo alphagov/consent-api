@@ -13,6 +13,19 @@
   function Consent() {
     // one year in milliseconds
     this.COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
+    this.ACCEPT_ALL = {
+      essential: true,
+      usage: true,
+      campaigns: true,
+      settings: true,
+    }
+
+    this.REJECT_ALL = {
+      essential: true,
+      usage: false,
+      campaigns: false,
+      settings: false,
+    }
     this.eventListeners = []
   }
 
