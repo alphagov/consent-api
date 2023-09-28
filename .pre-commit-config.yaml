@@ -16,7 +16,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/PyCQA/autoflake
-    rev: v2.2.0
+    rev: v2.2.1
     hooks:
       - id: autoflake
         args:
@@ -36,7 +36,7 @@ repos:
       - id: dodgy
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.286
+    rev: v0.0.291
     hooks:
       - id: ruff
         args:
@@ -55,12 +55,12 @@ repos:
           - "--pre-summary-newline"
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.9.1
     hooks:
       - id: black
 
   - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.32.1
+    rev: v1.34.0
     hooks:
       - id: djlint-jinja
         types_or: ["html"]
@@ -77,13 +77,13 @@ repos:
           - "--scripts-are-modules"
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.2
+    rev: v3.0.3
     hooks:
       - id: prettier
         exclude: consent_api/templates/
         types_or: ["javascript", "css"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.48.0
+    rev: v8.50.0
     hooks:
       - id: eslint
