@@ -72,7 +72,7 @@ test-end-to-end: migrations
 		--splinter-headless
 
 .PHONY: test-all
-test-all: migrations test test-client test-end-to-end
+test-all: migrations test test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:

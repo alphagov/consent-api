@@ -4,6 +4,19 @@ on: [pull_request]
 
 jobs:
 
+  test-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.node-version'
+          cache: 'npm'
+
+      - run: make test-client
+
   build-test-push:
     runs-on: ubuntu-latest
 
