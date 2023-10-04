@@ -187,8 +187,9 @@
     return origin
   }
 
+  window.Consent = new Consent()
+
   document.addEventListener('DOMContentLoaded', function () {
-    window.Consent = new Consent()
     window.Consent.init()
   })
 })()
