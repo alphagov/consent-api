@@ -58,7 +58,7 @@ user has shared consent, you need to register a callback function with the
 following example Javascript code:
 
 ```javascript
-SingleConsent.onStatusLoaded(function (consentData) {
+GovSingleConsent.onStatusLoaded(function (consentData) {
   document.querySelector("#example-cookie-banner-id").hidden = true
 })
 ```
@@ -77,7 +77,7 @@ exampleCookieConsentStatusObject = {
   "campaigns": false,
 }
 
-Consent.setStatus(exampleCookieConsentStatusObject)
+GovSingleConsent.setStatus(exampleCookieConsentStatusObject)
 ```
 
 The structure of the consent data object is currently based on the
@@ -133,7 +133,7 @@ with the consent status object as an argument.</td></tr>
 ##### Example
 
 ```javascript
-Consent.onStatusLoaded((status) => {
+GovSingleConsent.onStatusLoaded((status) => {
   console.log("Consent Status:")
   console.log(`- Essential cookies (${status.essential})`)
   console.log(`- Campaign cookies (${status.campaigns})`)
@@ -170,7 +170,7 @@ with the consent status as an argument.</td></tr>
 ##### Example
 
 ```javascript
-Consent.setStatus(
+GovSingleConsent.setStatus(
   acceptAllCookies,
   (status) => {
     console.log("Consent status successfully updated to", status)

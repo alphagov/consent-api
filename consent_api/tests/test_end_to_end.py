@@ -32,8 +32,8 @@ def test_single_service(browser, dummy_service, consent_api):
     assert CookieConsent(**json.loads(policy)) == CookieConsent.REJECT_ALL
 
     # we have been assigned a UID
-    browser.wait_for(lambda _: "consent_uid" in browser.cookies.all())
-    uid = browser.cookies.all()["consent_uid"]
+    browser.wait_for(lambda _: "gov_singleconsent_uid" in browser.cookies.all())
+    uid = browser.cookies.all()["gov_singleconsent_uid"]
 
     # consent status is also recorded in the API associated with the current UID
     assert consent_api.get_consent(uid) == CookieConsent.REJECT_ALL
@@ -83,8 +83,8 @@ def test_connected_services(browser, dummy_service, consent_api):
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.ACCEPT_ALL
 
-    browser.wait_for(lambda _: "consent_uid" in browser.cookies.all())
-    uid = browser.cookies.all()["consent_uid"]
+    browser.wait_for(lambda _: "gov_singleconsent_uid" in browser.cookies.all())
+    uid = browser.cookies.all()["gov_singleconsent_uid"]
     assert consent_api.get_consent(uid) == CookieConsent.ACCEPT_ALL
 
     # browse to a different domain/origin
@@ -95,7 +95,7 @@ def test_connected_services(browser, dummy_service, consent_api):
     assert not homepage.cookie_banner.visible
 
     # assert the UID has been carried over
-    assert browser.cookies.all()["consent_uid"] == uid
+    assert browser.cookies.all()["gov_singleconsent_uid"] == uid
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.ACCEPT_ALL
 

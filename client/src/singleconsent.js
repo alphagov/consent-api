@@ -1,16 +1,16 @@
 ;(function () {
   'use strict'
 
-  var uidKey = 'consent_uid'
+  var uidKey = 'gov_singleconsent_uid'
   var uidFromCookie = findByKey(uidKey, document.cookie.split(';'))
   var uidFromUrl = findByKey(uidKey, parseUrl(location.href).params)
   var apiUrl = (function ($el) {
     return $el
       ? $el.dataset.consentApiUrl.replace(/\/?$/, '/')
       : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
-  })(document.querySelector('[data-consent-api-url]'))
+  })(document.querySelector('[data-gov-singleconsent-api-url]'))
 
-  function Consent() {
+  function GovSingleConsent() {
     // one year in milliseconds
     this.COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
     this.ACCEPT_ALL = {
@@ -29,7 +29,7 @@
     this.eventListeners = []
   }
 
-  Consent.prototype.init = function () {
+  GovSingleConsent.prototype.init = function () {
     // hide uid URL parameter
     history.replaceState(null, null, removeUrlParameter(location.href, uidKey))
 
@@ -49,11 +49,11 @@
     }
   }
 
-  Consent.prototype.onStatusLoaded = function (callback) {
+  GovSingleConsent.prototype.onStatusLoaded = function (callback) {
     this.eventListeners.push(callback)
   }
 
-  Consent.prototype.setStatus = function (status, callback) {
+  GovSingleConsent.prototype.setStatus = function (status, callback) {
     if (status) {
       request(
         apiUrl.concat(this.uid || ''),
@@ -66,7 +66,7 @@
           // get the current uid from the API if we don't already have one
           setUid(this, response.uid)
           if (callback) {
-            callback()
+            callback(status)
           }
         }.bind(this)
       )
@@ -99,7 +99,7 @@
         .concat('=', uid)
         .concat(
           '; path=/',
-          '; max-age='.concat(Consent.COOKIE_LIFETIME),
+          '; max-age='.concat(GovSingleConsent.COOKIE_LIFETIME),
           document.location.protocol === 'https:' ? '; Secure' : ''
         )
     }
@@ -187,9 +187,9 @@
     return origin
   }
 
-  window.Consent = new Consent()
+  window.GovSingleConsent = new GovSingleConsent()
 
   document.addEventListener('DOMContentLoaded', function () {
-    window.Consent.init()
+    window.GovSingleConsent.init()
   })
 })()
