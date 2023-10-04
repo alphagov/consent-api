@@ -4,14 +4,16 @@ import argparse
 import secrets
 import string
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 import pulumi
-import pulumi_gcp as gcp
+from pulumi_gcp import cloudrun
+from pulumi_gcp import sql
 from ruamel.yaml import YAML
 
 
-def generate_password(length=20) -> pulumi.Output[str]:
+def generate_password(length: int = 20) -> pulumi.Output[str]:
     """Generate a random password."""
     alphabet = string.ascii_letters + string.digits
     return pulumi.Output.secret(
@@ -48,42 +50,36 @@ def get_db_instance_id(env: str) -> str:
     return result.stdout.strip()
 
 
-class ConsentAPIStack:
+def deploy_service(env: str, branch: str, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
-    def __init__(self, env: str, branch: str, tag: str) -> None:
-        """Get the environment and optional tag."""
-        self.env = env
-        self.branch = branch
-        self.tag = tag or branch
-
-    def __call__(self) -> None:
+    def _deploy() -> None:
         """Execute the inline Pulumi program."""
         name = "consent-api"
-        if self.branch:
-            name = f"{name}--{self.branch}"
+        if branch:
+            name = f"{name}--{branch}"
 
         google_project = "sde-consent-api"
 
         stack = pulumi.get_stack()
 
-        db_instance = gcp.sql.DatabaseInstance.get(
-            f"{self.env}-db-instance",
-            get_db_instance_id(self.env),
+        db_instance = sql.DatabaseInstance.get(
+            f"{env}-db-instance",
+            get_db_instance_id(env),
         )
         db_connection = db_instance.connection_name
 
-        db = gcp.sql.Database(
+        db = sql.Database(
             f"{name}--db",
             name=name,
             instance=db_instance.name,
         )
 
-        db_user = gcp.sql.User(
+        db_user = sql.User(
             f"{name}--db-user",
             name=name,
             instance=db_instance.name,
-            password=generate_password(length=20),
+            password=generate_password(),
         )
 
         db_url: pulumi.Output = pulumi.Output.secret(
@@ -97,46 +93,40 @@ class ConsentAPIStack:
             )
         )
 
-        service = gcp.cloudrun.Service(
+        service = cloudrun.Service(
             name,
             name=f"{stack}-consent-api",
             location=pulumi.Config("gcp").require("region"),
-            template=gcp.cloudrun.ServiceTemplateArgs(
-                metadata=gcp.cloudrun.ServiceTemplateMetadataArgs(
-                    annotations={
+            template={
+                "metadata": {
+                    "annotations": {
                         "autoscaling.knative.dev/maxScale": "5",
                         "run.googleapis.com/cloudsql-instances": db_connection,
-                    },
-                ),
-                spec=gcp.cloudrun.ServiceTemplateSpecArgs(
-                    containers=[
-                        gcp.cloudrun.ServiceTemplateSpecContainerArgs(
-                            image=f"gcr.io/{google_project}/consent-api:{self.tag}",
-                            envs=[
-                                gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
-                                    name="DATABASE_URL",
-                                    value=db_url,
-                                ),
-                                gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
-                                    name="ENV",
-                                    value=stack,
-                                ),
+                    }
+                },
+                "spec": {
+                    "containers": [
+                        {
+                            "image": f"gcr.io/{google_project}/consent-api:{tag}",
+                            "envs": [
+                                {"name": "DATABASE_URL", "value": db_url},
+                                {"name": "ENV", "value": stack},
                             ],
-                        )
+                        },
                     ],
-                ),
-            ),
+                },
+            },
             traffics=[
-                gcp.cloudrun.ServiceTrafficArgs(
-                    latest_revision=True,
-                    percent=100,
-                )
+                {
+                    "latest_revision": True,
+                    "percent": 100,
+                },
             ],
         )
 
         # TODO only allow public access to production - other envs should be behind some
         # kind of auth
-        gcp.cloudrun.IamBinding(
+        cloudrun.IamBinding(
             f"{name}--public-access-binding",
             location=service.location,
             service=service.name,
@@ -145,6 +135,8 @@ class ConsentAPIStack:
         )
 
         pulumi.export("service_url", service.statuses[0].url)
+
+    return _deploy
 
 
 def main():
@@ -166,12 +158,12 @@ def main():
     stack = pulumi.automation.create_or_select_stack(
         stack_name=stack_name,
         project_name="sde-consent-api",
-        program=ConsentAPIStack(args.env, args.branch, args.tag),
+        program=deploy_service(args.env, args.branch, args.tag),
     )
     print(f"Initialised stack {stack_name}")
 
     print("Installing plugins...")
-    stack.workspace.install_plugin("gcp", "v6.52.0")
+    stack.workspace.install_plugin("gcp", "v6.67.0")
 
     config_file = Path(__file__).parent / "config" / f"Pulumi.{args.env}.yaml"
     config = YAML(typ="safe").load(config_file)
