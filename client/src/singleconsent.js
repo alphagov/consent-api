@@ -39,7 +39,7 @@
       // fetch consent status from API and notify listeners on response
       request(
         apiUrl.concat(this.uid),
-        {},
+        {timeout: 1000},
         function (response) {
           this.eventListeners.forEach(function (callback) {
             callback(response.status)
@@ -115,6 +115,9 @@
       ) {
         callback(JSON.parse(req.responseText))
       }
+    }
+    if (options.timeout) {
+      req.timeout = options.timeout;
     }
     req.open(options.method || 'GET', url)
     for (var name in options.headers || {}) {
