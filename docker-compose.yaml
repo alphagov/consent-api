@@ -93,7 +93,7 @@ services:
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
-    entrypoint: ["make", "test-all"]
+    # entrypoint: ["make", "test-all"]
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       E2E_TEST_CONSENT_API_URL: "http://consent-api"
