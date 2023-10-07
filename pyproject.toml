@@ -1,3 +1,62 @@
+[tool.poetry]
+name = "consent-api"
+version = "0.1.0"
+description = "Single Consent is a service that streamlines user cookie preferences across multiple websites by generating a unique ID for each user's consent choice, centrally storing it, and ensuring subsequent websites respect those preferences."
+authors = ["Your Name <you@example.com>"]
+license = "MIT License - Copyright (c) 2023 Government Digital Service - See ./LICENSE"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiosqlite = "0.19.0"
+alembic = "1.10.4"
+asyncpg = "0.27.0"
+essentials = "1.1.5"
+fastapi = "0.95.2"
+fastapi-etag = "0.4.0"
+gunicorn = "21.2.0"
+httpx = "0.24.1"
+locust = "2.15.1"
+pytest = "7.2.0"
+pytest-asyncio = "0.21.0"
+pytest-cov = "4.0.0"
+pytest-splinter = "3.3.2"
+pytest-xdist = "3.1.0"
+python-dotenv = "0.21.0"
+python-multipart = "0.0.6"
+selenium = "4.9.1"
+sqlmodel = "0.0.8"
+wtforms = "3.0.1"
+uvicorn = {version = "0.22.0", extras = ["standard"]}
+
+
+[tool.poetry.group.infra.dependencies]
+pulumi = ">=3.0.0,<4.0.0"
+pulumi-gcp = ">=6.0.0,<7.0.0"
+ruamel-yaml = "0.17.21"
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "8.10.0"
+pre-commit = "2.20.0"
+
+
+[tool.poetry.group.ci.dependencies]
+aiosqlite = "0.19.0"
+black = "22.12.0"
+flake8 = "6.0.0"
+flake8-bugbear = "22.10.27"
+flake8-docstrings = "1.6.0"
+isort = "5.11.4"
+mypy = "0.991"
+pep8-naming = "0.13.2"
+types-sqlalchemy = "1.4.53.17"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
 [tool.black]
 extend-exclude = "^/migrations/"
 

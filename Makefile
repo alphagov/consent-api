@@ -7,7 +7,7 @@ DOCKER ?= docker
 DOCKER_BUILD ?= docker buildx build
 DOCKER_DB_URL ?= postgresql+asyncpg://postgres@host.docker.internal:5432/$(APP_NAME)
 DOCKER_IMAGE ?= gcr.io/sde-consent-api/consent-api
-TAG ?= latest
+TAG = latest
 ENV ?= development
 PORT ?= 8000
 PREVIEW := $(shell \
@@ -22,7 +22,7 @@ SPLINTER_REMOTE_URL := $(shell \
 ## clean: Remove temporary files
 .PHONY: clean
 clean:
-	find . \( -name '__pycache__' -and -not -name "venv" \) -depth -prune -exec rm -r {} +
+	find . \( -name '__pycache__' -and -not -name ".venv" \) -depth -prune -exec rm -r {} +
 
 ## install: Install dependencies
 .PHONY: install

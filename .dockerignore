@@ -20,7 +20,6 @@ htmlcov
 infra/
 node_modules/
 package.json
-pyproject.toml
 requirements/development
 requirements/infra
 selenoid/
