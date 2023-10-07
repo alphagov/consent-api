@@ -59,6 +59,19 @@ services:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
 
+
+  selenoid-ui:
+    container_name: selenoid-ui
+    image: "aerokube/selenoid-ui:latest-release"
+    networks:
+      - e2e
+    links:
+      - selenoid
+    command: ["--selenoid-uri", "http://selenoid:4444"]
+    ports:
+      - "8080:8080"
+
+
   selenoid:
     container_name: selenoid
     networks:
@@ -80,7 +93,7 @@ services:
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
-    # entrypoint: ["make", "test-all"]
+    entrypoint: ["make", "test-all"]
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       E2E_TEST_CONSENT_API_URL: "http://consent-api"
