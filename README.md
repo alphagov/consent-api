@@ -65,6 +65,11 @@ Clone the repository, then install dependencies with the following command:
 make install
 ```
 
+When running docker commands, you will need a few extra environment variables.
+Copy `.env.template` to `.env` and load it into your environment.
+
+Those variables will be used by both docker-compose and the Makefile.
+
 ### Testing
 
 #### Unit tests

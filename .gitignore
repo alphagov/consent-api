@@ -8,3 +8,4 @@ consent_api.tests.test_end_to_end/
 geckodriver.log
 .venv
 __pycache__
+.env
