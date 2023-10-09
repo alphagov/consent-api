@@ -6,7 +6,7 @@ exclude: ^migrations/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -84,6 +84,6 @@ repos:
         types_or: ["javascript", "css"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.50.0
+    rev: v8.51.0
     hooks:
       - id: eslint
