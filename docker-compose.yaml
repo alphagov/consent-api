@@ -27,6 +27,8 @@ services:
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
+    ports:
+      - "8000:80"
     depends_on:
       db:
         condition: service_healthy
@@ -39,6 +41,8 @@ services:
     networks:
       - e2e
     image: "gcr.io/sde-consent-api/fake_govuk:latest"
+    ports:
+      - "8001:80"
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
@@ -49,9 +53,24 @@ services:
     networks:
       - e2e
     image: "gcr.io/sde-consent-api/haas:latest"
+    ports:
+      - "8002:80"
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
+
+
+  selenoid-ui:
+    container_name: selenoid-ui
+    image: "aerokube/selenoid-ui:latest-release"
+    networks:
+      - e2e
+    links:
+      - selenoid
+    command: ["--selenoid-uri", "http://selenoid:4444"]
+    ports:
+      - "8080:8080"
+
 
   selenoid:
     container_name: selenoid
