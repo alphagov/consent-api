@@ -65,6 +65,8 @@ Clone the repository, then install dependencies with the following command:
 make install
 ```
 
+It will install poetry, our python dependencies manager, as well as the project dependencies.
+
 When running docker commands, you will need a few extra environment variables.
 Copy `.env.template` to `.env` and load it into your environment.
 
