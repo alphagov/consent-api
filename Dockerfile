@@ -1,30 +1,27 @@
-FROM python:3.11-slim AS build
+FROM python:3.11-slim@sha256:1591aa8c01b5b37ab31dbe5662c5bdcf40c2f1bce4ef1c1fd24802dae3d01052 as build
 
 WORKDIR /home/app
 
 RUN pip install poetry
+
+COPY pyproject.toml ./
+COPY poetry.lock ./ 
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
         build-essential \
         gcc \
         python3-dev \
-        libpq-dev
-RUN pg_config --version
-
-# poetry will automatically create a ./.venv/
-RUN poetry config virtualenvs.in-project true
-
-COPY pyproject.toml ./
-COPY poetry.lock ./ 
-RUN poetry install --only main --no-ansi
+        libpq-dev && \
+        pg_config --version && \
+        # poetry will automatically create a ./.venv/
+        poetry config virtualenvs.in-project true && \
+        poetry install --only main --no-ansi
 
 
-FROM build
+FROM python:3.11-slim@sha256:1591aa8c01b5b37ab31dbe5662c5bdcf40c2f1bce4ef1c1fd24802dae3d01052
 
 WORKDIR /home/app
-
-COPY --from=build /home/app /home/app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
