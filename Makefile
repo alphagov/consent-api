@@ -27,9 +27,8 @@ clean:
 ## install: Install dependencies
 .PHONY: install
 install:
-	python -m pip install -U pip
-	pip install -r requirements/production/requirements.txt
-	if [ -f requirements/$(ENV)/requirements.txt ]; then pip install -r requirements/$(ENV)/requirements.txt; fi
+	curl -sSL https://install.python-poetry.org | python3 -
+	poetry install
 
 .PHONY: check
 check:

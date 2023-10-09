@@ -99,7 +99,10 @@ jobs:
           python-version-file: ".python-version"
           cache: "pip"
 
-      - run: pip install -r requirements/infra/requirements.txt
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - run: poetry install --only infra
 
       - run: |
           python infra/deploy_service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}

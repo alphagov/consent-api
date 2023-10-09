@@ -20,6 +20,4 @@ htmlcov
 infra/
 node_modules/
 package.json
-requirements/development
-requirements/infra
 selenoid/
