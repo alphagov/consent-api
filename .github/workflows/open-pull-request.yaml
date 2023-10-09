@@ -24,7 +24,7 @@ jobs:
       - name: Generate sanitised branch name for Docker Image Tag
         run: |
           echo "SANITISED_BRANCH_NAME=$(echo $BRANCH_NAME | sed 's|/|-|g')" >> $GITHUB_ENV
-      
+
       - name: Set Docker Image Tag
         run: |
           echo "IMAGE_TAG=${{ vars.DOCKER_IMAGE }}:$SANITISED_BRANCH_NAME" >> $GITHUB_ENV
