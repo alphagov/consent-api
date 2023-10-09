@@ -18,7 +18,6 @@ RUN apt-get install -y --no-install-recommends \
         poetry config virtualenvs.in-project true && \
         poetry install --only main --no-ansi
 
-
 FROM python:3.11-slim@sha256:1591aa8c01b5b37ab31dbe5662c5bdcf40c2f1bce4ef1c1fd24802dae3d01052
 
 WORKDIR /home/app
