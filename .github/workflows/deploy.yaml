@@ -94,12 +94,15 @@ jobs:
             ${{ inputs.image_name }}:latest
             ${{ inputs.image_name }}:${{ inputs.tag }}
 
+      - name: Install poetry
+        run: pipx install poetry
+
       - uses: actions/setup-python@v4
         with:
           python-version-file: ".python-version"
-          cache: "pip"
+          cache: "poetry"
 
-      - run: pip install -r requirements/infra/requirements.txt
+      - run: poetry install --only infra
 
       - run: |
           python infra/deploy_service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
