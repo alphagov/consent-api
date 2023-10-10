@@ -1,6 +1,12 @@
-const fs = require('fs')
-
-eval(fs.readFileSync('client/src/singleconsent.js') + '')
+const {
+  addUrlParameter,
+  removeUrlParameter,
+  parseUrl,
+  buildUrl,
+  findByKey,
+  isCrossOrigin,
+  origin,
+} = require('./singleconsent')
 
 describe('addUrlParameter', () => {
   ;[
@@ -120,7 +126,6 @@ describe('findByKey', () => {
       expect(findByKey(key, kvPairs)).toEqual(expected)
     })
   })
-
   ;[
     {
       kvPairs: ['foo=1', 'bar=2'],
@@ -182,7 +187,7 @@ describe('isCrossOrigin', () => {
     },
   ].forEach(({ url, location, expected }) => {
     test(`returns ${expected} when passed ${url} and the current URL is ${location}`, () => {
-      jsdom.reconfigure({ url: location })
+      jsdom.reconfigure({ url: location });
       var link = document.createElement('a')
       link.href = url
       expect(isCrossOrigin(link)).toBe(expected)
