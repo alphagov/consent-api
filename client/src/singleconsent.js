@@ -56,7 +56,7 @@ _GovConsent.prototype.init = function () {
   if (this.uid) {
     request(
       _GovConsentConfig().getApiUrl().concat(this.uid),
-      {},
+      { timeout: 1000 },
       function (response) {
         this.eventListeners.forEach(function (callback) {
           callback(response.status)
@@ -139,18 +139,33 @@ function setUid(consent, uid) {
 function request(url, options, callback) {
   var req = new XMLHttpRequest()
   options = options || {}
+
   req.onreadystatechange = function () {
-    if (
-      req.readyState === req.DONE &&
-      (req.status === 0 || (req.status >= 200 && req.status < 400))
-    ) {
-      callback(JSON.parse(req.responseText))
+    if (req.readyState === req.DONE) {
+      if (req.status >= 200 && req.status < 400) {
+        callback(JSON.parse(req.responseText))
+      } else {
+        var reqError = new Error('Request failed with status: ' + req.status)
+        callback(reqError)
+      }
     }
   }
-  req.open(options.method || 'GET', url)
-  for (var name in options.headers || {}) {
-    req.setRequestHeader(name, options.headers[name])
+
+  if (options.timeout) {
+    req.timeout = options.timeout
   }
+
+  req.ontimeout = function () {
+    throw new Error('Request to ' + url + ' timed out')
+  }
+
+  req.open(options.method || 'GET', url, true)
+
+  var headers = options.headers || {}
+  for (var name in headers) {
+    req.setRequestHeader(name, headers[name])
+  }
+
   req.send(options.body || null)
 }
 

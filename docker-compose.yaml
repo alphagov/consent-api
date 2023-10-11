@@ -33,6 +33,7 @@ services:
       db:
         condition: service_healthy
     volumes:
+      - "./client:/home/app/client"
       - "./consent_api:/home/app/consent_api"
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
