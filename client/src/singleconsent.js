@@ -54,16 +54,15 @@ _GovConsent.prototype.init = function () {
   // get the current uid from the cookie or the URL if it exists
   setUid(this, consentConfig.uidFromCookie || consentConfig.uidFromUrl)
   if (this.uid) {
-    // fetch consent status from API and notify listeners on response
-    // request(
-    //   _GovConsentConfig().getApiUrl().concat(this.uid),
-    //   {timeout: 1000},
-    //   function (response) {
-    //     this.eventListeners.forEach(function (callback) {
-    //       callback(response.status)
-    //     })
-    //   }.bind(this)
-    // )
+    request(
+      _GovConsentConfig().getApiUrl().concat(this.uid),
+      {},
+      function (response) {
+        this.eventListeners.forEach(function (callback) {
+          callback(response.status)
+        })
+      }.bind(this)
+    )
   }
 }
 
@@ -147,9 +146,6 @@ function request(url, options, callback) {
     ) {
       callback(JSON.parse(req.responseText))
     }
-  }
-  if (options.timeout) {
-    req.timeout = options.timeout
   }
   req.open(options.method || 'GET', url)
   for (var name in options.headers || {}) {
