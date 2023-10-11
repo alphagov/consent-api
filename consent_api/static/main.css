@@ -30,7 +30,7 @@ body {
 }
 
 .nav-header .width-container::after {
-  content: '';
+  content: "";
   display: block;
   clear: both;
   position: static;
@@ -139,12 +139,12 @@ ul > li {
   width: 30%;
 }
 
-[data-consent='True'] {
+[data-consent="True"] {
   background: #8f8;
   color: #484;
 }
 
-[data-consent='False'] {
+[data-consent="False"] {
   background: #f88;
   color: #844;
 }
@@ -183,7 +183,7 @@ footer .footer--links {
 
 .govuk-grid-row::after,
 .grid-row::after {
-  content: '';
+  content: "";
   display: block;
   clear: both;
 }
@@ -370,8 +370,8 @@ button.secondary:hover,
 }
 
 .big-number {
-  -webkit-font-feature-settings: 'tnum' 1;
-  font-feature-settings: 'tnum' 1;
+  -webkit-font-feature-settings: "tnum" 1;
+  font-feature-settings: "tnum" 1;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: 48px;
@@ -389,7 +389,7 @@ button.secondary:hover,
 }
 
 .form-group::after {
-  content: '';
+  content: "";
   display: block;
   clear: both;
 }
