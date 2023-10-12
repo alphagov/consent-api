@@ -98,6 +98,8 @@ services:
     image: "${DOCKER_IMAGE}"
     volumes:
       - "$PWD/selenoid/opt:/home/app/logs"
+      - "$PWD/consent_api:/home/app/consent_api"
+      - "$PWD/Makefile:/home/app/Makefile"
     entrypoint: ["make", "test-all"]
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
