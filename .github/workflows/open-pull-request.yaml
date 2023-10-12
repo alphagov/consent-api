@@ -64,6 +64,8 @@ jobs:
 
       - run: make test-end-to-end-docker
         name: Run tests
+        env:
+          DOCKER_IMAGE: ${{ env.IMAGE_TAG }}
 
       - uses: docker/build-push-action@v4
         name: Push image

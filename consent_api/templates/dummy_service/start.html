@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set body_classes -%}
+  start-page
+{%- endset %}
+{% block content %}
+<div class="grid-row">
+  <div class="grid-col-two-thirds">
+    <h1>Dummy Service</h1>
+  </div>
+  <div class="grid-col-two-thirds">
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+      molestie, sem sit amet volutpat pellentesque, nisi nibh commodo dolor, a
+      commodo tortor odio eget libero. Mauris placerat commodo sapien, et
+      faucibus diam rhoncus eu. Nam sollicitudin fringilla lobortis. Maecenas a
+      nisl quam. Sed eget aliquet arcu. In malesuada dui ipsum, id congue metus
+      feugiat sed. Cras nec viverra neque, id maximus purus. Aenean eleifend,
+      risus ac euismod fermentum, nisl felis pharetra elit, vitae ultricies
+      dolor quam dictum lectus. Nunc ornare sapien sed ultricies porta. Fusce
+      efficitur nunc sed dolor rhoncus rhoncus. Curabitur eu massa in metus
+      blandit tempus. Integer ac turpis vitae magna malesuada ultrices. Etiam et
+      facilisis diam. Praesent pulvinar diam nulla, a tempor dui tincidunt non.
+      Vivamus et scelerisque erat.
+    </p>
+    <p>
+      <a href="{{ OTHER_URL }}" class="button button-start">
+        Start now
+        <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"></path>
+        </svg>
+      </a>
+    </p>
+  </div>
+</div>
+{% endblock %}
