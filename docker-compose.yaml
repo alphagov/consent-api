@@ -36,28 +36,31 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
 
-  fake_govuk:
-    container_name: fake_govuk
+  dummy-service-1:
+    container_name: dummy-service-1
     networks:
       - e2e
-    image: "gcr.io/sde-consent-api/fake_govuk:latest"
-    ports:
-      - "8001:80"
+    image: "${DOCKER_IMAGE}"
+    volumes:
+      - "./client:/home/app/client"
+    entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
-      HAAS_URL: "http://haas/"
+      OTHER_URL: "http://dummy-service-2/dummy-service/"
 
-  haas:
-    container_name: haas
+  dummy-service-2:
+    container_name: dummy-service-2
     networks:
       - e2e
-    image: "gcr.io/sde-consent-api/haas:latest"
-    ports:
-      - "8002:80"
+    image: "${DOCKER_IMAGE}"
+    volumes:
+      - "./client:/home/app/client"
+    entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
+      OTHER_URL: "http://dummy-service-1/dummy-service/"
 
 
   selenoid-ui:
@@ -93,17 +96,19 @@ services:
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
+    volumes:
+      - "$PWD/selenoid/opt:/home/app/logs"
     entrypoint: ["make", "test-all"]
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       E2E_TEST_CONSENT_API_URL: "http://consent-api"
-      E2E_TEST_GOVUK_URL: "http://fake_govuk"
-      E2E_TEST_HAAS_URL: "http://haas"
+      E2E_TEST_DUMMY_SERVICE_1_URL: "http://dummy-service-1"
+      E2E_TEST_DUMMY_SERVICE_2_URL: "http://dummy-service-2"
       SELENIUM_DRIVER: remote
       SELENIUM_REMOTE_URL: http://selenoid:4444/wd/hub/
       SPLINTER_REMOTE_BROWSER_VERSION: "${SPLINTER_REMOTE_BROWSER_VERSION}"
     depends_on:
       - consent-api
-      - fake_govuk
-      - haas
+      - dummy-service-1
+      - dummy-service-2
       - selenoid
