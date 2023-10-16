@@ -14,7 +14,9 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
+          cache-dependency-path: "./client/package-lock.json"
 
+      - run: cd client && npm ci
       - run: make test-client
 
   build-test-push:
