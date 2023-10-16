@@ -56,7 +56,7 @@ test:
 
 .PHONY: test-client
 test-client:
-	npm test
+	cd client && npm test
 
 ## test-end-to-end: Run webdriver tests
 .PHONY: test-end-to-end
