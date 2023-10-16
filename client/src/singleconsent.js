@@ -3,7 +3,7 @@
 function _GovConsentConfig() {
   var uidKey = 'consent_uid'
   return {
-    uidKey,
+    "uidKey": uidKey,
     uidFromCookie: findByKey(uidKey, document.cookie.split(';')),
     uidFromUrl: findByKey(uidKey, parseUrl(location.href).params),
     getApiUrl: function () {
@@ -230,15 +230,15 @@ if (isBrowser()) {
   })
 } else {
   module.exports = {
-    _GovConsent,
-    setUid,
-    request,
-    addUrlParameter,
-    removeUrlParameter,
-    parseUrl,
-    buildUrl,
-    findByKey,
-    isCrossOrigin,
-    origin,
+    "_GovConsent": _GovConsent,
+    setUid: setUid,
+    request: request,
+    addUrlParameter: addUrlParameter,
+    removeUrlParameter: removeUrlParameter,
+    parseUrl: parseUrl,
+    buildUrl: buildUrl,
+    findByKey: findByKey,
+    isCrossOrigin: isCrossOrigin,
+    origin: origin,
   }
 }
