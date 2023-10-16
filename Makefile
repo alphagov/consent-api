@@ -76,7 +76,7 @@ test-all: migrations test test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:
-	$(DOCKER) compose up --exit-code-from test
+	COMPOSE_PROFILES=testing $(DOCKER) compose up --exit-code-from test
 
 .PHONY: test-coverage
 test-coverage:

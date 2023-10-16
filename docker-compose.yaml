@@ -41,8 +41,12 @@ services:
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
+    ports:
+      - "8001:80"
     volumes:
       - "./client:/home/app/client"
+      - "./consent_api/routers/dummy_service.py:/home/app/consent_api/routers/dummy_service.py"
+      - "./consent_api/templates/dummy_service:/home/app/consent_api/templates/dummy_service"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
@@ -54,8 +58,12 @@ services:
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
+    ports:
+      - "8002:80"
     volumes:
       - "./client:/home/app/client"
+      - "./consent_api/routers/dummy_service.py:/home/app/consent_api/routers/dummy_service.py"
+      - "./consent_api/templates/dummy_service:/home/app/consent_api/templates/dummy_service"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
@@ -64,6 +72,8 @@ services:
 
 
   selenoid-ui:
+    profiles:
+        - "testing"
     container_name: selenoid-ui
     image: "aerokube/selenoid-ui:latest-release"
     networks:
@@ -76,6 +86,8 @@ services:
 
 
   selenoid:
+    profiles:
+      - "testing"
     container_name: selenoid
     networks:
       - e2e
@@ -92,6 +104,8 @@ services:
       - "4444:4444"
 
   test:
+    profiles:
+      - "testing"
     container_name: test
     networks:
       - e2e
