@@ -13,5 +13,5 @@ module.exports = {
     semi: ['error', 'never'],
     'no-extra-semi': ['off'],
   },
-  ignorePatterns: ["src/*.test.js"],
+  ignorePatterns: ['src/*.test.js'],
 }

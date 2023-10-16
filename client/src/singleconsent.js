@@ -3,7 +3,7 @@
 function _GovConsentConfig() {
   var uidKey = 'consent_uid'
   return {
-    "uidKey": uidKey,
+    uidKey: uidKey,
     uidFromCookie: findByKey(uidKey, document.cookie.split(';')),
     uidFromUrl: findByKey(uidKey, parseUrl(location.href).params),
     getApiUrl: function () {
@@ -230,7 +230,7 @@ if (isBrowser()) {
   })
 } else {
   module.exports = {
-    "_GovConsent": _GovConsent,
+    _GovConsent: _GovConsent,
     setUid: setUid,
     request: request,
     addUrlParameter: addUrlParameter,
