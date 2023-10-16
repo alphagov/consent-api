@@ -59,7 +59,7 @@ following example Javascript code:
 
 ```javascript
 SingleConsent.onStatusLoaded(function (consentData) {
-  document.querySelector("#example-cookie-banner-id").hidden = true
+  document.querySelector('#example-cookie-banner-id').hidden = true
 })
 ```
 
@@ -71,10 +71,10 @@ following function:
 
 ```javascript
 exampleCookieConsentStatusObject = {
-  "essential": true,
-  "settings": false,
-  "usage": true,
-  "campaigns": false,
+  essential: true,
+  settings: false,
+  usage: true,
+  campaigns: false,
 }
 
 Consent.setStatus(exampleCookieConsentStatusObject)
@@ -95,7 +95,9 @@ testing), you can add a `data-consent-api-url` attribute to the `body` tag in
 your HTML file, eg:
 
 ```html
-<body data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/">
+<body
+  data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/"
+></body>
 ```
 
 #### Content Security Policy
@@ -134,7 +136,7 @@ with the consent status object as an argument.</td></tr>
 
 ```javascript
 Consent.onStatusLoaded((status) => {
-  console.log("Consent Status:")
+  console.log('Consent Status:')
   console.log(`- Essential cookies (${status.essential})`)
   console.log(`- Campaign cookies (${status.campaigns})`)
   console.log(`- Settings cookies (${status.settings})`)
@@ -170,12 +172,9 @@ with the consent status as an argument.</td></tr>
 ##### Example
 
 ```javascript
-Consent.setStatus(
-  acceptAllCookies,
-  (status) => {
-    console.log("Consent status successfully updated to", status)
-  }
-)
+Consent.setStatus(acceptAllCookies, (status) => {
+  console.log('Consent status successfully updated to', status)
+})
 ```
 
 ## Getting updates

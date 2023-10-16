@@ -5,8 +5,13 @@
     "node": ">=19.0.1"
   },
   "description": "Client code for the Cookie Consent Sharing API",
+  "scripts": {
+    "test": "jest",
+    "format": "prettier --write .",
+    "lint": "eslint . --fix"
+  },
   "sideEffects": false,
-  "main": "client/src/consent_api_client.js",
+  "main": "client/dist/singleconsent.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alphagov/consent-api.git"
@@ -15,15 +20,19 @@
     "name": "Andy Driver",
     "email": "andy.driver@digital.cabinet-office.gov.uk"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN ../LICENSE",
   "bugs": {
     "url": "https://github.com/alphagov/consent-api/issues"
   },
   "homepage": "https://github.com/alphagov/consent-api/client/#readme",
-  "prettier": {
-    "trailingComma": "es5",
-    "tabWidth": 2,
-    "semi": false,
-    "singleQuote": true
+  "devDependencies": {
+    "eslint": "^8.51.0",
+    "jest": "^29.6.1",
+    "jest-environment-jsdom": "^29.6.1",
+    "jest-environment-jsdom-global": "^4.0.0",
+    "jsdom": "^22.1.0",
+    "jsdom-global": "^3.0.2",
+    "prettier": "^3.0.3",
+    "xhr-mock": "^2.5.1"
   }
 }

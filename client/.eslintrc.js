@@ -1,7 +1,7 @@
 module.exports = {
   env: {
     browser: true,
-    es2021: true,
+    es2021: false,
     node: true,
   },
   extends: 'eslint:recommended',
@@ -13,4 +13,5 @@ module.exports = {
     semi: ['error', 'never'],
     'no-extra-semi': ['off'],
   },
+  ignorePatterns: ['src/*.test.js'],
 }
