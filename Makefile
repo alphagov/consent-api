@@ -88,6 +88,13 @@ run:
 	gunicorn $(APP_NAME):app --worker-class uvicorn.workers.UvicornWorker --bind "0.0.0.0:$(PORT)" --forwarded-allow-ips="*"
 	#uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
 
+
+## run: Run server
+.PHONY: run-dev
+run-dev:
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+	
+
 ## docker-image: Build a Docker image
 .PHONY: docker-image
 docker-image: clean
