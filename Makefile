@@ -58,8 +58,8 @@ test:
 .PHONY: test-end-to-end
 test-end-to-end: migrations
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_CONSENT_API_URL)
-	python consent_api/tests/wait_for_url.py $(E2E_TEST_GOVUK_URL)
-	python consent_api/tests/wait_for_url.py $(E2E_TEST_HAAS_URL)
+	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_1_URL)
+	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_2_URL)
 	pytest \
 		-W ignore::DeprecationWarning \
 		-m end_to_end \

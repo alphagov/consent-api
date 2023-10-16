@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set body_classes -%}
+  product-page
+{%- endset %}
+{% block main %}
+  <div class="product-header">
+    <div class="width-container">
+      <div class="grid-row">
+        <div class="grid-col-two-thirds">
+          <h1>
+            Dummy Service homepage
+          </h1>
+          <p>
+            Enables end-to-end testing of Single Consent
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="width-container">
+    <section>
+      <div class="grid-row">
+        <div class="grid-col-two-thirds">
+          <h2>Links to services</h2>
+          <ul>
+            <li><a href="{{ url_for("start_page") }}">Another service</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

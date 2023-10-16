@@ -9,17 +9,15 @@ from fastapi import Form
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from starlette.responses import Response
 
 from consent_api import forms
+from consent_api.jinja import templates
 
 router = APIRouter(include_in_schema=False)
 get = router.get
 post = router.post
 url_for = router.url_path_for
-
-templates = Jinja2Templates(directory="consent_api/templates")
 
 
 # @docs.ignore()

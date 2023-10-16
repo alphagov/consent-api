@@ -61,7 +61,7 @@ To make use of the Single Consent service on your website, please see the
 
 Clone the repository, then install dependencies with the following command:
 
-```
+```sh
 make install
 ```
 
@@ -72,13 +72,20 @@ Copy `.env.template` to `.env` and load it into your environment.
 
 Those variables will be used by both docker-compose and the Makefile.
 
+
+### Running
+
+```sh
+make run
+```
+
 ### Testing
 
 #### Unit tests
 
 Run unit tests with the following command:
 
-```
+```sh
 make test
 ```
 
@@ -89,14 +96,14 @@ make test
 You will need to build a Docker image to run the tests against, using the
 following command:
 
-```
+```sh
 make docker-image
 ```
 
 You also need to have the Chrome Docker image already on your system, which you
 can do with the following command:
 
-```
+```sh
 docker pull selenoid/chrome:110.0
 ```
 
@@ -104,19 +111,20 @@ docker pull selenoid/chrome:110.0
 > Currently, Selenoid does not provide a Chrome image that works on Apple M1 hosts. As a
 > workaround, you can use a third-party Chromium image:
 >
-> ```
+> ```sh
 > docker pull sskorol/selenoid_chromium_vnc:100.0
 > ```
 >
 > Then set the following environment variable:
 >
+> ```sh
+> export SPLINTER_REMOTE_BROWSER_VERSION=sskorol/selenoid_chromium_vnc:100.0
 > ```
-> SPLINTER_REMOTE_BROWSER_VERSION=sskorol/selenoid_chromium_vnc:100.0
 
 The easiest way to run the end-to-end tests is in Docker Compose using the following
 command:
 
-```
+```sh
 make test-end-to-end-docker
 ```
 
@@ -126,21 +134,35 @@ To run end-to-end tests you will need Chrome or Firefox installed. Specify which
 want to use for running tests by setting the `SELENIUM_DRIVER` environment variable
 (defaults to `chrome`), eg:
 
-```
+```sh
 export SELENIUM_DRIVER=firefox
 ```
 
-You also need a running instance of the Consent API and instances of the [SDE Prototype
-fake GOV.UK homepage](https://github.com/alphagov/sde-prototype-govuk) and [Hexagrams as
-a Service](https://github.com/alphagov/sde-prototype-haas) webapps.
+You also need a running instance of the Consent API and two instances of webapps
+which have the Single Consent client installed.
+
+> Note
+> For convenience, a dummy service is included in the API.
+> You can run two more instances of the Consent API on different port numbers to
+> act as dummy services:
+>
+> ```sh
+> CONSENT_API_URL=http://localho.st:8000/api/v1/consent/ OTHER_URL=http://localho.st:8082/dummy-service/ PORT=8081 make run
+> ```
+>
+> and
+>
+> ```sh
+> CONSENT_API_URL=http://localho.st:8000/api/v1/consent/ PORT=8082 make run
+> ```
 
 The tests expect to find these available at the following URLs:
 
-| Name                   | Env var                  | Default                 |
-| --                     | --                       | --                      |
-| Consent API            | E2E_TEST_CONSENT_API_URL | http://localho.st:8000/ |
-| Fake GOV.UK            | E2E_TEST_GOVUK_URL       | http://localho.st:8080/ |
-| Hexagrams as a Service | E2E_TEST_HAAS_URL        | http://localho.st:8081  |
+| Name            | Env var                      | Default                |
+| --              | --                           | --                     |
+| Consent API     | E2E_TEST_CONSENT_API_URL     | http://localho.st:8000 |
+| Dummy service 1 | E2E_TEST_DUMMY_SERVICE_1_URL | http://localho.st:8080 |
+| Dummy service 2 | E2E_TEST_DUMMY_SERVICE_2_URL | http://localho.st:8081 |
 
 Due to CORS restrictions, the tests will fail if the URL domain is `localhost` or
 `127.0.01`, so a workaround is to use `localho.st` which resolves to `127.0.0.1`.

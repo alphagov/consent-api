@@ -58,13 +58,6 @@ repos:
     hooks:
       - id: black
 
-  - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.34.0
-    hooks:
-      - id: djlint-jinja
-        types_or: ["html"]
-        entry: djlint --profile jinja --reformat --indent 2 --ignore "J004,H006,H017" --quiet
-
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.5.1
     hooks:

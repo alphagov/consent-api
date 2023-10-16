@@ -168,17 +168,20 @@ footer .footer--links {
   padding: 0;
 }
 
+.govuk-width-container,
 .width-container {
   margin-left: auto;
   margin-right: auto;
   max-width: 960px;
 }
 
+.govuk-grid-row,
 .grid-row {
   margin-right: -15px;
   margin-left: -15px;
 }
 
+.govuk-grid-row::after,
 .grid-row::after {
   content: '';
   display: block;
@@ -192,6 +195,7 @@ footer .footer--links {
   padding: 0 15px;
 }
 
+.govuk-grid-column-two-thirds,
 .grid-col-two-thirds {
   width: 66.6666%;
   float: left;
@@ -261,6 +265,15 @@ button.secondary:hover,
   background-color: #c7c6c6;
 }
 
+.button-start {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 700;
+  display: inline-flex;
+  min-height: auto;
+  justify-content: center;
+}
+
 .product-page .nav-header {
   border-bottom: 0;
 }
@@ -273,7 +286,7 @@ button.secondary:hover,
 .product-header {
   background: #1d70b8;
   color: #fff;
-  padding: 2rem 10%;
+  padding: 2rem 0;
 }
 
 .product-header a {
@@ -469,4 +482,49 @@ form footer a:visited {
 .services .service .domain {
   color: #0b0c0c;
   display: block;
+}
+
+.govuk-cookie-banner {
+  background-color: #f3f2f1;
+  border-bottom: 10px solid transparent;
+  padding-top: 20px;
+}
+
+.govuk-heading-m {
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: #0b0c0c;
+}
+
+.govuk-body {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  color: #0b0b0c;
+}
+
+.govuk-button-group {
+  display: flex;
+  margin-bottom: 15px;
+  margin-right: -15px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.govuk-button-group .govuk-button {
+  margin-right: 15px;
+  margin-bottom: 15px;
+}
+
+.govuk-button__start-icon {
+  margin-left: 10px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  align-self: center;
+  forced-color-adjust: auto;
 }
