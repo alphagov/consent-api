@@ -12,9 +12,10 @@ router = APIRouter(include_in_schema=False)
 get = router.get
 
 OTHER_URL = os.getenv("OTHER_URL")
+DUMMY_SERVICE_PREFIX = "/dummy-service"
 
 
-@get("/dummy-service")
+@get("/")
 async def dummy_home(request: Request) -> Response:
     """Show a service home page."""
     return templates.TemplateResponse(
@@ -23,7 +24,7 @@ async def dummy_home(request: Request) -> Response:
     )
 
 
-@get("/dummy-service/start-page")
+@get("/start-page")
 async def start_page(request: Request) -> Response:
     """Show a start page."""
     return templates.TemplateResponse(
@@ -35,7 +36,7 @@ async def start_page(request: Request) -> Response:
     )
 
 
-@get("/dummy-service/landing-page")
+@get("/landing-page")
 async def landing_page(request: Request) -> Response:
     """Show a landing page."""
     return templates.TemplateResponse(
@@ -44,7 +45,7 @@ async def landing_page(request: Request) -> Response:
     )
 
 
-@get("/dummy-service/cookies")
+@get("/cookies")
 async def cookies_page(request: Request) -> Response:
     """Show a cookie settings form."""
     return templates.TemplateResponse(

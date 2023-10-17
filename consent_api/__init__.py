@@ -24,7 +24,7 @@ app.add_middleware(
 app.include_router(consent.router)
 app.include_router(healthcheck.router)
 app.include_router(self_service.router)
-app.include_router(dummy_service.router)
+app.include_router(dummy_service.router, prefix=dummy_service.DUMMY_SERVICE_PREFIX)
 
 add_exception_handler(app)
 
