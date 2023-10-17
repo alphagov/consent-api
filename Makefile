@@ -138,3 +138,9 @@ dist:
 .PHONY: help
 help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' | sed -e 's/^/ /'
+
+
+## Generage openapi.json
+.PHONY: generate-openapi
+generate-openapi:
+	python scripts/generate_openapi.py
