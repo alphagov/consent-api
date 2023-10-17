@@ -32,38 +32,52 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - "./consent_api:/home/app/consent_api"
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
+      ENV: "${ENV}"
 
   dummy-service-1:
     container_name: dummy-service-1
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
+    ports:
+      - "8001:80"
     volumes:
       - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
       OTHER_URL: "http://dummy-service-2/dummy-service/"
+      ENV: ${ENV}
 
   dummy-service-2:
     container_name: dummy-service-2
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
+    ports:
+      - "8002:80"
     volumes:
       - "./client:/home/app/client"
+      - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
       OTHER_URL: "http://dummy-service-1/dummy-service/"
+      ENV: ${ENV}
 
 
   selenoid-ui:
+    profiles:
+        - "testing"
     container_name: selenoid-ui
     image: "aerokube/selenoid-ui:latest-release"
     networks:
@@ -76,6 +90,8 @@ services:
 
 
   selenoid:
+    profiles:
+      - "testing"
     container_name: selenoid
     networks:
       - e2e
@@ -92,6 +108,8 @@ services:
       - "4444:4444"
 
   test:
+    profiles:
+      - "testing"
     container_name: test
     networks:
       - e2e

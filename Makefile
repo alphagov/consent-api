@@ -1,5 +1,4 @@
--include .env
-export
+-include .envrc
 
 APP_NAME ?= consent_api
 DATABASE_URL ?= postgresql+asyncpg://localhost:5432/$(APP_NAME)
@@ -76,7 +75,7 @@ test-all: migrations test test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:
-	$(DOCKER) compose up --exit-code-from test
+	COMPOSE_PROFILES=testing $(DOCKER) compose up --exit-code-from test
 
 .PHONY: test-coverage
 test-coverage:
@@ -85,8 +84,12 @@ test-coverage:
 ## run: Run server
 .PHONY: run
 run:
+ifeq ($(ENV),development)
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+else
 	gunicorn $(APP_NAME):app --worker-class uvicorn.workers.UvicornWorker --bind "0.0.0.0:$(PORT)" --forwarded-allow-ips="*"
-	#uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+endif
+
 
 ## docker-image: Build a Docker image
 .PHONY: docker-image

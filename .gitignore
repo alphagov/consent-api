@@ -9,4 +9,5 @@ geckodriver.log
 .venv
 __pycache__
 .env
+.envrc
 .vscode
