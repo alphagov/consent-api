@@ -32,9 +32,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - "./consent_api:/home/app/consent_api"
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
+      ENV: "${ENV}"
 
   dummy-service-1:
     container_name: dummy-service-1
@@ -45,13 +48,14 @@ services:
       - "8001:80"
     volumes:
       - "./client:/home/app/client"
-      - "./consent_api/routers/dummy_service.py:/home/app/consent_api/routers/dummy_service.py"
-      - "./consent_api/templates/dummy_service:/home/app/consent_api/templates/dummy_service"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
       OTHER_URL: "http://dummy-service-2/dummy-service/"
+      ENV: ${ENV}
 
   dummy-service-2:
     container_name: dummy-service-2
@@ -62,13 +66,13 @@ services:
       - "8002:80"
     volumes:
       - "./client:/home/app/client"
-      - "./consent_api/routers/dummy_service.py:/home/app/consent_api/routers/dummy_service.py"
-      - "./consent_api/templates/dummy_service:/home/app/consent_api/templates/dummy_service"
+      - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
       OTHER_URL: "http://dummy-service-1/dummy-service/"
+      ENV: ${ENV}
 
 
   selenoid-ui:

@@ -67,11 +67,23 @@ make install
 
 It will install poetry, our python dependencies manager, as well as the project dependencies.
 
+
+### Loading the environment with direnv
+
 When running docker commands, you will need a few extra environment variables.
-Copy `.env.template` to `.env` and load it into your environment.
+
+It's easiest to use [Direnv](https://direnv.net/) to load the environment.
+
+Copy `.envrc.template` to `.envrc` and load it with direnv:
+
+```shell
+direnv allow
+```
 
 Those variables will be used by both docker-compose and the Makefile.
 
+
+Additionally, we recommend [hooking direnv with your shell](https://direnv.net/docs/hook.html), for automatic environment loading.
 
 ### Running
 
