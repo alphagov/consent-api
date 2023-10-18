@@ -109,7 +109,7 @@ You will need to build a Docker image to run the tests against, using the
 following command:
 
 ```sh
-make docker-image
+make docker-build
 ```
 
 You also need to have the Chrome Docker image already on your system, which you

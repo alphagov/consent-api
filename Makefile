@@ -91,9 +91,9 @@ else
 endif
 
 
-## docker-image: Build a Docker image
-.PHONY: docker-image
-docker-image: clean
+## docker-build: Build a Docker image
+.PHONY: docker-build
+docker-build: clean
 	$(DOCKER_BUILD) --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
 
 ## docker-run: Start a Docker container
