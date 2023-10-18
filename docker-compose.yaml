@@ -52,9 +52,9 @@ services:
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
-      CONSENT_API_URL: "http://consent-api/api/v1/consent/"
+      CONSENT_API_URL: "${DOCKER_CONSENT_API_URL}"
       PORT: "80"
-      OTHER_URL: "http://dummy-service-2/dummy-service/"
+      OTHER_URL: "${DOCKER_DUMMY_SERVICE_2_URL}"
       ENV: ${ENV}
 
   dummy-service-2:
@@ -69,9 +69,9 @@ services:
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
-      CONSENT_API_URL: "http://consent-api/api/v1/consent/"
+      CONSENT_API_URL: "${DOCKER_CONSENT_API_URL}"
       PORT: "80"
-      OTHER_URL: "http://dummy-service-1/dummy-service/"
+      OTHER_URL: "${DOCKER_DUMMY_SERVICE_1_URL}"
       ENV: ${ENV}
 
 
