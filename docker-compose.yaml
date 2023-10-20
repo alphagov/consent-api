@@ -52,9 +52,10 @@ services:
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
-      CONSENT_API_URL: "http://consent-api/api/v1/consent/"
       PORT: "80"
-      OTHER_URL: "http://dummy-service-2/dummy-service/"
+      CONSENT_API_ORIGIN: "http://localhost:8000"
+      OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-2"
+      OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8002"
       ENV: ${ENV}
 
   dummy-service-2:
@@ -69,15 +70,15 @@ services:
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
-      CONSENT_API_URL: "http://consent-api/api/v1/consent/"
+      CONSENT_API_ORIGIN: "http://localhost:8000"
       PORT: "80"
-      OTHER_URL: "http://dummy-service-1/dummy-service/"
+      OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-1"
+      OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8001"
       ENV: ${ENV}
-
 
   selenoid-ui:
     profiles:
-        - "testing"
+      - "testing"
     container_name: selenoid-ui
     image: "aerokube/selenoid-ui:latest-release"
     networks:
@@ -88,7 +89,6 @@ services:
     ports:
       - "8080:8080"
 
-
   selenoid:
     profiles:
       - "testing"
@@ -97,8 +97,8 @@ services:
       - e2e
     image: "aerokube/selenoid:latest-release"
     volumes:
-      - "./selenoid/config:/etc/selenoid/"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./selenoid/config:/etc/selenoid/"
       - "$PWD/selenoid/opt:/opt/selenoid/video"
       - "$PWD/selenoid/opt:/opt/selenoid/logs"
     environment:
@@ -116,8 +116,12 @@ services:
     image: "${DOCKER_IMAGE}"
     volumes:
       - "$PWD/selenoid/opt:/home/app/logs"
+      - "$PWD/Makefile:/home/app/Makefile"
+      - "$PWD/consent_api/tests:/home/app/consent_api/tests"
     entrypoint: ["make", "test-all"]
+    # entrypoint: ["tail", "-f", "/dev/null"]
     environment:
+      ENV: ${ENV}
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       E2E_TEST_CONSENT_API_URL: "http://consent-api"
       E2E_TEST_DUMMY_SERVICE_1_URL: "http://dummy-service-1"

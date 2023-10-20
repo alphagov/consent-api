@@ -1,9 +1,10 @@
 """Set up Jinja2 templates."""
 
-import os
 
 import jinja2
 from starlette.templating import Jinja2Templates
+
+from consent_api.config import CONSENT_API_URL
 
 templates = Jinja2Templates(
     directory="consent_api/templates",  # required but overridden by loader arg
@@ -17,10 +18,5 @@ templates = Jinja2Templates(
     ),
 )
 templates.env.globals.update(
-    {
-        "CONSENT_API_URL": os.environ.get(
-            "CONSENT_API_URL",
-            "https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/",
-        )
-    },
+    {"CONSENT_API_URL": CONSENT_API_URL},
 )

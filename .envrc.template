@@ -1,4 +1,4 @@
 export APP_NAME=consent_api
-export DOCKER_IMAGE="gcr.io/sde-consent-api/consent-api"
-export SPLINTER_REMOTE_BROWSER_VERSION="sskorol/selenoid_chromium_vnc:100.0"
+export DOCKER_IMAGE=gcr.io/sde-consent-api/consent-api
+export SPLINTER_REMOTE_BROWSER_VERSION=sskorol/selenoid_chromium_vnc:100.0
 export ENV=development
