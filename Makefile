@@ -60,22 +60,25 @@ test-client:
 ## test-end-to-end: Run webdriver tests
 .PHONY: test-end-to-end
 test-end-to-end: migrations
+# test-end-to-end:
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_CONSENT_API_URL)
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_1_URL)
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_2_URL)
 	pytest \
+		-s \
 		-W ignore::DeprecationWarning \
 		-m end_to_end \
 		--splinter-webdriver $(SELENIUM_DRIVER) \
 		$(SPLINTER_REMOTE_URL) \
 		--splinter-headless
 
-.PHONY: test-all
-test-all: migrations test test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:
-	COMPOSE_PROFILES=testing $(DOCKER) compose up --exit-code-from test
+	ENV=testing COMPOSE_PROFILES=testing $(DOCKER) compose up --exit-code-from test
+
+.PHONY: test-all
+test-all: migrations test test-end-to-end
 
 .PHONY: test-coverage
 test-coverage:
@@ -85,6 +88,8 @@ test-coverage:
 .PHONY: run
 run:
 ifeq ($(ENV),development)
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+else ifeq ($(ENV),testing)
 	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
 else
 	gunicorn $(APP_NAME):app --worker-class uvicorn.workers.UvicornWorker --bind "0.0.0.0:$(PORT)" --forwarded-allow-ips="*"

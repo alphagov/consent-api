@@ -44,29 +44,23 @@ remembering a user's preferences without repeatedly asking for consent.
 To make use of the Single Consent service on your website, please see the
 [Single Consent client Quick Start documentation](client/README.md)
 
-### Running the API service
-
 #### Environment variables
 
-* `DATABASE_URL` (default is `postgresql+asyncpg://localhost:5432/consent_api`)
-* `ENV` (default is `development`)
-* `PORT` (default is `8000`)
-* `SECRET_KEY` (default is randomly generated)
-* You can configure the number of web server worker processes with the
-`WEB_CONCURRENCY` environment variable (default is 1)
+- `DATABASE_URL` (default is `postgresql+asyncpg://localhost:5432/consent_api`)
+- `ENV` (default is `development`)
+- `PORT` (default is `8000`)
+- `SECRET_KEY` (default is randomly generated)
+- You can configure the number of web server worker processes with the
+  `WEB_CONCURRENCY` environment variable (default is 1)
 
 ## Development
 
-### Install
+You can run all the services without setup needed:
 
-Clone the repository, then install dependencies with the following command:
-
-```sh
-make install
+```shell
+make docker-build
+docker compose up
 ```
-
-It will install poetry, our python dependencies manager, as well as the project dependencies.
-
 
 ### Loading the environment with direnv
 
@@ -82,14 +76,18 @@ direnv allow
 
 Those variables will be used by both docker-compose and the Makefile.
 
-
 Additionally, we recommend [hooking direnv with your shell](https://direnv.net/docs/hook.html), for automatic environment loading.
 
-### Running
+### Run Locally
 
-```sh
+To run the API locally:
+
+```shell
+make install
 make run
 ```
+
+It will install poetry, our python dependencies manager, as well as the project dependencies.
 
 ### Testing
 
@@ -159,19 +157,19 @@ which have the Single Consent client installed.
 > act as dummy services:
 >
 > ```sh
-> CONSENT_API_URL=http://localho.st:8000/api/v1/consent/ OTHER_URL=http://localho.st:8082/dummy-service/ PORT=8081 make run
+> CONSENT_API_ORIGIN=http://localho.st:8000 OTHER_SERVICE_ORIGIN=http://localho.st:8082 PORT=8081 make run
 > ```
 >
 > and
 >
 > ```sh
-> CONSENT_API_URL=http://localho.st:8000/api/v1/consent/ PORT=8082 make run
+> CONSENT_API_ORIGIN=http://localho.st:8000 PORT=8082 make run
 > ```
 
 The tests expect to find these available at the following URLs:
 
 | Name            | Env var                      | Default                |
-| --              | --                           | --                     |
+| --------------- | ---------------------------- | ---------------------- |
 | Consent API     | E2E_TEST_CONSENT_API_URL     | http://localho.st:8000 |
 | Dummy service 1 | E2E_TEST_DUMMY_SERVICE_1_URL | http://localho.st:8080 |
 | Dummy service 2 | E2E_TEST_DUMMY_SERVICE_2_URL | http://localho.st:8081 |
@@ -189,15 +187,15 @@ make test-end-to-end
 
 This project uses [Github Flow](https://githubflow.github.io/).
 
-* `main` branch is always deployable
-* To work on something new, create a descriptively named branch off `main`
-* Commit to that branch locally and regularly push to the same named branch on the
+- `main` branch is always deployable
+- To work on something new, create a descriptively named branch off `main`
+- Commit to that branch locally and regularly push to the same named branch on the
   server (Github)
-* When you need feedback or help, or you think the branch is ready to merge, rebase off
+- When you need feedback or help, or you think the branch is ready to merge, rebase off
   `main` and open a pull request
-* After the pull request has been reviewed and automated checks have passed, you can
+- After the pull request has been reviewed and automated checks have passed, you can
   merge to `main`
-* Commits to `main` are automatically built, deployed and tested in the Integration
+- Commits to `main` are automatically built, deployed and tested in the Integration
   environment.
 
 New features are developed on feature branches, which must be rebased on the main branch

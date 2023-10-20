@@ -1,10 +1,4 @@
 export APP_NAME=consent_api
 export DOCKER_IMAGE=gcr.io/sde-consent-api/consent-api
-export SPLINTER_REMOTE_BROWSER_VERSION="sskorol/selenoid_chromium_vnc:100.0"
+export SPLINTER_REMOTE_BROWSER_VERSION=sskorol/selenoid_chromium_vnc:100.0
 export ENV=development
-
-
-# Development only
-export DOCKER_CONSENT_API_URL=http://localhost:8080/api/v1/consent/
-export DOCKER_DUMMY_SERVICE_1_URL=http://localhost:8081/dummy-service/
-export DOCKER_DUMMY_SERVICE_2_URL=http://localhost:8082/dummy-service/
