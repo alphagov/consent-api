@@ -7,30 +7,30 @@ fork
 :Other Javascripts register callback functions;
 fork again
 :Load singleconsent.js file;
-:Read consent_uid from URL parameter, if exists;
-:Read consent_uid from cookie, if exists;
+:Read gov_singleconsent_uid from URL parameter, if exists;
+:Read gov_singleconsent_uid from cookie, if exists;
 end fork
 :DOMContentLoad event fires;
 split
 :Execute other JS event listeners;
 split again
 :instantiate and initialise Consent object;
-:Remove consent_uid URL parameter from address bar (if exists);
-if (consent_uid is set) then (yes)
+:Remove gov_singleconsent_uid URL parameter from address bar (if exists);
+if (gov_singleconsent_uid is set) then (yes)
 
   :Request list of known partner domains;
   fork
-  :Set consent_uid cookie;
+  :Set gov_singleconsent_uid cookie;
   label set_uid
   |Main|
   fork again
   |Async|
-  :Add consent_uid URL parameter to cross-origin links;
+  :Add gov_singleconsent_uid URL parameter to cross-origin links;
   stop
   |Main|
   end fork
 
-  :Query consent status for consent_uid;
+  :Query consent status for gov_singleconsent_uid;
   fork
 
   |Async|
@@ -46,7 +46,7 @@ end split
 :POST consent status to API;
 fork
 |Async|
-:Receive consent_uid from API;
+:Receive gov_singleconsent_uid from API;
 -[#red]->
 goto set_uid
 stop

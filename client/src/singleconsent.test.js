@@ -11,7 +11,7 @@ const {
 } = require('./singleconsent')
 
 MOCK_API_URL = 'https://test-url.com/api/'
-MOCK_COOKIE_NAME = 'consent_uid'
+MOCK_COOKIE_NAME = 'gov_singleconsent_uid'
 MOCK_UID = 'test-uid'
 
 let originalCookie
@@ -43,7 +43,7 @@ describe('Consent Management', () => {
   })
   beforeEach(() => {
     xhrMock.setup()
-    document.body.innerHTML = `<div data-consent-api-url="${MOCK_API_URL}"></div>`
+    document.body.innerHTML = `<div data-gov-singleconsent-api-url="${MOCK_API_URL}"></div>`
   })
 
   afterEach(() => {

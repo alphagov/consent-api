@@ -91,12 +91,12 @@ The client connects to the Single Consent service Production environment by
 default.
 
 If you need to direct the client to an alternative URL (for example, during
-testing), you can add a `data-consent-api-url` attribute to the `body` tag in
+testing), you can add a `data-gov-singleconsent-api-url` attribute to the `body` tag in
 your HTML file, eg:
 
 ```html
 <body
-  data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/"
+  data-gov-singleconsent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/"
 ></body>
 ```
 

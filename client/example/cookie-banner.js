@@ -1,4 +1,4 @@
-/* global Consent, Utils */
+/* global GovSingleConsent, Utils */
 
 ;(function () {
   function CookieBanner($module) {
@@ -36,7 +36,7 @@
       nodes[i].addEventListener('click', this.hideBanner.bind(this))
     }
 
-    Consent.onStatusLoaded(
+    GovSingleConsent.onStatusLoaded(
       function (status) {
         this.setCookiesPolicyCookie(status)
         this.hideBanner()
@@ -69,8 +69,8 @@
 
   CookieBanner.prototype.acceptCookies = function () {
     this.$module.showAcceptConfirmation()
-    this.setCookiesPolicyCookie(Consent.ACCEPT_ALL)
-    Consent.setStatus(Consent.ACCEPT_ALL)
+    this.setCookiesPolicyCookie(GovSingleConsent.ACCEPT_ALL)
+    GovSingleConsent.setStatus(GovSingleConsent.ACCEPT_ALL)
   }
 
   CookieBanner.prototype.setCookiesPolicyCookie = function (cookiesPolicy) {
@@ -88,8 +88,8 @@
 
   CookieBanner.prototype.rejectCookies = function () {
     this.$module.showRejectConfirmation()
-    this.setCookiesPolicyCookie(Consent.REJECT_ALL)
-    Consent.setStatus(Consent.REJECT_ALL)
+    this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
+    GovSingleConsent.setStatus(GovSingleConsent.REJECT_ALL)
   }
 
   CookieBanner.prototype.showRejectConfirmation = function () {

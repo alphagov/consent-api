@@ -1,15 +1,15 @@
 'use strict'
 
 function _GovConsentConfig() {
-  var uidKey = 'consent_uid'
+  var uidKey = 'gov_singleconsent_uid'
   return {
     uidKey: uidKey,
     uidFromCookie: findByKey(uidKey, document.cookie.split(';')),
     uidFromUrl: findByKey(uidKey, parseUrl(location.href).params),
     getApiUrl: function () {
-      var el = document.querySelector('[data-consent-api-url]')
+      var el = document.querySelector('[data-gov-singleconsent-api-url]')
       return el
-        ? el.dataset.consentApiUrl.replace(/\/?$/, '/')
+        ? el.dataset.govSingleconsentApiUrl.replace(/\/?$/, '/')
         : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
     },
   }
