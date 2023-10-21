@@ -1,7 +1,6 @@
 const xhrMock = require('xhr-mock').default
-const { sequence } = require('xhr-mock')
 const {
-  _GovConsent,
+  GovSingleConsent,
   addUrlParameter,
   removeUrlParameter,
   parseUrl,
@@ -53,7 +52,7 @@ describe('Consent Management', () => {
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
-    const consentInstance = new _GovConsent()
+    const consentInstance = new GovSingleConsent()
     consentInstance.init()
     expect(consentInstance.uid).toBeUndefined()
   })
@@ -68,7 +67,7 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) =>
       res.status(200).body(JSON.stringify(response2))
     )
-    const consentInstance = new _GovConsent()
+    const consentInstance = new GovSingleConsent()
     consentInstance.init()
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
@@ -82,7 +81,7 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
       return new Promise(() => {})
     })
-    const consentInstance = new _GovConsent()
+    const consentInstance = new GovSingleConsent()
     try {
       consentInstance.init()
       jest.advanceTimersByTime(1001)
@@ -100,7 +99,7 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
       return new Promise(() => {})
     })
-    const consentInstance = new _GovConsent()
+    const consentInstance = new GovSingleConsent()
     consentInstance.init()
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
