@@ -4,8 +4,7 @@ from enum import Enum
 
 from dotenv import load_dotenv
 
-from consent_api.config import development as dev_config
-from consent_api.config import production as prod_config
+from consent_api.config import defaults
 
 
 class Environment(Enum):
@@ -25,14 +24,6 @@ assert ENV in [member.value for member in Environment], f"Invalid ENV={ENV}"
 print(f"ENV={ENV}")
 
 
-default_config = {
-    Environment.DEVELOPMENT: dev_config,
-    Environment.STAGING: dev_config,
-    Environment.TESTING: dev_config,
-    Environment.PRODUCTION: prod_config,
-}[Environment(ENV)]
-
-
 DEBUG = os.getenv("DEBUG", True)
 
 SECRET_KEY = os.getenv("SECRET_KEY", os.urandom(24))
@@ -48,22 +39,28 @@ CONSENT_EXPIRY_DAYS = 7
 CONSENT_API_ORIGIN = {
     Environment.TESTING: "http://consent-api",
     Environment.DEVELOPMENT: os.getenv(
-        "CONSENT_API_ORIGIN", dev_config.DEFAULT_CONSENT_API_ORIGIN
+        "CONSENT_API_ORIGIN", defaults.DEV.DEFAULT_CONSENT_API_ORIGIN
+    ),
+    Environment.STAGING: os.getenv(
+        "CONSENT_API_ORIGIN", defaults.STAGING.DEFAULT_CONSENT_API_ORIGIN
     ),
     Environment.PRODUCTION: os.getenv(
-        "CONSENT_API_ORIGIN", prod_config.DEFAULT_CONSENT_API_ORIGIN
+        "CONSENT_API_ORIGIN", defaults.PROD.DEFAULT_CONSENT_API_ORIGIN
     ),
-}.get(Environment(ENV), dev_config.DEFAULT_CONSENT_API_ORIGIN)
+}.get(Environment(ENV), defaults.DEV.DEFAULT_CONSENT_API_ORIGIN)
 
 CONSENT_API_URL = f"{CONSENT_API_ORIGIN}/api/v1/consent/"
 
 
 OTHER_SERVICE_ORIGIN = {
     Environment.TESTING: os.getenv(
-        "OTHER_SERVICE_ORIGIN_DOCKER", dev_config.DEFAULT_OTHER_SERVICE_ORIGIN
+        "OTHER_SERVICE_ORIGIN_DOCKER", defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN
     ),
     Environment.DEVELOPMENT: os.getenv(
-        "OTHER_SERVICE_ORIGIN_HOST", dev_config.DEFAULT_OTHER_SERVICE_ORIGIN
+        "OTHER_SERVICE_ORIGIN_HOST", defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN
     ),
-    Environment.PRODUCTION: prod_config.DEFAULT_OTHER_SERVICE_ORIGIN,
-}.get(Environment(ENV), dev_config.DEFAULT_OTHER_SERVICE_ORIGIN)
+    Environment.STAGING: os.getenv(
+        "OTHER_SERVICE_ORIGIN_HOST", defaults.STAGING.DEFAULT_OTHER_SERVICE_ORIGIN
+    ),
+    Environment.PRODUCTION: defaults.PROD.DEFAULT_OTHER_SERVICE_ORIGIN,
+}.get(Environment(ENV), defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN)
