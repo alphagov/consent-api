@@ -8,25 +8,36 @@ from consent_api.config import development as dev_config
 from consent_api.config import production as prod_config
 
 
-class Env(Enum):
+class Environment(Enum):
     DEVELOPMENT = "development"
+    STAGING = "staging"
     TESTING = "testing"
     PRODUCTION = "production"
 
 
 load_dotenv()
-env = os.environ
 
-ENV = env.get("ENV")
-
-default_config = dev_config if os.environ.get("ENV") == Env.DEVELOPMENT else prod_config
+ENV = os.getenv("ENV", "development")
 
 
-DEBUG = env.get("DEBUG", True)
+assert ENV in [member.value for member in Environment], f"Invalid ENV={ENV}"
 
-SECRET_KEY = env.get("SECRET_KEY", os.urandom(24))
+print(f"ENV={ENV}")
 
-SQLALCHEMY_DATABASE_URI = env.get(
+
+default_config = {
+    Environment.DEVELOPMENT: dev_config,
+    Environment.STAGING: dev_config,
+    Environment.TESTING: dev_config,
+    Environment.PRODUCTION: prod_config,
+}[Environment(ENV)]
+
+
+DEBUG = os.getenv("DEBUG", True)
+
+SECRET_KEY = os.getenv("SECRET_KEY", os.urandom(24))
+
+SQLALCHEMY_DATABASE_URI = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://localhost:5432/consent_api",
 )
@@ -35,24 +46,24 @@ CONSENT_EXPIRY_DAYS = 7
 
 
 CONSENT_API_ORIGIN = {
-    Env.TESTING: "http://consent-api",
-    Env.DEVELOPMENT: env.get(
+    Environment.TESTING: "http://consent-api",
+    Environment.DEVELOPMENT: os.getenv(
         "CONSENT_API_ORIGIN", dev_config.DEFAULT_CONSENT_API_ORIGIN
     ),
-    Env.PRODUCTION: env.get(
+    Environment.PRODUCTION: os.getenv(
         "CONSENT_API_ORIGIN", prod_config.DEFAULT_CONSENT_API_ORIGIN
     ),
-}.get(Env(ENV), dev_config.DEFAULT_CONSENT_API_ORIGIN)
+}.get(Environment(ENV), dev_config.DEFAULT_CONSENT_API_ORIGIN)
 
 CONSENT_API_URL = f"{CONSENT_API_ORIGIN}/api/v1/consent/"
 
 
 OTHER_SERVICE_ORIGIN = {
-    Env.TESTING: env.get(
+    Environment.TESTING: os.getenv(
         "OTHER_SERVICE_ORIGIN_DOCKER", dev_config.DEFAULT_OTHER_SERVICE_ORIGIN
     ),
-    Env.DEVELOPMENT: env.get(
+    Environment.DEVELOPMENT: os.getenv(
         "OTHER_SERVICE_ORIGIN_HOST", dev_config.DEFAULT_OTHER_SERVICE_ORIGIN
     ),
-    Env.PRODUCTION: prod_config.DEFAULT_OTHER_SERVICE_ORIGIN,
-}.get(Env(ENV), dev_config.DEFAULT_OTHER_SERVICE_ORIGIN)
+    Environment.PRODUCTION: prod_config.DEFAULT_OTHER_SERVICE_ORIGIN,
+}.get(Environment(ENV), dev_config.DEFAULT_OTHER_SERVICE_ORIGIN)
