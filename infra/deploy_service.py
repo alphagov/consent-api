@@ -110,7 +110,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
                             "image": f"gcr.io/{google_project}/consent-api:{tag}",
                             "envs": [
                                 {"name": "DATABASE_URL", "value": db_url},
-                                {"name": "ENV", "value": stack},
+                                {"name": "ENV", "value": env},
                             ],
                         },
                     ],
