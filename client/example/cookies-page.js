@@ -1,4 +1,4 @@
-/* global Consent, Utils */
+/* global GovSingleConsent, Utils */
 
 ;(function () {
   function CookieSettings($module) {
@@ -16,7 +16,7 @@
 
     this.cookiesPolicy = JSON.parse(Utils.getCookie('cookies_policy'))
     if (!this.cookiesPolicy) {
-      this.cookiesPolicy = Consent.REJECT_ALL
+      this.cookiesPolicy = GovSingleConsent.REJECT_ALL
       Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), {
         days: 365,
       })
@@ -24,7 +24,7 @@
 
     this.setFormValues(this.cookiesPolicy)
 
-    Consent.onStatusLoaded(this.setFormValues.bind(this))
+    GovSingleConsent.onStatusLoaded(this.setFormValues.bind(this))
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {
@@ -76,7 +76,7 @@
     })
     Utils.setCookie('cookies_preferences_set', true, { days: 365 })
 
-    Consent.setStatus(this.cookiesPolicy)
+    GovSingleConsent.setStatus(this.cookiesPolicy)
 
     this.showConfirmationMessage()
   }

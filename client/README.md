@@ -58,7 +58,7 @@ user has shared consent, you need to register a callback function with the
 following example Javascript code:
 
 ```javascript
-SingleConsent.onStatusLoaded(function (consentData) {
+GovSingleConsent.onStatusLoaded(function (consentData) {
   document.querySelector('#example-cookie-banner-id').hidden = true
 })
 ```
@@ -77,7 +77,7 @@ exampleCookieConsentStatusObject = {
   campaigns: false,
 }
 
-Consent.setStatus(exampleCookieConsentStatusObject)
+GovSingleConsent.setStatus(exampleCookieConsentStatusObject)
 ```
 
 The structure of the consent data object is currently based on the
@@ -91,12 +91,12 @@ The client connects to the Single Consent service Production environment by
 default.
 
 If you need to direct the client to an alternative URL (for example, during
-testing), you can add a `data-consent-api-url` attribute to the `body` tag in
+testing), you can add a `data-gov-singleconsent-api-url` attribute to the `body` tag in
 your HTML file, eg:
 
 ```html
 <body
-  data-consent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/"
+  data-gov-singleconsent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/"
 ></body>
 ```
 
@@ -135,7 +135,7 @@ with the consent status object as an argument.</td></tr>
 ##### Example
 
 ```javascript
-Consent.onStatusLoaded((status) => {
+GovSingleConsent.onStatusLoaded((status) => {
   console.log('Consent Status:')
   console.log(`- Essential cookies (${status.essential})`)
   console.log(`- Campaign cookies (${status.campaigns})`)
@@ -172,7 +172,7 @@ with the consent status as an argument.</td></tr>
 ##### Example
 
 ```javascript
-Consent.setStatus(acceptAllCookies, (status) => {
+GovSingleConsent.setStatus(acceptAllCookies, (status) => {
   console.log('Consent status successfully updated to', status)
 })
 ```

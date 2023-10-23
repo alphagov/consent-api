@@ -1,5 +1,4 @@
--include .env
-export
+-include .envrc
 
 APP_NAME ?= consent_api
 DATABASE_URL ?= postgresql+asyncpg://localhost:5432/$(APP_NAME)
@@ -61,22 +60,25 @@ test-client:
 ## test-end-to-end: Run webdriver tests
 .PHONY: test-end-to-end
 test-end-to-end: migrations
+# test-end-to-end:
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_CONSENT_API_URL)
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_1_URL)
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_2_URL)
 	pytest \
+		-s \
 		-W ignore::DeprecationWarning \
 		-m end_to_end \
 		--splinter-webdriver $(SELENIUM_DRIVER) \
 		$(SPLINTER_REMOTE_URL) \
 		--splinter-headless
 
-.PHONY: test-all
-test-all: migrations test test-end-to-end
 
 .PHONY: test-end-to-end-docker
 test-end-to-end-docker:
-	$(DOCKER) compose up --exit-code-from test
+	ENV=testing COMPOSE_PROFILES=testing $(DOCKER) compose up --exit-code-from test
+
+.PHONY: test-all
+test-all: migrations test test-end-to-end
 
 .PHONY: test-coverage
 test-coverage:
@@ -85,12 +87,18 @@ test-coverage:
 ## run: Run server
 .PHONY: run
 run:
+ifeq ($(ENV),development)
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+else ifeq ($(ENV),testing)
+	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+else
 	gunicorn $(APP_NAME):app --worker-class uvicorn.workers.UvicornWorker --bind "0.0.0.0:$(PORT)" --forwarded-allow-ips="*"
-	#uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+endif
 
-## docker-image: Build a Docker image
-.PHONY: docker-image
-docker-image: clean
+
+## docker-build: Build a Docker image
+.PHONY: docker-build
+docker-build: clean
 	$(DOCKER_BUILD) --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
 
 ## docker-run: Start a Docker container
@@ -135,3 +143,9 @@ dist:
 .PHONY: help
 help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' | sed -e 's/^/ /'
+
+
+## Generage openapi.json
+.PHONY: generate-openapi
+generate-openapi:
+	python scripts/generate_openapi.py

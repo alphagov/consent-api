@@ -1,7 +1,6 @@
 const xhrMock = require('xhr-mock').default
-const { sequence } = require('xhr-mock')
 const {
-  _GovConsent,
+  GovSingleConsent,
   addUrlParameter,
   removeUrlParameter,
   parseUrl,
@@ -12,7 +11,7 @@ const {
 } = require('./singleconsent')
 
 MOCK_API_URL = 'https://test-url.com/api/'
-MOCK_COOKIE_NAME = 'consent_uid'
+MOCK_COOKIE_NAME = 'gov_singleconsent_uid'
 MOCK_UID = 'test-uid'
 
 let originalCookie
@@ -44,7 +43,7 @@ describe('Consent Management', () => {
   })
   beforeEach(() => {
     xhrMock.setup()
-    document.body.innerHTML = `<div data-consent-api-url="${MOCK_API_URL}"></div>`
+    document.body.innerHTML = `<div data-gov-singleconsent-api-url="${MOCK_API_URL}"></div>`
   })
 
   afterEach(() => {
@@ -53,7 +52,7 @@ describe('Consent Management', () => {
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
-    const consentInstance = new _GovConsent()
+    const consentInstance = new GovSingleConsent()
     consentInstance.init()
     expect(consentInstance.uid).toBeUndefined()
   })
@@ -68,8 +67,41 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) =>
       res.status(200).body(JSON.stringify(response2))
     )
-    const consentInstance = new _GovConsent()
+    const consentInstance = new GovSingleConsent()
     consentInstance.init()
+    expect(consentInstance.uid).toBe(MOCK_UID)
+  })
+
+  it('should timeout the consents if the request takes more than one second', () => {
+    mockCookie()
+    const response1 = ['a', 'b']
+    xhrMock.get(MOCK_API_URL, (req, res) =>
+      res.status(200).body(JSON.stringify(response1))
+    )
+    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
+      return new Promise(() => {})
+    })
+    const consentInstance = new GovSingleConsent()
+    try {
+      consentInstance.init()
+      jest.advanceTimersByTime(1001)
+    } catch (e) {
+      expect(e.message).toMatch(/timed out/)
+    }
+  })
+
+  it('should not timeout the consents if the request takes less than one second', () => {
+    mockCookie()
+    const response1 = ['a', 'b']
+    xhrMock.get(MOCK_API_URL, (req, res) =>
+      res.status(200).body(JSON.stringify(response1))
+    )
+    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
+      return new Promise(() => {})
+    })
+    const consentInstance = new GovSingleConsent()
+    consentInstance.init()
+    jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
 })

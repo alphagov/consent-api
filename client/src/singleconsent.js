@@ -1,21 +1,21 @@
 'use strict'
 
 function _GovConsentConfig() {
-  var uidKey = 'consent_uid'
+  var uidKey = 'gov_singleconsent_uid'
   return {
     uidKey: uidKey,
     uidFromCookie: findByKey(uidKey, document.cookie.split(';')),
     uidFromUrl: findByKey(uidKey, parseUrl(location.href).params),
     getApiUrl: function () {
-      var el = document.querySelector('[data-consent-api-url]')
+      var el = document.querySelector('[data-gov-singleconsent-api-url]')
       return el
-        ? el.dataset.consentApiUrl.replace(/\/?$/, '/')
+        ? el.dataset.govSingleconsentApiUrl.replace(/\/?$/, '/')
         : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
     },
   }
 }
 
-function _GovConsent() {
+function GovSingleConsent() {
   // one year in milliseconds
   this.COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
   this.ACCEPT_ALL = {
@@ -34,7 +34,7 @@ function _GovConsent() {
   this.eventListeners = []
 }
 
-_GovConsent.prototype.init = function () {
+GovSingleConsent.prototype.init = function () {
   /**
     Initialises _GovConsent object by performing the following:
     1. Removes 'uid' from URL.
@@ -56,7 +56,7 @@ _GovConsent.prototype.init = function () {
   if (this.uid) {
     request(
       _GovConsentConfig().getApiUrl().concat(this.uid),
-      {},
+      { timeout: 1000 },
       function (response) {
         this.eventListeners.forEach(function (callback) {
           callback(response.status)
@@ -66,11 +66,11 @@ _GovConsent.prototype.init = function () {
   }
 }
 
-_GovConsent.prototype.onStatusLoaded = function (callback) {
+GovSingleConsent.prototype.onStatusLoaded = function (callback) {
   this.eventListeners.push(callback)
 }
 
-_GovConsent.prototype.setStatus = function (status, callback) {
+GovSingleConsent.prototype.setStatus = function (status, callback) {
   if (status) {
     request(
       _GovConsentConfig()
@@ -130,7 +130,7 @@ function setUid(consent, uid) {
       .uidKey.concat('=', uid)
       .concat(
         '; path=/',
-        '; max-age='.concat(_GovConsent.COOKIE_LIFETIME),
+        '; max-age='.concat(GovSingleConsent.COOKIE_LIFETIME),
         document.location.protocol === 'https:' ? '; Secure' : ''
       )
   }
@@ -139,18 +139,33 @@ function setUid(consent, uid) {
 function request(url, options, callback) {
   var req = new XMLHttpRequest()
   options = options || {}
+
   req.onreadystatechange = function () {
-    if (
-      req.readyState === req.DONE &&
-      (req.status === 0 || (req.status >= 200 && req.status < 400))
-    ) {
-      callback(JSON.parse(req.responseText))
+    if (req.readyState === req.DONE) {
+      if (req.status >= 200 && req.status < 400) {
+        callback(JSON.parse(req.responseText))
+      } else {
+        var reqError = new Error('Request failed with status: ' + req.status)
+        callback(reqError)
+      }
     }
   }
-  req.open(options.method || 'GET', url)
-  for (var name in options.headers || {}) {
-    req.setRequestHeader(name, options.headers[name])
+
+  if (options.timeout) {
+    req.timeout = options.timeout
   }
+
+  req.ontimeout = function () {
+    throw new Error('Request to ' + url + ' timed out')
+  }
+
+  req.open(options.method || 'GET', url, true)
+
+  var headers = options.headers || {}
+  for (var name in headers) {
+    req.setRequestHeader(name, headers[name])
+  }
+
   req.send(options.body || null)
 }
 
@@ -223,14 +238,14 @@ function isBrowser() {
 }
 
 if (isBrowser()) {
-  window.Consent = new _GovConsent()
+  window.GovSingleConsent = new GovSingleConsent()
 
   document.addEventListener('DOMContentLoaded', function () {
-    window.Consent.init()
+    window.GovSingleConsent.init()
   })
 } else {
   module.exports = {
-    _GovConsent: _GovConsent,
+    GovSingleConsent: GovSingleConsent,
     setUid: setUid,
     request: request,
     addUrlParameter: addUrlParameter,
