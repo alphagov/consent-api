@@ -56,5 +56,3 @@ OTHER_SERVICE_ORIGIN = {
     ),
     Env.PRODUCTION: prod_config.DEFAULT_OTHER_SERVICE_ORIGIN,
 }.get(Env(ENV), dev_config.DEFAULT_OTHER_SERVICE_ORIGIN)
-
-print("\n\n", CONSENT_API_ORIGIN, "\n\n")

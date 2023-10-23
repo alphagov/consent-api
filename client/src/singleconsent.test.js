@@ -72,6 +72,39 @@ describe('Consent Management', () => {
     consentInstance.init()
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
+
+  it('should timeout the consents if the request takes more than one second', () => {
+    mockCookie()
+    const response1 = ['a', 'b']
+    xhrMock.get(MOCK_API_URL, (req, res) =>
+      res.status(200).body(JSON.stringify(response1))
+    )
+    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
+      return new Promise(() => {})
+    })
+    const consentInstance = new _GovConsent()
+    try {
+      consentInstance.init()
+      jest.advanceTimersByTime(1001)
+    } catch (e) {
+      expect(e.message).toMatch(/timed out/)
+    }
+  })
+
+  it('should not timeout the consents if the request takes less than one second', () => {
+    mockCookie()
+    const response1 = ['a', 'b']
+    xhrMock.get(MOCK_API_URL, (req, res) =>
+      res.status(200).body(JSON.stringify(response1))
+    )
+    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
+      return new Promise(() => {})
+    })
+    const consentInstance = new _GovConsent()
+    consentInstance.init()
+    jest.advanceTimersByTime(500)
+    expect(consentInstance.uid).toBe(MOCK_UID)
+  })
 })
 
 /*
