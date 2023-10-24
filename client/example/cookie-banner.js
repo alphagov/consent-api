@@ -1,8 +1,8 @@
 /* global GovSingleConsent, Utils */
 
 ;(function () {
-  function CookieBanner($module) {
-    this.$module = $module
+  function CookieBanner($component) {
+    this.$component = $component
   }
 
   CookieBanner.prototype.init = function () {
@@ -10,37 +10,54 @@
       Utils.getCookie('cookies_preferences_set') === 'true'
     this.cookies_policy = JSON.parse(Utils.getCookie('cookies_policy', '{}'))
 
-    this.$module.message = this.$module.querySelector(
+    this.$component.message = this.$component.querySelector(
       '.js-cookie-banner-message'
     )
-    this.$module.confirmAccept = this.$module.querySelector(
+    this.$component.confirmAccept = this.$component.querySelector(
       '.js-cookie-banner-confirmation-accept'
     )
-    this.$module.confirmReject = this.$module.querySelector(
+    this.$component.confirmReject = this.$component.querySelector(
       '.js-cookie-banner-confirmation-reject'
     )
 
-    this.$module.setCookieConsent = this.acceptCookies.bind(this)
-    this.$module.showAcceptConfirmation = this.showAcceptConfirmation.bind(this)
-    this.$module
+    this.$component.setCookieConsent = this.acceptCookies.bind(this)
+    this.$component.showAcceptConfirmation =
+      this.showAcceptConfirmation.bind(this)
+    this.$component
       .querySelector('[data-accept-cookies]')
-      .addEventListener('click', this.$module.setCookieConsent)
-    this.$module.rejectCookieConsent = this.rejectCookies.bind(this)
-    this.$module.showRejectConfirmation = this.showRejectConfirmation.bind(this)
-    this.$module
+      .addEventListener('click', this.$component.setCookieConsent)
+    this.$component.rejectCookieConsent = this.rejectCookies.bind(this)
+    this.$component.showRejectConfirmation =
+      this.showRejectConfirmation.bind(this)
+    this.$component
       .querySelector('[data-reject-cookies]')
-      .addEventListener('click', this.$module.rejectCookieConsent)
+      .addEventListener('click', this.$component.rejectCookieConsent)
 
-    var nodes = this.$module.querySelectorAll('[data-hide-cookie-message]')
-    for (var i = 0, length = nodes.length; i < length; i++) {
-      nodes[i].addEventListener('click', this.hideBanner.bind(this))
+    var hideBannerBtnNodes = this.$component.querySelectorAll(
+      '[data-hide-cookie-message]'
+    )
+    for (var i = 0, length = hideBannerBtnNodes.length; i < length; i++) {
+      hideBannerBtnNodes[i].addEventListener(
+        'click',
+        this.hideBanner.bind(this)
+      )
     }
 
-    GovSingleConsent.onStatusLoaded(
-      function (status) {
-        this.setCookiesPolicyCookie(status)
-        this.hideBanner()
-      }.bind(this)
+    function updateConsents(responseStatus) {
+      this.setCookiesPolicyCookie(responseStatus)
+      this.hideBanner()
+    }
+
+    function revokeAllConsents(error) {
+      if (error) {
+        console.error(error)
+      }
+      this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
+    }
+
+    GovSingleConsent.init(
+      updateConsents.bind(this),
+      revokeAllConsents.bind(this)
     )
 
     this.showBanner()
@@ -55,20 +72,20 @@
     if (this.cookies_preferences_set) {
       this.hideBanner()
     } else {
-      this.$module.hidden = false
-      this.$module.confirmAccept.hidden =
+      this.$component.hidden = false
+      this.$component.confirmAccept.hidden =
         noResponse || !acceptedAdditionalCookies
-      this.$module.confirmReject.hidden =
+      this.$component.confirmReject.hidden =
         noResponse || acceptedAdditionalCookies
     }
   }
 
   CookieBanner.prototype.hideBanner = function () {
-    this.$module.hidden = true
+    this.$component.hidden = true
   }
 
   CookieBanner.prototype.acceptCookies = function () {
-    this.$module.showAcceptConfirmation()
+    this.$component.showAcceptConfirmation()
     this.setCookiesPolicyCookie(GovSingleConsent.ACCEPT_ALL)
     GovSingleConsent.setStatus(GovSingleConsent.ACCEPT_ALL)
   }
@@ -81,21 +98,21 @@
   }
 
   CookieBanner.prototype.showAcceptConfirmation = function () {
-    this.$module.message.hidden = true
-    this.$module.confirmAccept.hidden = false
-    this.$module.confirmAccept.focus()
+    this.$component.message.hidden = true
+    this.$component.confirmAccept.hidden = false
+    this.$component.confirmAccept.focus()
   }
 
   CookieBanner.prototype.rejectCookies = function () {
-    this.$module.showRejectConfirmation()
+    this.$component.showRejectConfirmation()
     this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
     GovSingleConsent.setStatus(GovSingleConsent.REJECT_ALL)
   }
 
   CookieBanner.prototype.showRejectConfirmation = function () {
-    this.$module.message.hidden = true
-    this.$module.confirmReject.hidden = false
-    this.$module.confirmReject.focus()
+    this.$component.message.hidden = true
+    this.$component.confirmReject.hidden = false
+    this.$component.confirmReject.focus()
   }
 
   window.CookieBanner = CookieBanner

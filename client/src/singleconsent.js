@@ -40,6 +40,9 @@ GovSingleConsent.prototype.init = function (updateConsents, revokeAllConsents) {
     2. Sets 'uid' attribute from cookie or URL.
     3. Fetches consent status from API if 'uid' exists.
     4. Notifies event listeners with API response.
+
+    @arg updateConsents: function(status) - callback to update consent status - response status is passed
+    @arg revokeAllConsents: function() - callback to revoke all consents - error is passed
     */
 
   if (!updateConsents || !revokeAllConsents) {
@@ -74,8 +77,8 @@ GovSingleConsent.prototype.init = function (updateConsents, revokeAllConsents) {
     request(
       _GovConsentConfig().getApiUrl().concat(this.uid),
       { timeout: 1000 },
-      function (response) {
-        this.updateConsents(response.status)
+      function (responseData) {
+        this.updateConsents(responseData.status)
       }.bind(this)
     )
   }
@@ -134,7 +137,7 @@ function setUid(consent, uid, onError) {
           }
         })
       },
-      onError
+      onError || null
     )
 
     // set uid cookie
@@ -157,7 +160,9 @@ function request(url, options, onSuccess, onError) {
       if (req.status >= 200 && req.status < 400) {
         onSuccess(JSON.parse(req.responseText))
       } else {
-        onError(new Error('Request failed with status: ' + req.status))
+        if (onError) {
+          onError(new Error('Request failed with status: ' + req.status))
+        }
       }
     }
   }
