@@ -53,7 +53,7 @@ describe('Consent Management', () => {
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
     const consentInstance = new GovSingleConsent()
-    consentInstance.init()
+    consentInstance.init(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBeUndefined()
   })
 
@@ -68,7 +68,7 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response2))
     )
     const consentInstance = new GovSingleConsent()
-    consentInstance.init()
+    consentInstance.init(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
 
@@ -82,11 +82,13 @@ describe('Consent Management', () => {
       return new Promise(() => {})
     })
     const consentInstance = new GovSingleConsent()
+    const onError = jest.fn()
     try {
-      consentInstance.init()
+      consentInstance.init(jest.fn(), onError)
       jest.advanceTimersByTime(1001)
     } catch (e) {
       expect(e.message).toMatch(/timed out/)
+      expect(onError).toHaveBeenCalledTimes(1)
     }
   })
 
@@ -100,7 +102,7 @@ describe('Consent Management', () => {
       return new Promise(() => {})
     })
     const consentInstance = new GovSingleConsent()
-    consentInstance.init()
+    consentInstance.init(jest.fn(), jest.fn())
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
   })

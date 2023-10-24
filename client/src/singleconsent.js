@@ -33,7 +33,10 @@ function GovSingleConsent() {
   }
 }
 
-GovSingleConsent.prototype.init = function (updateConsents, revokeAllConsents) {
+GovSingleConsent.prototype.init = function (
+  updateConsentsCallback,
+  revokeConsentsCallback
+) {
   /**
     Initialises _GovConsent object by performing the following:
     1. Removes 'uid' from URL.
@@ -41,23 +44,27 @@ GovSingleConsent.prototype.init = function (updateConsents, revokeAllConsents) {
     3. Fetches consent status from API if 'uid' exists.
     4. Notifies event listeners with API response.
 
-    @arg updateConsents: function(status) - callback to update consent status - response status is passed
-    @arg revokeAllConsents: function() - callback to revoke all consents - error is passed
+    @arg updateConsentsCallback: function(status) - callback to update consent status - response status is passed
+    @arg revokeConsentsCallback: function() - callback to revoke all consents - error is passed
     */
 
-  if (!updateConsents || !revokeAllConsents) {
-    throw new Error('updateConsents and revokeAllConsents are required')
+  if (!updateConsentsCallback || !revokeConsentsCallback) {
+    throw new Error(
+      'updateConsentsCallback and revokeConsentsCallback are required'
+    )
   }
 
   if (
-    typeof updateConsents !== 'function' ||
-    typeof revokeAllConsents !== 'function'
+    typeof updateConsentsCallback !== 'function' ||
+    typeof revokeConsentsCallback !== 'function'
   ) {
-    throw new Error('updateConsents and revokeAllConsents must be functions')
+    throw new Error(
+      'updateConsentsCallback and revokeConsentsCallback must be functions'
+    )
   }
 
-  this.updateConsents = updateConsents
-  this.revokeAllConsents = revokeAllConsents
+  this.updateConsentsCallback = updateConsentsCallback
+  this.revokeConsentsCallback = revokeConsentsCallback
   var consentConfig = _GovConsentConfig()
 
   // hide uid URL parameter
@@ -68,18 +75,15 @@ GovSingleConsent.prototype.init = function (updateConsents, revokeAllConsents) {
   )
 
   // get the current uid from the cookie or the URL if it exists
-  setUid(
-    this,
-    consentConfig.uidFromCookie || consentConfig.uidFromUrl,
-    this.revokeAllConsents
-  )
+  setUid(this, consentConfig.uidFromCookie || consentConfig.uidFromUrl)
   if (this.uid) {
     request(
       _GovConsentConfig().getApiUrl().concat(this.uid),
       { timeout: 1000 },
       function (responseData) {
-        this.updateConsents(responseData.status)
-      }.bind(this)
+        this.updateConsentsCallback(responseData.status)
+      }.bind(this),
+      this.revokeConsentsCallback
     )
   }
 }
@@ -97,7 +101,7 @@ GovSingleConsent.prototype.setStatus = function (status, callback) {
       },
       function (response) {
         // get the current uid from the API if we don't already have one
-        setUid(this, response.uid, this.revokeAllConsents)
+        setUid(this, response.uid)
         if (callback) {
           callback()
         }
@@ -107,7 +111,7 @@ GovSingleConsent.prototype.setStatus = function (status, callback) {
 }
 
 // TODO: Make a setter method for uid?
-function setUid(consent, uid, onError) {
+function setUid(consent, uid) {
   /**
    * Updates uid in the consent object and performs the following:
    * 1. Sets 'uid' if it's different from the current one.
@@ -136,8 +140,7 @@ function setUid(consent, uid, onError) {
             })
           }
         })
-      },
-      onError || null
+      }
     )
 
     // set uid cookie
