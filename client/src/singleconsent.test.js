@@ -53,7 +53,7 @@ describe('Consent Management', () => {
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
     const consentInstance = new GovSingleConsent()
-    consentInstance.init()
+    consentInstance.init(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBeUndefined()
   })
 
@@ -64,11 +64,11 @@ describe('Consent Management', () => {
     xhrMock.get(MOCK_API_URL, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) =>
+    xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) =>
       res.status(200).body(JSON.stringify(response2))
     )
     const consentInstance = new GovSingleConsent()
-    consentInstance.init()
+    consentInstance.init(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
 
@@ -78,16 +78,19 @@ describe('Consent Management', () => {
     xhrMock.get(MOCK_API_URL, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
+    xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
       return new Promise(() => {})
     })
     const consentInstance = new GovSingleConsent()
+    let err
     try {
-      consentInstance.init()
+      consentInstance.init(jest.fn(), jest.fn())
       jest.advanceTimersByTime(1001)
     } catch (e) {
-      expect(e.message).toMatch(/timed out/)
+      err = e
     }
+    console.log(err)
+    expect(err.message).toMatch(/timed out/)
   })
 
   it('should not timeout the consents if the request takes less than one second', () => {
@@ -96,11 +99,11 @@ describe('Consent Management', () => {
     xhrMock.get(MOCK_API_URL, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(`${MOCK_API_URL}test-uid`, (req, res) => {
+    xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
       return new Promise(() => {})
     })
     const consentInstance = new GovSingleConsent()
-    consentInstance.init()
+    consentInstance.init(jest.fn(), jest.fn())
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
   })

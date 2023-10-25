@@ -24,7 +24,23 @@
 
     this.setFormValues(this.cookiesPolicy)
 
-    GovSingleConsent.onStatusLoaded(this.setFormValues.bind(this))
+    function revokeAllConsents(error) {
+      if (error) {
+        console.error(error)
+      }
+      Utils.setCookie(
+        'cookies_policy',
+        JSON.stringify(GovSingleConsent.REJECT_ALL),
+        {
+          days: 365,
+        }
+      )
+    }
+
+    GovSingleConsent.init(
+      this.setFormValues.bind(this),
+      revokeAllConsents.bind(this)
+    )
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {

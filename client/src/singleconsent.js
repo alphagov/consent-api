@@ -31,17 +31,45 @@ function GovSingleConsent() {
     campaigns: false,
     settings: false,
   }
-  this.eventListeners = []
 }
 
-GovSingleConsent.prototype.init = function () {
+function validateCallbacks(updateConsentsCallback, revokeConsentsCallback) {
+  if (!updateConsentsCallback || !revokeConsentsCallback) {
+    throw new Error(
+      'updateConsentsCallback and revokeConsentsCallback are required'
+    )
+  }
+
+  if (
+    typeof updateConsentsCallback !== 'function' ||
+    typeof revokeConsentsCallback !== 'function'
+  ) {
+    throw new Error(
+      'updateConsentsCallback and revokeConsentsCallback must be functions'
+    )
+  }
+}
+
+GovSingleConsent.prototype.init = function (
+  updateConsentsCallback,
+  revokeConsentsCallback
+) {
   /**
     Initialises _GovConsent object by performing the following:
     1. Removes 'uid' from URL.
     2. Sets 'uid' attribute from cookie or URL.
     3. Fetches consent status from API if 'uid' exists.
     4. Notifies event listeners with API response.
+
+    @arg updateConsentsCallback: function(status) - callback to update consent status - response consents object passed
+    @arg revokeConsentsCallback: function() - callback to revoke all consents - error is passed
     */
+
+  validateCallbacks(updateConsentsCallback, revokeConsentsCallback)
+
+  this.updateConsentsCallback = updateConsentsCallback
+  this.revokeConsentsCallback = revokeConsentsCallback
+
   var consentConfig = _GovConsentConfig()
 
   // hide uid URL parameter
@@ -52,101 +80,147 @@ GovSingleConsent.prototype.init = function () {
   )
 
   // get the current uid from the cookie or the URL if it exists
-  setUid(this, consentConfig.uidFromCookie || consentConfig.uidFromUrl)
+  this.updateUID.bind(this)(
+    consentConfig.uidFromCookie || consentConfig.uidFromUrl
+  )
   if (this.uid) {
-    request(
-      _GovConsentConfig().getApiUrl().concat(this.uid),
-      { timeout: 1000 },
-      function (response) {
-        this.eventListeners.forEach(function (callback) {
-          callback(response.status)
-        })
-      }.bind(this)
-    )
+    var getConsentsUrl = _GovConsentConfig().getApiUrl().concat(this.uid)
+
+    try {
+      request(
+        getConsentsUrl,
+        { timeout: 1000 },
+        function (responseData) {
+          this.updateConsentsCallback(responseData.status)
+        }.bind(this)
+      )
+    } catch (error) {
+      this.revokeConsentsCallback(error)
+    }
   }
 }
 
-GovSingleConsent.prototype.onStatusLoaded = function (callback) {
-  this.eventListeners.push(callback)
-}
+GovSingleConsent.prototype.setStatus = function (
+  status,
+  statusSetCallback,
+  onErrorCallback
+) {
+  if (!status) {
+    throw new Error('status is required in GovSingleConsent.setStatus()')
+  }
 
-GovSingleConsent.prototype.setStatus = function (status, callback) {
-  if (status) {
+  var url = _GovConsentConfig()
+    .getApiUrl()
+    .concat(this.uid || '')
+
+  var callback = function (response) {
+    // get the current uid from the API if we don't already have one
+    this.updateUID.bind(this)(response.uid)
+    if (statusSetCallback) {
+      statusSetCallback()
+    }
+  }.bind(this)
+
+  try {
     request(
-      _GovConsentConfig()
-        .getApiUrl()
-        .concat(this.uid || ''),
+      url,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'status='.concat(JSON.stringify(status)),
       },
-      function (response) {
-        // get the current uid from the API if we don't already have one
-        setUid(this, response.uid)
-        if (callback) {
-          callback()
-        }
-      }.bind(this)
+      callback
     )
+  } catch (error) {
+    if (onErrorCallback) {
+      onErrorCallback(error)
+    } else {
+      throw error
+    }
   }
 }
 
-// TODO: Make a setter method for uid?
-function setUid(consent, uid) {
+GovSingleConsent.prototype.addUIDtoCrossOriginLinks = function (origins, uid) {
   /**
-   * Updates uid in the consent object and performs the following:
-   * 1. Sets 'uid' if it's different from the current one.
-   * 2. Fetches list of known origins from API.
-   * 3. Updates consent sharing links with new 'uid'.
-   * 4. Sets a cookie with the new 'uid'.
+   * Adds uid URL parameter to consent sharing links.
+   * Only links with known origins are updated.
    */
-  if (uid && uid !== consent.uid) {
-    consent.uid = uid
 
-    // fetch known origins
-    request(
-      _GovConsentConfig().getApiUrl().replace('/consent/', '/origins/'),
-      {},
-      function (origins) {
-        // add uid URL parameter to consent sharing links
-        var links = document.querySelectorAll('a[href]')
-        Array.prototype.forEach.call(links, function (link) {
-          if (isCrossOrigin(link) && origins.indexOf(origin(link)) >= 0) {
-            link.addEventListener('click', function (event) {
-              event.target.href = addUrlParameter(
-                event.target.href,
-                _GovConsentConfig().uidKey,
-                uid
-              )
-            })
-          }
-        })
-      }
-    )
-
-    // set uid cookie
-    document.cookie = _GovConsentConfig()
-      .uidKey.concat('=', uid)
-      .concat(
-        '; path=/',
-        '; max-age='.concat(GovSingleConsent.COOKIE_LIFETIME),
-        document.location.protocol === 'https:' ? '; Secure' : ''
-      )
-  }
+  var links = document.querySelectorAll('a[href]')
+  Array.prototype.forEach.call(links, function (link) {
+    if (isCrossOrigin(link) && origins.indexOf(origin(link)) >= 0) {
+      link.addEventListener('click', function (event) {
+        event.target.href = addUrlParameter(
+          event.target.href,
+          _GovConsentConfig().uidKey,
+          uid
+        )
+      })
+    }
+  })
 }
 
-function request(url, options, callback) {
+GovSingleConsent.prototype.setUIDCookie = function (uid) {
+  document.cookie = _GovConsentConfig()
+    .uidKey.concat('=', uid)
+    .concat(
+      '; path=/',
+      '; max-age='.concat(GovSingleConsent.COOKIE_LIFETIME),
+      document.location.protocol === 'https:' ? '; Secure' : ''
+    )
+}
+
+GovSingleConsent.prototype.updateUID = function (uid) {
+  /**
+   * Sets the new UID, updates page links and sets the UID cookie.
+   */
+
+  if (!uid || uid === this.uid) {
+    return
+  }
+
+  this.uid = uid
+
+  // Get origins
+  request(
+    _GovConsentConfig().getApiUrl().replace('/consent/', '/origins/'),
+    {},
+    // Update links with UID
+    function (origins) {
+      this.addUIDtoCrossOriginLinks(origins, uid)
+    }.bind(this)
+  )
+
+  // Update UID cookie
+  this.setUIDCookie(uid)
+}
+
+function request(url, options, onSuccess) {
   var req = new XMLHttpRequest()
+  var isTimeout = false
   options = options || {}
 
   req.onreadystatechange = function () {
     if (req.readyState === req.DONE) {
       if (req.status >= 200 && req.status < 400) {
-        callback(JSON.parse(req.responseText))
+        onSuccess(JSON.parse(req.responseText))
+      } else if (req.status === 0 && req.timeout > 0) {
+        // Possible timeout, waiting for ontimeout event
+        // Timeout will throw a status = 0 request
+        // onreadystatechange preempts ontimeout
+        // And we can't know for sure at this stage if it's a timeout
+        setTimeout(function () {
+          if (isTimeout) {
+            return
+          }
+          throw new Error(
+            'Request to ' + url + ' failed with status: ' + req.status
+          )
+        }, 500)
       } else {
-        var reqError = new Error('Request failed with status: ' + req.status)
-        callback(reqError)
+        throw new Error(
+          'Request to ' + url + ' failed with status: ' + req.status
+        )
       }
     }
   }
@@ -156,6 +230,7 @@ function request(url, options, callback) {
   }
 
   req.ontimeout = function () {
+    isTimeout = true
     throw new Error('Request to ' + url + ' timed out')
   }
 
@@ -239,14 +314,9 @@ function isBrowser() {
 
 if (isBrowser()) {
   window.GovSingleConsent = new GovSingleConsent()
-
-  document.addEventListener('DOMContentLoaded', function () {
-    window.GovSingleConsent.init()
-  })
 } else {
   module.exports = {
     GovSingleConsent: GovSingleConsent,
-    setUid: setUid,
     request: request,
     addUrlParameter: addUrlParameter,
     removeUrlParameter: removeUrlParameter,
