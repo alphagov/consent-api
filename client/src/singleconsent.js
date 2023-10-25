@@ -197,12 +197,26 @@ GovSingleConsent.prototype.updateUID = function (uid) {
 
 function request(url, options, onSuccess) {
   var req = new XMLHttpRequest()
+  var isTimeout = false
   options = options || {}
 
   req.onreadystatechange = function () {
     if (req.readyState === req.DONE) {
       if (req.status >= 200 && req.status < 400) {
         onSuccess(JSON.parse(req.responseText))
+      } else if (req.status === 0 && req.timeout > 0) {
+        // Possible timeout, waiting for ontimeout event
+        // Timeout will throw a status = 0 request
+        // onreadystatechange preempts ontimeout
+        // And we can't know for sure at this stage if it's a timeout
+        setTimeout(function () {
+          if (isTimeout) {
+            return
+          }
+          throw new Error(
+            'Request to ' + url + ' failed with status: ' + req.status
+          )
+        }, 500)
       } else {
         throw new Error(
           'Request to ' + url + ' failed with status: ' + req.status
@@ -216,6 +230,7 @@ function request(url, options, onSuccess) {
   }
 
   req.ontimeout = function () {
+    isTimeout = true
     throw new Error('Request to ' + url + ' timed out')
   }
 
