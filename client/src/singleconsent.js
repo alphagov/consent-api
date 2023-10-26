@@ -58,11 +58,11 @@ GovSingleConsent.prototype.init = function (
     Initialises _GovConsent object by performing the following:
     1. Removes 'uid' from URL.
     2. Sets 'uid' attribute from cookie or URL.
-    3. Fetches consent status from API if 'uid' exists.
+    3. Fetches consent object from API if 'uid' exists.
     4. Notifies event listeners with API response.
 
-    @arg updateConsentsCallback: function(status) - callback to update consent status - response consents object passed
-    @arg revokeConsentsCallback: function() - callback to revoke all consents - error is passed
+    @arg updateConsentsCallback: function(consent) - callback to update consent - response consent object passed
+    @arg revokeConsentsCallback: function() - callback to revoke all consent - error is passed
     */
 
   validateCallbacks(updateConsentsCallback, revokeConsentsCallback)
@@ -91,7 +91,7 @@ GovSingleConsent.prototype.init = function (
         getConsentsUrl,
         { timeout: 1000 },
         function (responseData) {
-          this.updateConsentsCallback(responseData.status)
+          this.updateConsentsCallback(responseData.consent)
         }.bind(this)
       )
     } catch (error) {
@@ -100,13 +100,13 @@ GovSingleConsent.prototype.init = function (
   }
 }
 
-GovSingleConsent.prototype.setStatus = function (
-  status,
-  statusSetCallback,
+GovSingleConsent.prototype.setConsent = function (
+  consent,
+  consentSetCallback,
   onErrorCallback
 ) {
-  if (!status) {
-    throw new Error('status is required in GovSingleConsent.setStatus()')
+  if (!consent) {
+    throw new Error('consent is required in GovSingleConsent.setConsents()')
   }
 
   var url = _GovConsentConfig()
@@ -116,8 +116,8 @@ GovSingleConsent.prototype.setStatus = function (
   var callback = function (response) {
     // get the current uid from the API if we don't already have one
     this.updateUID.bind(this)(response.uid)
-    if (statusSetCallback) {
-      statusSetCallback()
+    if (consentSetCallback) {
+      consentSetCallback()
     }
   }.bind(this)
 
@@ -127,7 +127,7 @@ GovSingleConsent.prototype.setStatus = function (
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'status='.concat(JSON.stringify(status)),
+        body: 'consent='.concat(JSON.stringify(consent)),
       },
       callback
     )

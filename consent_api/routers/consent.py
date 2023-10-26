@@ -102,10 +102,10 @@ async def get_consent_status(
     origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent | None:
     """Fetch a specified user's consent status."""
-    status = (await get_user_consent(uid, db)).first()
-    if not status:
+    consent = (await get_user_consent(uid, db)).first()
+    if not consent:
         response.status_code = 404
-    return status
+    return consent
 
 
 @consent.post("/{uid}")
