@@ -7,7 +7,9 @@ module.exports = {
   extends: 'eslint:recommended',
   overrides: [],
   parserOptions: {
-    ecmaVersion: 5,
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    project: 'tsconfig.json',
   },
   rules: {
     semi: ['error', 'never'],

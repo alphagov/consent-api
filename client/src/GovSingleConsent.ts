@@ -8,14 +8,14 @@ import {
 } from './utils'
 
 export class GovSingleConsent {
-  COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
-  ACCEPT_ALL = {
+  static COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
+  static ACCEPT_ALL = {
     essential: true,
     usage: true,
     campaigns: true,
     settings: true,
   }
-  REJECT_ALL = {
+  static REJECT_ALL = {
     essential: true,
     usage: false,
     campaigns: false,
@@ -57,7 +57,7 @@ export class GovSingleConsent {
       var getConsentsUrl = this.config.getApiUrl().concat(this.uid)
 
       try {
-        request(getConsentsUrl, { timeout: 1000 }, function (responseData) {
+        request(getConsentsUrl, { timeout: 1000 }, (responseData) => {
           this.updateConsentsCallback(responseData.status)
         })
       } catch (error) {
@@ -82,9 +82,7 @@ export class GovSingleConsent {
       this.config.getApiUrl().replace('/consent/', '/origins/'),
       {},
       // Update links with UID
-      function (origins) {
-        this.addUIDtoCrossOriginLinks(origins, uid)
-      }
+      (origins) => this.addUIDtoCrossOriginLinks(origins, uid)
     )
 
     // Update UID cookie
@@ -98,12 +96,12 @@ export class GovSingleConsent {
      */
 
     var links = document.querySelectorAll('a[href]')
-    Array.prototype.forEach.call(links, function (link) {
+    Array.prototype.forEach.call(links, (link) => {
       if (
         isCrossOrigin(link) &&
         origins.indexOf(getOriginFromLink(link)) >= 0
       ) {
-        link.addEventListener('click', function (event) {
+        link.addEventListener('click', (event) => {
           event.target.href = addUrlParameter(
             event.target.href,
             this.config.uidKey,
@@ -119,7 +117,7 @@ export class GovSingleConsent {
       .concat('=', uid)
       .concat(
         '; path=/',
-        '; max-age='.concat(this.COOKIE_LIFETIME.toString()),
+        '; max-age='.concat(GovSingleConsent.COOKIE_LIFETIME.toString()),
         document.location.protocol === 'https:' ? '; Secure' : ''
       )
   }
@@ -131,13 +129,13 @@ export class GovSingleConsent {
 
     var url = this.config.getApiUrl().concat(this.uid || '')
 
-    var callback = function (response) {
+    const callback = (response) => {
       // get the current uid from the API if we don't already have one
       this.updateUID(response.uid)
       if (statusSetCallback) {
         statusSetCallback()
       }
-    }.bind(this)
+    }
 
     try {
       request(

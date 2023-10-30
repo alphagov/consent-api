@@ -1,27 +1,33 @@
-const xhrMock = require('xhr-mock').default
-const {
-  GovSingleConsent,
+// @ts-ignore
+import xhrMock from 'xhr-mock'
+import { GovSingleConsent } from './GovSingleConsent'
+
+import {
   addUrlParameter,
   removeUrlParameter,
   parseUrl,
   buildUrl,
   findByKey,
   isCrossOrigin,
-  origin,
-} = require('./singleconsent')
+  getOriginFromLink,
+} from './utils'
 
-MOCK_API_URL = 'https://test-url.com/api/'
-MOCK_COOKIE_NAME = 'gov_singleconsent_uid'
-MOCK_UID = 'test-uid'
+const MOCK_API_URL = 'https://test-url.com/api/'
+const MOCK_COOKIE_NAME = 'gov_singleconsent_uid'
+const MOCK_UID = 'test-uid'
 
 let originalCookie
 
 jest.useFakeTimers()
 
-const mockCookie = (name = MOCK_COOKIE_NAME, value = MOCK_UID, days = 1) => {
+const mockCookie = (
+  name = MOCK_COOKIE_NAME,
+  value = MOCK_UID,
+  days = 1
+): void => {
   const date = new Date()
   date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
-  const expires = `; expires=${date.toGMTString()}`
+  const expires = `; expires=${date.toUTCString()}`
 
   Object.defineProperty(document, 'cookie', {
     writable: true,
@@ -29,11 +35,11 @@ const mockCookie = (name = MOCK_COOKIE_NAME, value = MOCK_UID, days = 1) => {
   })
 }
 
-const resetCookie = (_document) => {
+const resetCookie = (_document): void => {
   if (originalCookie) {
     Object.defineProperty(_document, 'cookie', originalCookie)
   } else {
-    delete _document.cookie
+    _document.cookie = ''
   }
 }
 
@@ -52,8 +58,7 @@ describe('Consent Management', () => {
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
-    const consentInstance = new GovSingleConsent()
-    consentInstance.init(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBeUndefined()
   })
 
@@ -67,8 +72,7 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) =>
       res.status(200).body(JSON.stringify(response2))
     )
-    const consentInstance = new GovSingleConsent()
-    consentInstance.init(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
 
@@ -81,10 +85,9 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
       return new Promise(() => {})
     })
-    const consentInstance = new GovSingleConsent()
     let err
     try {
-      consentInstance.init(jest.fn(), jest.fn())
+      new GovSingleConsent(jest.fn(), jest.fn())
       jest.advanceTimersByTime(1001)
     } catch (e) {
       err = e
@@ -102,8 +105,7 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
       return new Promise(() => {})
     })
-    const consentInstance = new GovSingleConsent()
-    consentInstance.init(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
@@ -294,7 +296,7 @@ describe('isCrossOrigin', () => {
     },
   ].forEach(({ url, location, expected }) => {
     test(`returns ${expected} when passed ${url} and the current URL is ${location}`, () => {
-      jsdom.reconfigure({ url: location })
+      global.jsdom.reconfigure({ url: location })
       var link = document.createElement('a')
       link.href = url
       expect(isCrossOrigin(link)).toBe(expected)
@@ -314,7 +316,7 @@ describe('origin', function () {
     test(`returns the origin of a link href url: ${url}`, function () {
       var link = document.createElement('a')
       link.href = url
-      expect(origin(link)).toEqual(expected)
+      expect(getOriginFromLink(link)).toEqual(expected)
     })
   })
 })
