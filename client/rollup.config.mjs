@@ -1,10 +1,23 @@
 import typescript from '@rollup/plugin-typescript'
+import terser from '@rollup/plugin-terser'
 
-export default {
+const baseConfig = {
   input: 'src/index.ts',
-  output: {
-    format: 'iife',
-    file: 'dist/singleconsent.js',
-  },
   plugins: [typescript()],
 }
+
+const unminifiedOutput = {
+  format: 'iife',
+  file: 'dist/singleconsent.js',
+}
+
+const minifiedOutput = {
+  ...unminifiedOutput,
+  file: 'dist/singleconsent.min.js',
+  plugins: [terser()],
+}
+
+export default [
+  { ...baseConfig, output: unminifiedOutput },
+  { ...baseConfig, output: minifiedOutput },
+]
