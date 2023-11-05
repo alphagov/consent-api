@@ -29,6 +29,15 @@ def test_single_service(browser, dummy_service, consent_api):
     cookie_banner.reject_cookies()
     assert not cookie_banner.message.visible
 
+    print("\n\n\n\n\n")
+    for key, value in os.environ.items():
+        print(f"{key}: {value}")
+    print("\n\n\n\n\n")
+    print("ALL COOKIES")
+    print(browser.cookies.all())
+    print("\n\n\n\n\n")
+    policy = browser.cookies.all()["cookies_policy"]
+
     # consent status is stored in a cookie
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.REJECT_ALL
@@ -99,6 +108,13 @@ def test_connected_services(browser, dummy_service, consent_api):
 
     # assert the UID has been carried over
     assert browser.cookies.all()["gov_singleconsent_uid"] == uid
+    print("\n\n\n\n\n")
+    for key, value in os.environ.items():
+        print(f"{key}: {value}")
+    print("\n\n\n\n\n")
+    print("ALL COOKIES")
+    print(browser.cookies.all())
+    print("\n\n\n\n\n")
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.ACCEPT_ALL
 
@@ -120,5 +136,6 @@ def test_connected_services(browser, dummy_service, consent_api):
         usage=True, settings=True
     )
 
-    # TODO follow another cross-origin link which is not Single Consent enabled
-    # and show that no UID was passed
+
+# TODO follow another cross-origin link which is not Single Consent enabled
+# and show that no UID was passed
