@@ -7,6 +7,8 @@ import pytest
 
 from consent_api.models import CookieConsent
 
+from .wait_with_retries import wait_with_retries
+
 pytestmark = [pytest.mark.end_to_end]
 
 
@@ -42,9 +44,10 @@ def test_single_service(browser, dummy_service, consent_api):
     cookies_page = service.cookies_page.get()
     assert cookies_page.get_settings() == CookieConsent.REJECT_ALL
 
-    # we can modify the consent status via the settings form
-    cookies_page.accept(["usage"])
-    assert cookies_page.get_settings() == CookieConsent(usage=True)
+    with wait_with_retries():
+        # we can modify the consent status via the settings form
+        cookies_page.accept(["usage"])
+        assert cookies_page.get_settings() == CookieConsent(usage=True)
 
     # the consent status is updated in the API
     browser.wait_for(
