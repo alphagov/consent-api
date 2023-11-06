@@ -33,6 +33,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+          cache-dependency-path: "./client/package-lock.json"
+
+      - run: ls client
+
+      - run: cd client && npm ci && npm run build
+
+      - run: ls client/dist
+
       - uses: pulumi/actions@v4
 
       - name: Generate sanitised branch name for Docker Image Tag
