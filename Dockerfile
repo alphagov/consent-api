@@ -34,7 +34,9 @@ RUN apt-get update && apt-get install -y curl && \
     node --version && \
     npm --version && \
     cd client && \
-    npm install && \
+    npm ci && \
+    # Needed for rollup minify build to run in docker
+    npm i @rollup/rollup-linux-x64-gnu \
     npm run build
 
 
