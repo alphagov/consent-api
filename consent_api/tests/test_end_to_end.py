@@ -29,6 +29,11 @@ def test_single_service(browser, dummy_service, consent_api):
     cookie_banner.reject_cookies()
     assert not cookie_banner.message.visible
 
+    browser_logs = browser.get_log("browser")
+    for entry in browser_logs:
+        if entry["level"] == "SEVERE":
+            print(entry)
+
     print("\n\n\n\n\n")
     for key, value in os.environ.items():
         print(f"{key}: {value}")
