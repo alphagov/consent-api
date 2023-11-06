@@ -39,11 +39,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: "./client/package-lock.json"
 
-      - run: ls client
-
       - run: cd client && npm ci && npm run build
-
-      - run: ls client/dist
 
       - uses: pulumi/actions@v4
 
