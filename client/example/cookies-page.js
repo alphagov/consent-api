@@ -37,7 +37,7 @@
       )
     }
 
-    GovSingleConsent.init(
+    this.singleConsent = new GovSingleConsent(
       this.setFormValues.bind(this),
       revokeAllConsents.bind(this)
     )
@@ -92,7 +92,7 @@
     })
     Utils.setCookie('cookies_preferences_set', true, { days: 365 })
 
-    GovSingleConsent.setStatus(this.cookiesPolicy)
+    this.singleConsent.setStatus(this.cookiesPolicy)
 
     this.showConfirmationMessage()
   }

@@ -2,10 +2,13 @@
 
 import json
 import os
+import time
 
 import pytest
 
 from consent_api.models import CookieConsent
+
+from .wait_with_retries import wait_with_retries
 
 pytestmark = [pytest.mark.end_to_end]
 
@@ -27,6 +30,8 @@ def test_single_service(browser, dummy_service, consent_api):
     cookie_banner.reject_cookies()
     assert not cookie_banner.message.visible
 
+    policy = browser.cookies.all()["cookies_policy"]
+
     # consent status is stored in a cookie
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.REJECT_ALL
@@ -42,9 +47,10 @@ def test_single_service(browser, dummy_service, consent_api):
     cookies_page = service.cookies_page.get()
     assert cookies_page.get_settings() == CookieConsent.REJECT_ALL
 
-    # we can modify the consent status via the settings form
-    cookies_page.accept(["usage"])
-    assert cookies_page.get_settings() == CookieConsent(usage=True)
+    with wait_with_retries():
+        # we can modify the consent status via the settings form
+        cookies_page.accept(["usage"])
+        assert cookies_page.get_settings() == CookieConsent(usage=True)
 
     # the consent status is updated in the API
     browser.wait_for(
@@ -67,8 +73,10 @@ def test_connected_services(browser, dummy_service, consent_api):
 
     for service in services:
         homepage = service.homepage.get()
+        time.sleep(1)
         browser.driver.delete_all_cookies()
         homepage.cookie_banner.accept_cookies()
+        time.sleep(1)
         browser.driver.delete_all_cookies()
 
     service1, service2 = services
@@ -117,5 +125,6 @@ def test_connected_services(browser, dummy_service, consent_api):
         usage=True, settings=True
     )
 
-    # TODO follow another cross-origin link which is not Single Consent enabled
-    # and show that no UID was passed
+
+# TODO follow another cross-origin link which is not Single Consent enabled
+# and show that no UID was passed

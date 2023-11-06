@@ -55,7 +55,7 @@
       this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
     }
 
-    GovSingleConsent.init(
+    this.singleConsent = new GovSingleConsent(
       updateConsents.bind(this),
       revokeAllConsents.bind(this)
     )
@@ -87,7 +87,7 @@
   CookieBanner.prototype.acceptCookies = function () {
     this.$component.showAcceptConfirmation()
     this.setCookiesPolicyCookie(GovSingleConsent.ACCEPT_ALL)
-    GovSingleConsent.setStatus(GovSingleConsent.ACCEPT_ALL)
+    this.singleConsent.setStatus(GovSingleConsent.ACCEPT_ALL)
   }
 
   CookieBanner.prototype.setCookiesPolicyCookie = function (cookiesPolicy) {
@@ -106,7 +106,7 @@
   CookieBanner.prototype.rejectCookies = function () {
     this.$component.showRejectConfirmation()
     this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
-    GovSingleConsent.setStatus(GovSingleConsent.REJECT_ALL)
+    this.singleConsent.setStatus(GovSingleConsent.REJECT_ALL)
   }
 
   CookieBanner.prototype.showRejectConfirmation = function () {
