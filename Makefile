@@ -61,6 +61,9 @@ test-client:
 .PHONY: test-end-to-end
 test-end-to-end: migrations
 # test-end-to-end:
+	echo "Running end-to-end tests"
+	ls client
+	ls client/dist
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_CONSENT_API_URL)
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_1_URL)
 	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_2_URL)
