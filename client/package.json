@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/singleconsent.js",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=12.0.0"
   },
   "description": "Client code for the Cookie Consent Sharing API",
   "scripts": {
