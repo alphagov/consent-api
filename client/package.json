@@ -1,6 +1,7 @@
 {
-  "name": "@alphagov/consent-api",
+  "name": "govuk-single-consent",
   "version": "1.0.0",
+  "main": "dist/singleconsent.js",
   "engines": {
     "node": ">=12.0.0"
   },
@@ -11,8 +12,10 @@
     "lint": "eslint . --fix",
     "build": "npx rollup --config rollup.config.mjs"
   },
+  "files": [
+    "dist/*"
+  ],
   "sideEffects": false,
-  "main": "client/dist/singleconsent.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alphagov/consent-api.git"

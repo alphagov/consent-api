@@ -11,10 +11,13 @@ export class GovConsentConfig {
   }
 
   getApiUrl() {
-    var el = document.querySelector('[data-gov-singleconsent-api-url]')
-    return el
-      ? // @ts-ignore
-        el.dataset.govSingleconsentApiUrl.replace(/\/?$/, '/')
-      : 'https://consent-api-bgzqvpmbyq-nw.a.run.app/api/v1/consent/'
+    const el = document.querySelector('[data-gov-singleconsent-api-url]')
+    // @ts-ignore
+    const govSingleconsentApiUrl = el?.dataset?.govSingleconsentApiUrl
+    if (!govSingleconsentApiUrl) {
+      throw new Error('data-gov-singleconsent-api-url is required')
+    }
+
+    return govSingleconsentApiUrl.replace(/\/?$/, '/')
   }
 }
