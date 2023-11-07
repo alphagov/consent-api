@@ -1,5 +1,5 @@
 {
-  "name": "@alphagov/consent-api",
+  "name": "consent-api",
   "version": "1.0.0",
   "main": "dist/singleconsent.js",
   "engines": {
