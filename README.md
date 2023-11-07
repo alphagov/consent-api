@@ -212,3 +212,8 @@ Crown copyright and availabe under the terms of the Open Government 3.0 licence.
 The Single Consent service is maintained by a team at Government Digital
 Service. If you want to know more about the service, please email the Data
 Infrastructure team or get in touch with them on Slack.
+
+You can also contact the maintainers of this repository via email:
+
+- Guilhem Forey: guilhem.forey@digital.cabinet-office.gov.uk
+- Andy Driver: andy.driver@digital.cabinet-office.gov.uk
