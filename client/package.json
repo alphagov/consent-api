@@ -1,18 +1,22 @@
 {
   "name": "@alphagov/consent-api",
   "version": "1.0.0",
+  "main": "dist/singleconsent.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "description": "Client code for the Cookie Consent Sharing API",
   "scripts": {
+    "prepublish": "npm run test && npm run build",
     "test": "jest",
     "format": "prettier --write .",
     "lint": "eslint . --fix",
     "build": "npx rollup --config rollup.config.mjs"
   },
+  "files": [
+    "dist/*"
+  ],
   "sideEffects": false,
-  "main": "client/dist/singleconsent.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alphagov/consent-api.git"
