@@ -52,7 +52,7 @@ export class GovSingleConsent {
     this.config = new GovConsentConfig()
 
     // get the current uid from the cookie or the URL if it exists
-    this.updateUID(this.config.uidFromCookie || this.config.uidFromUrl)
+    this.updateUID(this.config.uidFromUrl || this.config.uidFromCookie)
     if (this.uid) {
       var getConsentsUrl = this.config.getApiUrl().concat(this.uid)
 
