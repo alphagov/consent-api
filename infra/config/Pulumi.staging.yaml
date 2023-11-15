@@ -1,6 +1,7 @@
 config:
   gcp:project: sde-consent-api
   gcp:region: europe-west2
+  sde-consent-api:domain: gds-single-consent-staging.app
   sde-consent-api:db-name: consent-api
   sde-consent-api:db-tier: db-f1-micro
   sde-consent-api:db-version: POSTGRES_14

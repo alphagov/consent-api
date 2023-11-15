@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pulumi
 from pulumi_gcp import cloudrun
+from pulumi_gcp import compute
 from pulumi_gcp import sql
 from ruamel.yaml import YAML
 
@@ -132,6 +133,117 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
             service=service.name,
             role="roles/run.invoker",
             members=["allUsers"],
+        )
+
+        # Now we set up the Load Balancer for the cloud run service
+        # It will have a public facing IP as well as a DNS record with an SSL cert
+
+        ip_address = compute.GlobalAddress(
+            f"{env}--{name}--ipaddress", address_type="EXTERNAL", project=google_project
+        )
+
+        endpoint_group = compute.RegionNetworkEndpointGroup(
+            f"{env}--{name}--endpoint-group",
+            network_endpoint_type="SERVERLESS",
+            region=pulumi.Config("gcp").require("region"),
+            cloud_run=compute.RegionNetworkEndpointGroupCloudRunArgs(
+                service=service.name
+            ),
+        )
+
+        backend_service = compute.BackendService(
+            f"{env}--{name}--backend-service",
+            enable_cdn=False,
+            connection_draining_timeout_sec=10,
+            log_config=compute.BackendServiceLogConfigArgs(
+                enable=True, sample_rate=0.5
+            ),
+            backends=[compute.BackendServiceBackendArgs(group=endpoint_group.id)],
+        )
+
+        # https_map sends all incoming https traffic to the designated backend service
+        https_path_matcher_name = f"{env}--{name}--https--path-matcher"
+        https_paths = compute.URLMap(
+            f"{env}--{branch}--https--load-balancer",
+            default_service=backend_service.id,
+            host_rules=[
+                compute.URLMapHostRuleArgs(
+                    hosts=[pulumi.Config("sde-consent-api").require("domain")],
+                    path_matcher=https_path_matcher_name,
+                )
+            ],
+            path_matchers=[
+                compute.URLMapPathMatcherArgs(
+                    name=https_path_matcher_name,
+                    default_service=backend_service.id,
+                    path_rules=[
+                        compute.URLMapPathMatcherPathRuleArgs(
+                            paths=["/*"],
+                            service=backend_service.id,
+                        )
+                    ],
+                )
+            ],
+        )
+
+        certificate = compute.ManagedSslCertificate(
+            f"{env}--{name}--certificate",
+            managed=compute.ManagedSslCertificateManagedArgs(
+                domains=[pulumi.Config("sde-consent-api").require("domain")],
+            ),
+        )
+
+        https_proxy = compute.TargetHttpsProxy(
+            resource_name=f"{env}--{name}--https-proxy",
+            url_map=https_paths.id,
+            ssl_certificates=[certificate.id],
+        )
+
+        compute.GlobalForwardingRule(
+            resource_name=f"{env}--https--forwarding-rule",
+            target=https_proxy.self_link,
+            ip_address=ip_address.address,
+            port_range="443",
+            load_balancing_scheme="EXTERNAL",
+        )
+
+        # http_paths redirects any http incoming traffic to its https equivalent
+        http_path_matcher_name = f"{env}--{name}--http--path-matcher"
+        http_paths = compute.URLMap(
+            f"{env}--{branch}--http--load-balancer",
+            default_service=backend_service.id,
+            host_rules=[
+                compute.URLMapHostRuleArgs(
+                    hosts=[pulumi.Config("sde-consent-api").require("domain")],
+                    path_matcher=http_path_matcher_name,
+                )
+            ],
+            path_matchers=[
+                compute.URLMapPathMatcherArgs(
+                    name=http_path_matcher_name,
+                    default_service=backend_service.id,
+                    path_rules=[
+                        compute.URLMapPathMatcherPathRuleArgs(
+                            paths=["/*"],
+                            url_redirect=compute.URLMapPathMatcherPathRuleUrlRedirectArgs(
+                                strip_query=False, https_redirect=True
+                            ),
+                        )
+                    ],
+                )
+            ],
+        )
+
+        http_proxy = compute.TargetHttpProxy(
+            resource_name=f"{env}--{name}--http-proxy", url_map=http_paths.id
+        )
+
+        compute.GlobalForwardingRule(
+            resource_name=f"{env}--http-forwarding-rule",
+            target=http_proxy.self_link,
+            ip_address=ip_address.address,
+            port_range="80",
+            load_balancing_scheme="EXTERNAL",
         )
 
         pulumi.export("service_url", service.statuses[0].url)

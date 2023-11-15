@@ -13,6 +13,11 @@ from pulumi_gcp import sql
 from pulumi_gcp import storage
 from ruamel.yaml import YAML
 
+# Setup the project before deployments
+# DB instance
+# Github deploy service account with Workload Identity Pools
+# IAM permissions
+
 
 def setup_env(env: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""

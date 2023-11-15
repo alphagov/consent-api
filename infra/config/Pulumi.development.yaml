@@ -1,6 +1,8 @@
 config:
   gcp:project: sde-consent-api
   gcp:region: europe-west2
+  # this domain doesn't exist, using the IP address for development instead
+  sde-consent-api:domain: DOMAIN
   sde-consent-api:db-name: consent-api
   sde-consent-api:db-tier: db-f1-micro
   sde-consent-api:db-version: POSTGRES_14
