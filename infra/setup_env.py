@@ -113,6 +113,8 @@ def setup_env(env: str) -> Callable:
                 "run.services.getIamPolicy",
                 "run.services.setIamPolicy",
                 "run.services.update",
+                "compute.sslCertificates.create",
+                "compute.globalAddresses.create",
             ],
             role_id=f"{env}_deploy",
             title=f"{env.title()} deployment",
