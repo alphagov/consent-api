@@ -251,6 +251,9 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
     return _deploy
 
 
+# dummy comment
+
+
 def main():
     """Deploy (or destroy) the service."""
     parser = argparse.ArgumentParser()
