@@ -31,7 +31,8 @@ jobs:
     if: needs.release.outputs.tag_name != ''
     with:
       image_name: ${{ vars.DOCKER_IMAGE }}
-      tag: ${{ needs.release.outputs.tag_name }}
+      image_tag: ${{ needs.release.outputs.tag_name }}
+      branch_name: main
     secrets: inherit
     permissions:
       contents: write
