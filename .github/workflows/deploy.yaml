@@ -7,7 +7,7 @@ on:
         description: "Docker image name"
         required: true
         type: string
-      tag:
+      image_tag:
         description: "The docker image tag (default 'latest')"
         required: false
         type: string
@@ -16,6 +16,11 @@ on:
         description: "Deploying a unmerged branch"
         required: false
         type: boolean
+      branch_name:
+        description: "The branch name"
+        required: false
+        type: string
+        default: ""
       environment:
         description: "The Github environment to deploy with"
         required: false
@@ -54,7 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.branch_name }}
 
       - uses: pulumi/actions@v4
 
@@ -92,7 +97,7 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             ${{ inputs.image_name }}:latest
-            ${{ inputs.image_name }}:${{ inputs.tag }}
+            ${{ inputs.image_name }}:${{ inputs.image_tag }}
 
       - name: Install poetry
         run: pipx install poetry
@@ -108,6 +113,6 @@ jobs:
           poetry run python infra/deploy_service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
         env:
           ENV: ${{ inputs.environment }}
-          BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.tag) || '' }}
-          TAG: ${{ !inputs.is_branch && format('--tag {0}', inputs.tag) || '' }}
+          BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.branch_name || '' }}
+          TAG: ${{ !inputs.is_branch && format('--tag {0}', inputs.image_tag) || '' }}
           PREVIEW: ${{ inputs.noop && '--preview' || '' }}
