@@ -36,7 +36,9 @@ jobs:
       - name: Create sanitized image tag
         id: sanitize-image-tag
         run: |
-          echo "SANITISED_IMAGE_TAG=$(echo ${{ steps.branch-deploy.outputs.ref }} | sed 's|/|-|g')" >> $GITHUB_ENV
+          SANITISED_IMAGE_TAG=$(echo "${{ steps.branch-deploy.outputs.ref }}" | sed 's|/|-|g')
+          echo "SANITISED_IMAGE_TAG is $SANITISED_IMAGE_TAG"
+          echo "::set-output name=SANITISED_IMAGE_TAG::$SANITISED_IMAGE_TAG"
 
   deploy:
     uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
