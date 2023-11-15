@@ -92,7 +92,7 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             ${{ inputs.image_name }}:latest
-            ${{ inputs.image_name }}:${{ inputs.tag }}
+            ${{ inputs.image_name }}:${{ format(inputs.tag, '/', '_') }}
 
       - name: Install poetry
         run: pipx install poetry
@@ -108,6 +108,6 @@ jobs:
           poetry run python infra/deploy_service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
         env:
           ENV: ${{ inputs.environment }}
-          BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.tag) || '' }}
-          TAG: ${{ !inputs.is_branch && format('--tag {0}', inputs.tag) || '' }}
+          BRANCH: ${{ inputs.is_branch && format('--branch {0}', format(inputs.tag, '/', '_')) || '' }}
+          TAG: ${{ !inputs.is_branch && format('--tag {0}', format(inputs.tag, '/', '_')) || '' }}
           PREVIEW: ${{ inputs.noop && '--preview' || '' }}

@@ -13,7 +13,6 @@ permissions:
   id-token: write
 
 jobs:
-
   request:
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
@@ -31,6 +30,7 @@ jobs:
           trigger: ".deploy"
           allow_forks: false
           environment: development
+          reaction: "eyes"
 
   deploy:
     uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
