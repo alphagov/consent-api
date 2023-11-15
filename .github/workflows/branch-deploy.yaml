@@ -22,6 +22,7 @@ jobs:
       environment: ${{ steps.branch-deploy.outputs.environment }}
       noop: ${{ steps.branch-deploy.outputs.noop }}
       ref: ${{ steps.branch-deploy.outputs.ref }}
+      image_tag: ${{ steps.sanitize-image-tag.outputs.SANITISED_IMAGE_TAG }}
 
     steps:
       - uses: github/branch-deploy@v4.3.0
@@ -32,13 +33,19 @@ jobs:
           environment: development
           reaction: "eyes"
 
+      - name: Create sanitized image tag
+        id: sanitize-image-tag
+        run: |
+          echo "SANITISED_IMAGE_TAG=$(echo ${{ steps.branch-deploy.outputs.ref }} | sed 's|/|-|g')" >> $GITHUB_ENV
+
   deploy:
     uses: alphagov/consent-api/.github/workflows/deploy.yaml@main
     needs: request
     with:
-      image_name: ${{ vars.DOCKER_IMAGE }}
-      tag: ${{ needs.request.outputs.ref }}
       is_branch: true
+      branch_name: ${{ needs.request.outputs.ref }}
+      image_name: ${{ vars.DOCKER_IMAGE }}
+      image_tag: ${{ needs.request.outputs.image_tag }}
       environment: ${{ needs.request.outputs.environment }}
       noop: ${{ needs.request.outputs.noop == 'true' }}
     secrets: inherit
