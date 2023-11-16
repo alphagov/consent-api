@@ -265,7 +265,8 @@ def main():
 
     stack_name = args.env
     if args.branch:
-        stack_name = f"{stack_name}-{args.branch}"
+        n = args.branch.replace("/", "-")
+        stack_name = f"{stack_name}-{n}"
 
     stack = pulumi.automation.create_or_select_stack(
         stack_name=stack_name,
