@@ -13,6 +13,11 @@ from pulumi_gcp import compute
 from pulumi_gcp import sql
 from ruamel.yaml import YAML
 
+# Max resource name is 63 characters
+# Max suffix name in this script is 24 (--https--forwarding-rule)
+# 63-24=39 characters for the name which is the prefix
+MAX_NAME_LEN = 39
+
 
 def generate_password(length: int = 20) -> pulumi.Output[str]:
     """Generate a random password."""
@@ -51,14 +56,14 @@ def get_db_instance_id(env: str) -> str:
     return result.stdout.strip()
 
 
-def deploy_service(env: str, branch: str, tag: str) -> Callable:
+def deploy_service(env: str, sanitised_branch_name: str, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
     def _deploy() -> None:
         """Execute the inline Pulumi program."""
         name = "consent-api"
-        if branch:
-            name = f"{name}--{branch}"
+        if sanitised_branch_name:
+            name = (f"{name}--{sanitised_branch_name}")[:MAX_NAME_LEN]
 
         google_project = "sde-consent-api"
 
@@ -164,7 +169,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         # https_map sends all incoming https traffic to the designated backend service
         https_path_matcher_name = f"{env}--{name}--https--path-matcher"
         https_paths = compute.URLMap(
-            f"{env}--{branch}--https--load-balancer",
+            f"{env}--{sanitised_branch_name}--https--load-balancer",
             default_service=backend_service.id,
             host_rules=[
                 compute.URLMapHostRuleArgs(
@@ -210,7 +215,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         # http_paths redirects any http incoming traffic to its https equivalent
         http_path_matcher_name = f"{env}--{name}--http--path-matcher"
         http_paths = compute.URLMap(
-            f"{env}--{branch}--http--load-balancer",
+            f"{env}--{sanitised_branch_name}--http--load-balancer",
             default_service=backend_service.id,
             host_rules=[
                 compute.URLMapHostRuleArgs(
@@ -264,14 +269,14 @@ def main():
     args = parser.parse_args()
 
     stack_name = args.env
+    sanitised_branch_name = args.branch.replace("/", "-")
     if args.branch:
-        n = args.branch.replace("/", "-")
-        stack_name = f"{stack_name}-{n}"
+        stack_name = f"{stack_name}--{sanitised_branch_name}"
 
     stack = pulumi.automation.create_or_select_stack(
         stack_name=stack_name,
         project_name="sde-consent-api",
-        program=deploy_service(args.env, args.branch, args.tag),
+        program=deploy_service(args.env, sanitised_branch_name, args.tag),
     )
     print(f"Initialised stack {stack_name}")
 
