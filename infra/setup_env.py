@@ -1,5 +1,6 @@
 """Pulumi inline program to deploy a stack."""
 
+# test
 import argparse
 from collections.abc import Callable
 from pathlib import Path
