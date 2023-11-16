@@ -53,6 +53,7 @@ describe('Consent Management', () => {
   })
 
   afterEach(() => {
+    jest.clearAllTimers()
     xhrMock.teardown()
     resetCookie(document)
   })
