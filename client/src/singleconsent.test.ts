@@ -12,7 +12,7 @@ import {
   getOriginFromLink,
 } from './utils'
 
-const MOCK_API_URL = 'https://test-url.com/api/'
+const MOCK_API_URL = 'https://test-url.com/api/consent/'
 const MOCK_COOKIE_NAME = 'gov_singleconsent_uid'
 const MOCK_UID = 'test-uid'
 
@@ -53,6 +53,7 @@ describe('Consent Management', () => {
   })
 
   afterEach(() => {
+    jest.clearAllTimers()
     xhrMock.teardown()
     resetCookie(document)
   })
@@ -66,7 +67,7 @@ describe('Consent Management', () => {
     mockCookie()
     const response1 = ['a', 'b']
     const response2 = { data: 'ok' }
-    xhrMock.get(MOCK_API_URL, (req, res) =>
+    xhrMock.get(MOCK_API_URL.replace('consent/', 'origins/'), (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) =>
@@ -79,7 +80,7 @@ describe('Consent Management', () => {
   it('should timeout the consents if the request takes more than one second', () => {
     mockCookie()
     const response1 = ['a', 'b']
-    xhrMock.get(MOCK_API_URL, (req, res) =>
+    xhrMock.get(MOCK_API_URL.replace('consent/', 'origins/'), (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
@@ -92,14 +93,13 @@ describe('Consent Management', () => {
     } catch (e) {
       err = e
     }
-    console.log(err)
     expect(err.message).toMatch(/timed out/)
   })
 
   it('should not timeout the consents if the request takes less than one second', () => {
     mockCookie()
     const response1 = ['a', 'b']
-    xhrMock.get(MOCK_API_URL, (req, res) =>
+    xhrMock.get(MOCK_API_URL.replace('consent/', 'origins/'), (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
