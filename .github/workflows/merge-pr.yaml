@@ -32,7 +32,7 @@ jobs:
     with:
       image_name: ${{ vars.DOCKER_IMAGE }}
       image_tag: ${{ needs.release.outputs.tag_name }}
-      branch_name: main
+      branch_name: ${{ needs.release.outputs.tag_name }}
     secrets: inherit
     permissions:
       contents: write
