@@ -257,9 +257,8 @@ def main():
     parser.add_argument("--destroy", action="store_true")
     parser.add_argument("--preview", action="store_true")
     parser.add_argument("-e", "--env", default="development")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-b", "--branch", default="main")
-    group.add_argument("-t", "--tag")
+    parser.add_argument("-b", "--branch", default="main")
+    parser.add_argument("-t", "--tag")
 
     args = parser.parse_args()
 

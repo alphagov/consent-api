@@ -114,5 +114,5 @@ jobs:
         env:
           ENV: ${{ inputs.environment }}
           BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.branch_name) || '' }}
-          TAG: ${{ !inputs.is_branch && format('--tag {0}', inputs.image_tag) || '' }}
+          TAG: ${{ format('--tag {0}', inputs.image_tag) }}
           PREVIEW: ${{ inputs.noop && '--preview' || '' }}
