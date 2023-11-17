@@ -1,6 +1,7 @@
 // @ts-ignore
 import xhrMock from 'xhr-mock'
 import { GovSingleConsent } from './GovSingleConsent'
+import { GovConsentConfig } from './GovConsentConfig'
 
 import {
   addUrlParameter,
@@ -35,6 +36,14 @@ const mockCookie = (
   })
 }
 
+const defaultMockURL = 'test-url.com'
+const mockWindowURL = (url?: string): void => {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: { href: url || 'test-url.com' },
+  })
+}
+
 const resetCookie = (_document): void => {
   if (originalCookie) {
     Object.defineProperty(_document, 'cookie', originalCookie)
@@ -56,6 +65,16 @@ describe('Consent Management', () => {
     jest.clearAllTimers()
     xhrMock.teardown()
     resetCookie(document)
+  })
+
+  it.only('should have the mocked url', () => {
+    const mockedUID = 'test-uid'
+    const mockedURL = `test-url.com/?gov_singleconsent_uid=${mockedUID}`
+    mockWindowURL('test-url.com/?gov_singleconsent_uid=test-uid')
+    expect(location.href).toBe(mockedURL)
+
+    const config = new GovConsentConfig()
+    expect(config.uidFromUrl).toBe(mockedUID)
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
