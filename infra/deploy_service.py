@@ -185,7 +185,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         # https_map sends all incoming https traffic to the designated backend service
         https_path_matcher_name = resource_name(f"{env}--$--https--path-matcher", name)
         https_paths = compute.URLMap(
-            f"{env}--{branch}--https--load-balancer",
+            resource_name(f"{env}--$--https--load-balancer", name),
             default_service=backend_service.id,
             host_rules=[
                 compute.URLMapHostRuleArgs(
