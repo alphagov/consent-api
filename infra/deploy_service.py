@@ -263,14 +263,14 @@ def main():
     args = parser.parse_args()
 
     stack_name = args.env
+    sanitised_branch = args.branch.replace("/", "-") if args.branch else ""
     if args.branch:
-        escaped = args.branch.replace("/", "-")
-        stack_name = f"{stack_name}-{escaped}"
+        stack_name = f"{stack_name}-{sanitised_branch}"
 
     stack = pulumi.automation.create_or_select_stack(
         stack_name=stack_name,
         project_name="sde-consent-api",
-        program=deploy_service(args.env, args.branch, args.tag),
+        program=deploy_service(args.env, sanitised_branch, args.tag),
     )
     print(f"Initialised stack {stack_name}")
 
