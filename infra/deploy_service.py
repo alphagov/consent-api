@@ -51,6 +51,25 @@ def get_db_instance_id(env: str) -> str:
     return result.stdout.strip()
 
 
+def resource_name(template: str, trimmable: str) -> str:
+    """
+    Generate a name for a resource.
+
+    Length is limited to 63
+    @trimmable will be trimmed if necessary
+
+    @template: the name template in format "prefix-$-suffix"
+    Where $ will be replaced with @trimmable
+    """
+
+    commit_hash_length = 7
+    max_length = 63 - len(template) - commit_hash_length
+    max_length -= 2  # some contingency
+    trimmed = trimmable[:max_length]
+
+    return template.replace("$", trimmed).replace("/", "-")
+
+
 def deploy_service(env: str, branch: str, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
@@ -71,13 +90,13 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         db_connection = db_instance.connection_name
 
         db = sql.Database(
-            f"{name}--db",
+            resource_name("$--db", name),
             name=name,
             instance=db_instance.name,
         )
 
         db_user = sql.User(
-            f"{name}--db-user",
+            resource_name("$--db-user", name),
             name=name,
             instance=db_instance.name,
             password=generate_password(),
@@ -96,7 +115,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
 
         service = cloudrun.Service(
             name,
-            name=f"{stack}-consent-api",
+            name=resource_name("$-consent-api", stack),
             location=pulumi.Config("gcp").require("region"),
             template={
                 "metadata": {
@@ -128,7 +147,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         # TODO only allow public access to production - other envs should be behind some
         # kind of auth
         cloudrun.IamBinding(
-            f"{name}--public-access-binding",
+            resource_name("$--public-access-binding", name),
             location=service.location,
             service=service.name,
             role="roles/run.invoker",
@@ -139,11 +158,13 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         # It will have a public facing IP as well as a DNS record with an SSL cert
 
         ip_address = compute.GlobalAddress(
-            f"{env}--{name}--ipaddress", address_type="EXTERNAL", project=google_project
+            resource_name(f"{env}--$--ipaddress", name),
+            address_type="EXTERNAL",
+            project=google_project,
         )
 
         endpoint_group = compute.RegionNetworkEndpointGroup(
-            f"{env}--{name}--endpoint-group",
+            resource_name(f"{env}--$--endpoint-group", name),
             network_endpoint_type="SERVERLESS",
             region=pulumi.Config("gcp").require("region"),
             cloud_run=compute.RegionNetworkEndpointGroupCloudRunArgs(
@@ -152,7 +173,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         )
 
         backend_service = compute.BackendService(
-            f"{env}--{name}--backend-service",
+            resource_name(f"{env}--$--backend-service", name),
             enable_cdn=False,
             connection_draining_timeout_sec=10,
             log_config=compute.BackendServiceLogConfigArgs(
@@ -162,7 +183,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         )
 
         # https_map sends all incoming https traffic to the designated backend service
-        https_path_matcher_name = f"{env}--{name}--https--path-matcher"
+        https_path_matcher_name = resource_name(f"{env}--$--https--path-matcher", name)
         https_paths = compute.URLMap(
             f"{env}--{branch}--https--load-balancer",
             default_service=backend_service.id,
@@ -187,14 +208,14 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         )
 
         certificate = compute.ManagedSslCertificate(
-            f"{env}--{name}--certificate",
+            resource_name(f"{env}--$--certificate", name),
             managed=compute.ManagedSslCertificateManagedArgs(
                 domains=[pulumi.Config("sde-consent-api").require("domain")],
             ),
         )
 
         https_proxy = compute.TargetHttpsProxy(
-            resource_name=f"{env}--{name}--https-proxy",
+            resource_name=resource_name(f"{env}--$--https-proxy", name),
             url_map=https_paths.id,
             ssl_certificates=[certificate.id],
         )
@@ -208,9 +229,9 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         )
 
         # http_paths redirects any http incoming traffic to its https equivalent
-        http_path_matcher_name = f"{env}--{name}--http--path-matcher"
+        http_path_matcher_name = resource_name(f"{env}--$--http--path-matcher", name)
         http_paths = compute.URLMap(
-            f"{env}--{branch}--http--load-balancer",
+            resource_name(f"{env}--$--http--load-balancer", branch),
             default_service=backend_service.id,
             host_rules=[
                 compute.URLMapHostRuleArgs(
@@ -235,7 +256,8 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
         )
 
         http_proxy = compute.TargetHttpProxy(
-            resource_name=f"{env}--{name}--http-proxy", url_map=http_paths.id
+            resource_name=resource_name(f"{env}--$--http-proxy", name),
+            url_map=http_paths.id,
         )
 
         compute.GlobalForwardingRule(
