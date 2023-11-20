@@ -284,9 +284,14 @@ def main():
 
     args = parser.parse_args()
 
+    if args.env == "production":
+        # Production doesn't support branch environments
+        args.branch = None
+
     stack_name = args.env
-    sanitised_branch = args.branch.replace("/", "-") if args.branch else ""
+    sanitised_branch = None
     if args.branch:
+        sanitised_branch = args.branch.replace("/", "-") if args.branch else ""
         stack_name = f"{stack_name}-{sanitised_branch}"
 
     stack = pulumi.automation.create_or_select_stack(
