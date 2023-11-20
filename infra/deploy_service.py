@@ -51,7 +51,7 @@ def get_db_instance_id(env: str) -> str:
     return result.stdout.strip()
 
 
-def resource_name(template: str, trimmable: str) -> str:
+def resource_name(template: str, trimmable: str | None) -> str:
     """
     Generate a name for a resource.
 
@@ -65,7 +65,7 @@ def resource_name(template: str, trimmable: str) -> str:
     commit_hash_length = 7
     max_length = 63 - len(template) - commit_hash_length
     max_length -= 2  # some contingency
-    trimmed = trimmable[:max_length]
+    trimmed = trimmable[:max_length] if trimmable else ""
 
     return template.replace("$", trimmed).replace("/", "-")
 

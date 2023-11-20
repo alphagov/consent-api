@@ -6,4 +6,5 @@ config:
   sde-consent-api:db-name: consent-api
   sde-consent-api:db-tier: db-f1-micro
   sde-consent-api:db-version: POSTGRES_14
+  sde-consent-api:db-deletion-protected: false
   sde-consent-api:docker-image: consent-api:v1.9.0

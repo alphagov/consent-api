@@ -24,10 +24,13 @@ def setup_env(env: str) -> Callable:
 
     def _setup() -> None:
         """Execute the inline Pulumi program."""
+        db_deletion_protected = (
+            pulumi.Config("sde-consent-api").require("db-deletion-protected") == "true"
+        )
         sql.DatabaseInstance(
             f"{env}-db-instance",
             database_version=pulumi.Config().require("db-version"),
-            deletion_protection=False,
+            deletion_protection=db_deletion_protected,
             settings={"tier": pulumi.Config().require("db-tier")},
         )
 
