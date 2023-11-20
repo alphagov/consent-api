@@ -13,6 +13,14 @@ from pulumi_gcp import compute
 from pulumi_gcp import sql
 from ruamel.yaml import YAML
 
+from infra.utils import (
+    get_latest_production_color,
+    get_opposite_production_color,
+    ProductionColor,
+)
+
+PRODUCTION_INITIAL_TRAFFIC_PERCENT = 5
+
 
 def generate_password(length: int = 20) -> pulumi.Output[str]:
     """Generate a random password."""
@@ -70,6 +78,32 @@ def resource_name(template: str, trimmable: str | None) -> str:
     return template.replace("$", trimmed).replace("/", "-")
 
 
+def configure_cloud_run_traffics(
+    env: str,
+    next_production_color: ProductionColor | None,
+) -> list[dict]:
+    if env != "production":
+        return [
+            {
+                "latest_revision": True,
+                "percent": 100,
+            },
+        ]
+
+    if not next_production_color:
+        raise ValueError(
+            "Production color must be specified for production env deployment"
+        )
+    return [
+        {
+            "latest_revision": True,
+            "percent": PRODUCTION_INITIAL_TRAFFIC_PERCENT,
+            "tag": next_production_color.value,
+            "percent": 100,
+        },
+    ]
+
+
 def deploy_service(env: str, branch: str, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
@@ -113,6 +147,20 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
             )
         )
 
+        if env == "production":
+            print("🚀 Deploying new Cloud Run revision to production")
+            dot_map = {
+                ProductionColor.GREEN: "🟢",
+                ProductionColor.BLUE: "🔵",
+            }
+            latest_color = get_latest_production_color()
+            next_production_color = get_opposite_production_color(latest_color)
+            print(
+                f"{dot_map[latest_color]} Latest color was {latest_color.value}\n{dot_map[next_production_color]} Deploying to {next_production_color.value}"
+            )
+
+        cloud_run_traffics = configure_cloud_run_traffics(env, next_production_color)
+
         service = cloudrun.Service(
             name,
             name=resource_name("$-consent-api", stack),
@@ -136,12 +184,7 @@ def deploy_service(env: str, branch: str, tag: str) -> Callable:
                     ],
                 },
             },
-            traffics=[
-                {
-                    "latest_revision": True,
-                    "percent": 100,
-                },
-            ],
+            traffics=cloud_run_traffics,
         )
 
         # TODO only allow public access to production - other envs should be behind some
