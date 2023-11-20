@@ -15,6 +15,9 @@ import {
 const MOCK_API_URL = 'https://test-url.com/api/consent/'
 const MOCK_COOKIE_NAME = 'gov_singleconsent_uid'
 const MOCK_UID = 'test-uid'
+const MOCK_URL = 'test-url.com'
+
+const originalLocation = window.location
 
 let originalCookie
 
@@ -43,6 +46,20 @@ const resetCookie = (_document): void => {
   }
 }
 
+const mockWindowURL = (url?: string): void => {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: { href: url || MOCK_URL },
+  })
+}
+
+const resetWindowURL = (): void => {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: originalLocation,
+  })
+}
+
 describe('Consent Management', () => {
   beforeAll(() => {
     originalCookie = Object.getOwnPropertyDescriptor(document, 'cookie')
@@ -56,6 +73,7 @@ describe('Consent Management', () => {
     jest.clearAllTimers()
     xhrMock.teardown()
     resetCookie(document)
+    resetWindowURL()
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
@@ -63,7 +81,7 @@ describe('Consent Management', () => {
     expect(consentInstance.uid).toBeUndefined()
   })
 
-  it('should initialise Consent UID to cookie value if defined', () => {
+  it('should initialise Consent UID to cookie value if defined and URL value is not defined', () => {
     mockCookie()
     const response1 = ['a', 'b']
     const response2 = { data: 'ok' }
@@ -75,6 +93,39 @@ describe('Consent Management', () => {
     )
     const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
     expect(consentInstance.uid).toBe(MOCK_UID)
+  })
+
+  it('should initialise Consent UID to URL value if defined and cookie value is not defined', () => {
+    const response1 = ['a', 'b']
+    const response2 = { data: 'ok' }
+    const mockedUrlUid = `test-url-uid`
+    const mockedUrl = `${MOCK_URL}?${MOCK_COOKIE_NAME}=${mockedUrlUid}`
+    xhrMock.get(MOCK_API_URL.replace('consent/', 'origins/'), (req, res) =>
+      res.status(200).body(JSON.stringify(response1))
+    )
+    xhrMock.get(`${MOCK_API_URL}${mockedUrlUid}`, (req, res) =>
+      res.status(200).body(JSON.stringify(response2))
+    )
+    mockWindowURL(mockedUrl)
+    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    expect(consentInstance.uid).toBe(mockedUrlUid)
+  })
+
+  it('should initialise Consent UID to URL value if both URL and cookie values are defined', () => {
+    mockCookie()
+    const response1 = ['a', 'b']
+    const response2 = { data: 'ok' }
+    const mockedUrlUid = `test-url-uid`
+    const mockedUrl = `${MOCK_URL}?${MOCK_COOKIE_NAME}=${mockedUrlUid}`
+    xhrMock.get(MOCK_API_URL.replace('consent/', 'origins/'), (req, res) =>
+      res.status(200).body(JSON.stringify(response1))
+    )
+    xhrMock.get(`${MOCK_API_URL}${mockedUrlUid}`, (req, res) =>
+      res.status(200).body(JSON.stringify(response2))
+    )
+    mockWindowURL(mockedUrl)
+    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    expect(consentInstance.uid).toBe(mockedUrlUid)
   })
 
   it('should timeout the consents if the request takes more than one second', () => {
