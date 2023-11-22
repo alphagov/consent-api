@@ -12,14 +12,10 @@ from pulumi_gcp import cloudrun
 from pulumi_gcp import compute
 from pulumi_gcp import sql
 from ruamel.yaml import YAML
-
-from infra.utils import (
-    get_latest_production_color,
-    get_opposite_production_color,
-    ProductionColor,
-)
-
-PRODUCTION_INITIAL_TRAFFIC_PERCENT = 5
+from utils import ProductionColor
+from utils import configure_cloud_run_traffics
+from utils import get_latest_production_revision
+from utils import get_opposite_production_color
 
 
 def generate_password(length: int = 20) -> pulumi.Output[str]:
@@ -78,42 +74,17 @@ def resource_name(template: str, trimmable: str | None) -> str:
     return template.replace("$", trimmed).replace("/", "-")
 
 
-def configure_cloud_run_traffics(
-    env: str,
-    next_production_color: ProductionColor | None,
-) -> list[dict]:
-    if env != "production":
-        return [
-            {
-                "latest_revision": True,
-                "percent": 100,
-            },
-        ]
-
-    if not next_production_color:
-        raise ValueError(
-            "Production color must be specified for production env deployment"
-        )
-    return [
-        {
-            "latest_revision": True,
-            "percent": PRODUCTION_INITIAL_TRAFFIC_PERCENT,
-            "tag": next_production_color.value,
-            "percent": 100,
-        },
-    ]
-
-
 def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
     def _deploy() -> None:
         """Execute the inline Pulumi program."""
+
+        region = pulumi.Config("gcp").require("region")
+        project_id = pulumi.Config("gcp").require("project")
         name = "consent-api"
         if branch:
             name = f"{name}--{branch}"
-
-        google_project = "sde-consent-api"
 
         stack = pulumi.get_stack()
 
@@ -147,35 +118,40 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
             )
         )
 
+        cloudrun_service_name = resource_name("$-consent-api", stack)
         if env == "production":
             print("🚀 Deploying new Cloud Run revision to production")
-            dot_map = {
+            dot = {
                 ProductionColor.GREEN: "🟢",
                 ProductionColor.BLUE: "🔵",
             }
-            latest_color = get_latest_production_color()
-            next_production_color = get_opposite_production_color(latest_color)
-            print(
-                f"{dot_map[latest_color]} Latest color was {latest_color.value}\n{dot_map[next_production_color]} Deploying to {next_production_color.value}"
+            latest_color, latest_rev_name = get_latest_production_revision(
+                project_id=project_id, region=region, service_name=cloudrun_service_name
             )
+            next_color = get_opposite_production_color(latest_color)
+            print(f"{dot[latest_color]} Latest color was {latest_color.value}")
+            print(f"{dot[next_color]} Deploying to {next_color.value}")
 
-        cloud_run_traffics = configure_cloud_run_traffics(env, next_production_color)
+        cloud_run_traffics = configure_cloud_run_traffics(
+            env, next_color, latest_color, latest_rev_name
+        )
 
         service = cloudrun.Service(
             name,
-            name=resource_name("$-consent-api", stack),
-            location=pulumi.Config("gcp").require("region"),
+            name=cloudrun_service_name,
+            location=region,
             template={
                 "metadata": {
                     "annotations": {
                         "autoscaling.knative.dev/maxScale": "5",
                         "run.googleapis.com/cloudsql-instances": db_connection,
+                        "production-color": next_color.value,
                     }
                 },
                 "spec": {
                     "containers": [
                         {
-                            "image": f"gcr.io/{google_project}/consent-api:{tag}",
+                            "image": f"gcr.io/{project_id}/consent-api:{tag}",
                             "envs": [
                                 {"name": "DATABASE_URL", "value": db_url},
                                 {"name": "ENV", "value": env},
@@ -203,13 +179,13 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
         ip_address = compute.GlobalAddress(
             resource_name(f"{env}--$--ipaddress", name),
             address_type="EXTERNAL",
-            project=google_project,
+            project=project_id,
         )
 
         endpoint_group = compute.RegionNetworkEndpointGroup(
             resource_name(f"{env}--$--endpoint-group", name),
             network_endpoint_type="SERVERLESS",
-            region=pulumi.Config("gcp").require("region"),
+            region=region,
             cloud_run=compute.RegionNetworkEndpointGroupCloudRunArgs(
                 service=service.name
             ),
