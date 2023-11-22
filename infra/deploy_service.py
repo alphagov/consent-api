@@ -70,7 +70,7 @@ def resource_name(template: str, trimmable: str | None) -> str:
     return template.replace("$", trimmed).replace("/", "-")
 
 
-def deploy_service(env: str, branch: str, tag: str) -> Callable:
+def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
     def _deploy() -> None:
@@ -289,9 +289,10 @@ def main():
         args.branch = None
 
     stack_name = args.env
+
     sanitised_branch = None
     if args.branch:
-        sanitised_branch = args.branch.replace("/", "-") if args.branch else ""
+        sanitised_branch = args.branch.replace("/", "-")
         stack_name = f"{stack_name}-{sanitised_branch}"
 
     stack = pulumi.automation.create_or_select_stack(
