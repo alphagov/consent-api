@@ -1,9 +1,9 @@
 config:
   gcp:project: sde-consent-api
   gcp:region: europe-west2
-  sde-consent-api:domain: gds-single-consent-staging.app
+  sde-consent-api:domain: gds-single-consent.app
   sde-consent-api:db-name: consent-api
   sde-consent-api:db-tier: db-f1-micro
   sde-consent-api:db-version: POSTGRES_14
-  sde-consent-api:db-deletion-protected: false
+  sde-consent-api:db-deletion-protected: "true"
   sde-consent-api:docker-image: consent-api:v1.7.5

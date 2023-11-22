@@ -51,7 +51,7 @@ def get_db_instance_id(env: str) -> str:
     return result.stdout.strip()
 
 
-def resource_name(template: str, trimmable: str) -> str:
+def resource_name(template: str, trimmable: str | None) -> str:
     """
     Generate a name for a resource.
 
@@ -65,12 +65,12 @@ def resource_name(template: str, trimmable: str) -> str:
     commit_hash_length = 7
     max_length = 63 - len(template) - commit_hash_length
     max_length -= 2  # some contingency
-    trimmed = trimmable[:max_length]
+    trimmed = trimmable[:max_length] if trimmable else ""
 
     return template.replace("$", trimmed).replace("/", "-")
 
 
-def deploy_service(env: str, branch: str, tag: str) -> Callable:
+def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
     def _deploy() -> None:
@@ -284,9 +284,15 @@ def main():
 
     args = parser.parse_args()
 
+    if args.env == "production":
+        # Production doesn't support branch environments
+        args.branch = None
+
     stack_name = args.env
-    sanitised_branch = args.branch.replace("/", "-") if args.branch else ""
+
+    sanitised_branch = None
     if args.branch:
+        sanitised_branch = args.branch.replace("/", "-")
         stack_name = f"{stack_name}-{sanitised_branch}"
 
     stack = pulumi.automation.create_or_select_stack(
