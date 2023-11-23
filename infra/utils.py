@@ -25,8 +25,8 @@ def get_latest_production_revision(
     try:
         col_annotation = latest_rev.annotations["production-color"]
         latest_color = ProductionColor(col_annotation)
-    except Exception as e:
-        raise Exception(
+    except ValueError as e:
+        raise ValueError(
             f"Unknown color annotation on latest revision: {col_annotation}"
         ) from e
 
