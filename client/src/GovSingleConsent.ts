@@ -73,12 +73,12 @@ export class GovSingleConsent {
           getConsentsUrl,
           { timeout: 1000 },
           ({ status: consents }: { status: Consents }) => {
-            this.setConsentsCookie(consents)
+            this.setConsents(consents)
             this._consentsUpdatedCallback(consents)
           }
         )
       } catch (error) {
-        this.setConsentsCookie(GovSingleConsent.REJECT_ALL)
+        this.setConsents(GovSingleConsent.REJECT_ALL)
         this._consentsRevokedCallback(error, GovSingleConsent.REJECT_ALL)
       }
     }
@@ -192,11 +192,22 @@ export class GovSingleConsent {
     setCookie(cookieName, uid, lifetime)
   }
 
+  private setConsents(consents: Consents): void {
+    this.setConsentsCookie(consents)
+    this.setPreferencesSetCookie(true)
+  }
+
   private setConsentsCookie(consents: Consents): void {
-    const cookieName = this.config.CONSENTS_COOKIE_NAME
+    const consentsCookieName = this.config.CONSENTS_COOKIE_NAME
     const value = JSON.stringify(consents)
     const lifetime = this.config.COOKIE_LIFETIME
-    setCookie(cookieName, value, lifetime)
+    setCookie(consentsCookieName, value, lifetime)
+  }
+
+  private setPreferencesSetCookie(value: boolean): void {
+    const cookieName = this.config.PREFERENCES_SET_COOKIE_NAME
+    const lifetime = this.config.COOKIE_LIFETIME
+    setCookie(cookieName, value.toString(), lifetime)
   }
 
   private hideUIDParameter(): void {
