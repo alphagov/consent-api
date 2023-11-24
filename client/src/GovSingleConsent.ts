@@ -16,8 +16,11 @@ type Consents = {
   settings: boolean
 }
 
-type ConsentsUpdatedCallback = (consents: Consents) => void
-type ConsentsRevokedCallback = (error: Error, consents: Consents) => void
+type ConsentsUpdateCallback = (
+  consents: Consents,
+  consentsPreferencesSet: boolean,
+  error?: Error | null
+) => void
 
 export class GovSingleConsent {
   static ACCEPT_ALL: Consents = {
@@ -33,17 +36,13 @@ export class GovSingleConsent {
     settings: false,
   }
 
-  _consentsUpdatedCallback: ConsentsUpdatedCallback
-  _consentsRevokedCallback: ConsentsRevokedCallback
+  _consentsUpdateCallback: ConsentsUpdateCallback
 
   config: GovConsentConfig
 
   uid?: string | null
 
-  constructor(
-    consentsUpdatedCallback: ConsentsUpdatedCallback,
-    consentsRevokedCallback: ConsentsRevokedCallback
-  ) {
+  constructor(consentsUpdateCallback: ConsentsUpdateCallback) {
     /**
       Initialises _GovConsent object by performing the following:
       1. Removes 'uid' from URL.
@@ -51,14 +50,15 @@ export class GovSingleConsent {
       3. Fetches consent status from API if 'uid' exists.
       4. Notifies event listeners with API response.
 
-      @arg updateConsentsCallback: function(status) - callback when the consents cookie is updated - status is passed
-      @arg revokeConsentsCallback: function(error, status) - callback when the consents cookie is revoked - error and revoked status is passed
+      @arg consentsUpdateCallback: function(consents, consentsPreferencesSet, error) - callback when the consents are updated
+      "consents": this is the consents object. It has the following properties: "essential", "usage", "campaigns", "settings". Each property is a boolean.
+      "consentsPreferencesSet": true if the consents have been set for this user and this domain. Typically, only display the cookie banner if this is true.
+      "error": if an error occurred, this is the error object. Otherwise, this is null.
       */
 
-    this._consentsUpdatedCallback = consentsUpdatedCallback
-    this._consentsRevokedCallback = consentsRevokedCallback
+    this._consentsUpdateCallback = consentsUpdateCallback
 
-    this.validateCallbacks()
+    this.validateCallback()
 
     this.config = new GovConsentConfig()
     this.hideUIDParameter()
@@ -74,12 +74,20 @@ export class GovSingleConsent {
           { timeout: 1000 },
           ({ status: consents }: { status: Consents }) => {
             this.setConsents(consents)
-            this._consentsUpdatedCallback(consents)
+            this._consentsUpdateCallback(
+              consents,
+              this.areCookiesPreferencesSet(),
+              null
+            )
           }
         )
       } catch (error) {
         this.setConsents(GovSingleConsent.REJECT_ALL)
-        this._consentsRevokedCallback(error, GovSingleConsent.REJECT_ALL)
+        this._consentsUpdateCallback(
+          GovSingleConsent.REJECT_ALL,
+          this.areCookiesPreferencesSet(),
+          error
+        )
       }
     }
   }
@@ -169,20 +177,13 @@ export class GovSingleConsent {
     })
   }
 
-  private validateCallbacks(): void {
-    if (!this._consentsUpdatedCallback || !this._consentsRevokedCallback) {
-      throw new Error(
-        'updateConsentsCallback and revokeConsentsCallback are required'
-      )
+  private validateCallback(): void {
+    if (!this._consentsUpdateCallback) {
+      throw new Error('Argument consentsUpdateCallback is required')
     }
 
-    if (
-      typeof this._consentsUpdatedCallback !== 'function' ||
-      typeof this._consentsRevokedCallback !== 'function'
-    ) {
-      throw new Error(
-        'updateConsentsCallback and revokeConsentsCallback must be functions'
-      )
+    if (typeof this._consentsUpdateCallback !== 'function') {
+      throw new Error('_consentsUpdateCallback must be a function')
     }
   }
 
