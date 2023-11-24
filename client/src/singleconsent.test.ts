@@ -153,6 +153,19 @@ describe('Consent Management', () => {
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
+
+  describe('[method]: areCookiesPreferencesSet', () => {
+    it('should return false if the cookie is not set', () => {
+      const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+      expect(consentInstance.areCookiesPreferencesSet()).toBe(false)
+    })
+
+    it('should return true if the cookie is set', () => {
+      const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+      mockCookie(consentInstance.config.PREFERENCES_SET_COOKIE_NAME, 'true')
+      expect(consentInstance.areCookiesPreferencesSet()).toBe(true)
+    })
+  })
 })
 
 /*
