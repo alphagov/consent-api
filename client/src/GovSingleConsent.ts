@@ -92,19 +92,21 @@ export class GovSingleConsent {
     }
   }
 
-  setConsents(consents: Consents, statusSetCallback, onErrorCallback): void {
+  setConsents(consents: Consents): void {
     if (!consents) {
       throw new Error('status is required in GovSingleConsent.setStatus()')
     }
 
     var url = this.config.getApiUrl().concat(this.uid || '')
 
-    const callback = (response) => {
-      // get the current uid from the API if we don't already have one
+    const successCallback = (response) => {
       this.updateUID(response.uid)
-      if (statusSetCallback) {
-        statusSetCallback()
-      }
+      this.updateBrowserConsents(consents)
+      this._consentsUpdateCallback(
+        consents,
+        this.isConsentPreferencesSet(),
+        null
+      )
     }
 
     try {
@@ -115,14 +117,16 @@ export class GovSingleConsent {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: 'status='.concat(JSON.stringify(consents)),
         },
-        callback
+        successCallback
       )
     } catch (error) {
-      if (onErrorCallback) {
-        onErrorCallback(error)
-      } else {
-        throw error
-      }
+      // The request failed. For security reasons, we assume the user has rejected all cookies.
+      this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
+      this._consentsUpdateCallback(
+        GovSingleConsent.REJECT_ALL,
+        this.isConsentPreferencesSet(),
+        error
+      )
     }
   }
 
