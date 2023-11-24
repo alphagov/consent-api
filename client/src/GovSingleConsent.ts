@@ -5,33 +5,44 @@ import {
   isCrossOrigin,
   removeUrlParameter,
   request,
+  setCookie,
+  getCookie,
 } from './utils'
 
+type Consents = {
+  essential: boolean
+  usage: boolean
+  campaigns: boolean
+  settings: boolean
+}
+
+type ConsentsUpdatedCallback = (consents: Consents) => void
+type ConsentsRevokedCallback = (error: Error, consents: Consents) => void
+
 export class GovSingleConsent {
-  static COOKIE_LIFETIME = 365 * 24 * 60 * 60 * 1000
-  static ACCEPT_ALL = {
+  static ACCEPT_ALL: Consents = {
     essential: true,
     usage: true,
     campaigns: true,
     settings: true,
   }
-  static REJECT_ALL = {
+  static REJECT_ALL: Consents = {
     essential: true,
     usage: false,
     campaigns: false,
     settings: false,
   }
 
-  updateConsentsCallback: Function
-  revokeConsentsCallback: Function
+  _consentsUpdatedCallback: ConsentsUpdatedCallback
+  _consentsRevokedCallback: ConsentsRevokedCallback
 
   config: GovConsentConfig
 
   uid?: string | null
 
   constructor(
-    updateConsentsCallback: Function,
-    revokeConsentsCallback: Function
+    consentsUpdatedCallback: ConsentsUpdatedCallback,
+    consentsRevokedCallback: ConsentsRevokedCallback
   ) {
     /**
       Initialises _GovConsent object by performing the following:
@@ -40,12 +51,12 @@ export class GovSingleConsent {
       3. Fetches consent status from API if 'uid' exists.
       4. Notifies event listeners with API response.
 
-      @arg updateConsentsCallback: function(status) - callback to update consent status - response consents object passed
-      @arg revokeConsentsCallback: function() - callback to revoke all consents - error is passed
+      @arg updateConsentsCallback: function(status) - callback when the consents cookie is updated - status is passed
+      @arg revokeConsentsCallback: function(error, status) - callback when the consents cookie is revoked - error and revoked status is passed
       */
 
-    this.updateConsentsCallback = updateConsentsCallback
-    this.revokeConsentsCallback = revokeConsentsCallback
+    this._consentsUpdatedCallback = consentsUpdatedCallback
+    this._consentsRevokedCallback = consentsRevokedCallback
 
     this.validateCallbacks()
 
@@ -58,72 +69,22 @@ export class GovSingleConsent {
       var getConsentsUrl = this.config.getApiUrl().concat(this.uid)
 
       try {
-        request(getConsentsUrl, { timeout: 1000 }, (responseData) => {
-          this.updateConsentsCallback(responseData.status)
-        })
+        request(
+          getConsentsUrl,
+          { timeout: 1000 },
+          ({ status: consents }: { status: Consents }) => {
+            this.setConsentsCookie(consents)
+            this._consentsUpdatedCallback(consents)
+          }
+        )
       } catch (error) {
-        this.revokeConsentsCallback(error)
+        this.setConsentsCookie(GovSingleConsent.REJECT_ALL)
+        this._consentsRevokedCallback(error, GovSingleConsent.REJECT_ALL)
       }
     }
   }
 
-  private updateUID(uid) {
-    /**
-     * Sets the new UID, updates page links and sets the UID cookie.
-     */
-
-    if (!uid || uid === this.uid) {
-      return
-    }
-
-    this.uid = uid
-
-    // Get origins
-    request(
-      this.config.getApiUrl().replace('/consent/', '/origins/'),
-      {},
-      // Update links with UID
-      (origins) => this.addUIDtoCrossOriginLinks(origins, uid)
-    )
-
-    // Update UID cookie
-    this.setUIDCookie(uid)
-  }
-
-  private addUIDtoCrossOriginLinks(origins, uid) {
-    /**
-     * Adds uid URL parameter to consent sharing links.
-     * Only links with known origins are updated.
-     */
-
-    var links = document.querySelectorAll('a[href]')
-    Array.prototype.forEach.call(links, (link) => {
-      if (
-        isCrossOrigin(link) &&
-        origins.indexOf(getOriginFromLink(link)) >= 0
-      ) {
-        link.addEventListener('click', (event) => {
-          event.target.href = addUrlParameter(
-            event.target.href,
-            this.config.uidKey,
-            uid
-          )
-        })
-      }
-    })
-  }
-
-  private setUIDCookie(uid) {
-    document.cookie = this.config.uidKey
-      .concat('=', uid)
-      .concat(
-        '; path=/',
-        '; max-age='.concat(GovSingleConsent.COOKIE_LIFETIME.toString()),
-        document.location.protocol === 'https:' ? '; Secure' : ''
-      )
-  }
-
-  setStatus(status, statusSetCallback, onErrorCallback) {
+  setStatus(status, statusSetCallback, onErrorCallback): void {
     if (!status) {
       throw new Error('status is required in GovSingleConsent.setStatus()')
     }
@@ -157,16 +118,67 @@ export class GovSingleConsent {
     }
   }
 
-  private validateCallbacks() {
-    if (!this.updateConsentsCallback || !this.revokeConsentsCallback) {
+  areCookiesPreferencesSet(): boolean {
+    const value = getCookie(this.config.PREFERENCES_SET_COOKIE_NAME, null)
+    return value === 'true'
+  }
+
+  private updateUID(uid): void {
+    /**
+     * Sets the new UID, updates page links and sets the UID cookie.
+     */
+
+    if (!uid || uid === this.uid) {
+      return
+    }
+
+    this.uid = uid
+
+    // Get origins
+    request(
+      this.config.getApiUrl().replace('/consent/', '/origins/'),
+      {},
+      // Update links with UID
+      (origins) => this.addUIDtoCrossOriginLinks(origins, uid)
+    )
+
+    // Update UID cookie
+    this.setUIDCookie(uid)
+  }
+
+  private addUIDtoCrossOriginLinks(origins, uid): void {
+    /**
+     * Adds uid URL parameter to consent sharing links.
+     * Only links with known origins are updated.
+     */
+
+    var links = document.querySelectorAll('a[href]')
+    Array.prototype.forEach.call(links, (link) => {
+      if (
+        isCrossOrigin(link) &&
+        origins.indexOf(getOriginFromLink(link)) >= 0
+      ) {
+        link.addEventListener('click', (event) => {
+          event.target.href = addUrlParameter(
+            event.target.href,
+            this.config.UID_KEY,
+            uid
+          )
+        })
+      }
+    })
+  }
+
+  private validateCallbacks(): void {
+    if (!this._consentsUpdatedCallback || !this._consentsRevokedCallback) {
       throw new Error(
         'updateConsentsCallback and revokeConsentsCallback are required'
       )
     }
 
     if (
-      typeof this.updateConsentsCallback !== 'function' ||
-      typeof this.revokeConsentsCallback !== 'function'
+      typeof this._consentsUpdatedCallback !== 'function' ||
+      typeof this._consentsRevokedCallback !== 'function'
     ) {
       throw new Error(
         'updateConsentsCallback and revokeConsentsCallback must be functions'
@@ -174,11 +186,24 @@ export class GovSingleConsent {
     }
   }
 
-  private hideUIDParameter() {
+  private setUIDCookie(uid: string): void {
+    const cookieName = this.config.UID_KEY
+    const lifetime = this.config.COOKIE_LIFETIME
+    setCookie(cookieName, uid, lifetime)
+  }
+
+  private setConsentsCookie(consents: Consents): void {
+    const cookieName = this.config.CONSENTS_COOKIE_NAME
+    const value = JSON.stringify(consents)
+    const lifetime = this.config.COOKIE_LIFETIME
+    setCookie(cookieName, value, lifetime)
+  }
+
+  private hideUIDParameter(): void {
     history.replaceState(
       null,
       null,
-      removeUrlParameter(location.href, this.config.uidKey)
+      removeUrlParameter(location.href, this.config.UID_KEY)
     )
   }
 }

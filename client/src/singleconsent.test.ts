@@ -10,6 +10,7 @@ import {
   findByKey,
   isCrossOrigin,
   getOriginFromLink,
+  getCookie,
 } from './utils'
 
 const MOCK_API_URL = 'https://test-url.com/api/consent/'
@@ -23,18 +24,10 @@ let originalCookie
 
 jest.useFakeTimers()
 
-const mockCookie = (
-  name = MOCK_COOKIE_NAME,
-  value = MOCK_UID,
-  days = 1
-): void => {
-  const date = new Date()
-  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
-  const expires = `; expires=${date.toUTCString()}`
-
+const mockCookie = (name = MOCK_COOKIE_NAME, value = MOCK_UID): void => {
   Object.defineProperty(document, 'cookie', {
     writable: true,
-    value: `${name}=${value}${expires}; path=/`,
+    value: `${document.cookie}${name}=${value};`,
   })
 }
 
@@ -233,6 +226,59 @@ describe('removeUrlParameter', () => {
       expect(removeUrlParameter(url, name)).toEqual(expected)
     })
   })
+})
+
+describe('getCookie', () => {
+  const testSettings: {
+    mockCookies: any[]
+    cookieName: string
+    expected: string
+    defaultValue?: string
+  }[] = [
+    // get cookie when it exists
+    {
+      mockCookies: [{ name: 'foo', value: '1' }],
+      cookieName: 'foo',
+      expected: '1',
+    },
+    // get cookie when it exists amongst other cookies
+    {
+      mockCookies: [
+        { name: 'foo1', value: '1' },
+        { name: 'foo2', value: '2' },
+        { name: 'foo3', value: '3' },
+      ],
+      cookieName: 'foo2',
+      expected: '2',
+    },
+    // get cookie "a" when it doesn't exist and no default value specified
+    {
+      mockCookies: [{ name: 'foo', value: '1' }],
+      cookieName: 'none',
+      expected: null,
+    },
+    // get cookie "a" when id doesn't exist and default value specified
+    {
+      mockCookies: [{ name: 'foo', value: '1' }],
+      cookieName: 'none',
+      defaultValue: '123',
+      expected: '123',
+    },
+  ]
+
+  testSettings.forEach(
+    ({ mockCookies, cookieName, expected, defaultValue }) => {
+      test(`returns ${expected} when the cookie is amongst ${mockCookies.length} cookies and the name is ${cookieName} and the default value is ${defaultValue}`, () => {
+        mockCookies.forEach((cookie) => {
+          const { name, value } = cookie
+          mockCookie(name, value)
+        })
+        console.log(mockCookies.length)
+        console.log(document.cookie)
+        expect(getCookie(cookieName, defaultValue)).toEqual(expected)
+      })
+    }
+  )
 })
 
 describe('parseUrl', () => {
