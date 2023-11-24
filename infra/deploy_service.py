@@ -191,6 +191,29 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
             ),
         )
 
+        rate_limiting_rule = compute.SecurityPolicyRuleArgs(
+            priority=1000,
+            action="rate_based_ban",
+            match=compute.SecurityPolicyRuleMatchArgs(
+                versioned_expr="SRC_IPS_V1",
+                config=compute.SecurityPolicyRuleMatchConfigArgs(src_ip_ranges=["*"]),
+            ),
+            rate_limit_options=compute.SecurityPolicyRuleRateLimitOptionsArgs(
+                conform_action="allow",
+                exceed_action="deny(403)",
+                rate_limit_threshold=compute.SecurityPolicyRuleRateLimitOptionsRateLimitThresholdArgs(
+                    count=500, interval_sec=10
+                ),
+                ban_duration_sec=60,
+                enforce_on_key="IP",
+            ),
+        )
+
+        security_policy = compute.SecurityPolicy(
+            resource_name=resource_name(f"{env}--$--security-policy", branch),
+            rules=[rate_limiting_rule],
+        )
+
         backend_service = compute.BackendService(
             resource_name(f"{env}--$--backend-service", name),
             enable_cdn=False,
@@ -199,6 +222,7 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
                 enable=True, sample_rate=0.5
             ),
             backends=[compute.BackendServiceBackendArgs(group=endpoint_group.id)],
+            security_policy=security_policy.self_link,
         )
 
         # https_map sends all incoming https traffic to the designated backend service
