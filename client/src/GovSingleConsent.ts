@@ -76,7 +76,7 @@ export class GovSingleConsent {
             this.setConsents(consents)
             this._consentsUpdateCallback(
               consents,
-              this.areCookiesPreferencesSet(),
+              this.isConsentPreferencesSet(),
               null
             )
           }
@@ -85,7 +85,7 @@ export class GovSingleConsent {
         this.setConsents(GovSingleConsent.REJECT_ALL)
         this._consentsUpdateCallback(
           GovSingleConsent.REJECT_ALL,
-          this.areCookiesPreferencesSet(),
+          this.isConsentPreferencesSet(),
           error
         )
       }
@@ -126,7 +126,7 @@ export class GovSingleConsent {
     }
   }
 
-  areCookiesPreferencesSet(): boolean {
+  isConsentPreferencesSet(): boolean {
     const value = getCookie(this.config.PREFERENCES_SET_COOKIE_NAME, null)
     return value === 'true'
   }
