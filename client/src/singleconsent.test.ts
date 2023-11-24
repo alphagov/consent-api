@@ -270,13 +270,13 @@ describe('getCookie', () => {
       cookieName: 'foo2',
       expected: '2',
     },
-    // get cookie "a" when it doesn't exist and no default value specified
+    // get cookie when it doesn't exist and no default value specified
     {
       mockCookies: [{ name: 'foo', value: '1' }],
       cookieName: 'none',
       expected: null,
     },
-    // get cookie "a" when id doesn't exist and default value specified
+    // get cookie when it doesn't exist and default value specified
     {
       mockCookies: [{ name: 'foo', value: '1' }],
       cookieName: 'none',
@@ -292,8 +292,6 @@ describe('getCookie', () => {
           const { name, value } = cookie
           mockCookie(name, value)
         })
-        console.log(mockCookies.length)
-        console.log(document.cookie)
         expect(getCookie(cookieName, defaultValue)).toEqual(expected)
       })
     }
