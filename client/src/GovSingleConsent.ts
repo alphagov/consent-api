@@ -50,6 +50,7 @@ export class GovSingleConsent {
     this.validateCallbacks()
 
     this.config = new GovConsentConfig()
+    this.hideUIDParameter()
 
     // get the current uid from the cookie or the URL if it exists
     this.updateUID(this.config.uidFromUrl || this.config.uidFromCookie)
