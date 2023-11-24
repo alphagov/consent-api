@@ -130,6 +130,34 @@ export class GovSingleConsent {
     }
   }
 
+  getConsents(): Consents | null {
+    const cookieValue = getCookie(this.config.CONSENTS_COOKIE_NAME, null)
+    if (cookieValue) {
+      return JSON.parse(cookieValue)
+    }
+    return null
+  }
+
+  hasConsentedToEssential(): boolean {
+    const consents = this.getConsents()
+    return consents.essential
+  }
+
+  hasConsentedToUsage(): boolean {
+    const consents = this.getConsents()
+    return consents.usage
+  }
+
+  hasConsentedToCampaigns(): boolean {
+    const consents = this.getConsents()
+    return consents.campaigns
+  }
+
+  hasConsentedToSettings(): boolean {
+    const consents = this.getConsents()
+    return consents.settings
+  }
+
   isConsentPreferencesSet(): boolean {
     const value = getCookie(this.config.PREFERENCES_SET_COOKIE_NAME, null)
     return value === 'true'
