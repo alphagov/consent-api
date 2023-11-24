@@ -73,7 +73,7 @@ export class GovSingleConsent {
           getConsentsUrl,
           { timeout: 1000 },
           ({ status: consents }: { status: Consents }) => {
-            this.setConsents(consents)
+            this.updateBrowserConsents(consents)
             this._consentsUpdateCallback(
               consents,
               this.isConsentPreferencesSet(),
@@ -82,7 +82,7 @@ export class GovSingleConsent {
           }
         )
       } catch (error) {
-        this.setConsents(GovSingleConsent.REJECT_ALL)
+        this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
         this._consentsUpdateCallback(
           GovSingleConsent.REJECT_ALL,
           this.isConsentPreferencesSet(),
@@ -92,8 +92,8 @@ export class GovSingleConsent {
     }
   }
 
-  setStatus(status, statusSetCallback, onErrorCallback): void {
-    if (!status) {
+  setConsents(consents: Consents, statusSetCallback, onErrorCallback): void {
+    if (!consents) {
       throw new Error('status is required in GovSingleConsent.setStatus()')
     }
 
@@ -113,7 +113,7 @@ export class GovSingleConsent {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'status='.concat(JSON.stringify(status)),
+          body: 'status='.concat(JSON.stringify(consents)),
         },
         callback
       )
@@ -193,7 +193,7 @@ export class GovSingleConsent {
     setCookie(cookieName, uid, lifetime)
   }
 
-  private setConsents(consents: Consents): void {
+  private updateBrowserConsents(consents: Consents): void {
     this.setConsentsCookie(consents)
     this.setPreferencesSetCookie(true)
   }
