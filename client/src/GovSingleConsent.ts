@@ -99,7 +99,7 @@ export class GovSingleConsent {
 
   setConsents(consents: Consents): void {
     if (!consents) {
-      throw new Error('status is required in GovSingleConsent.setStatus()')
+      throw new Error('consents is required in GovSingleConsent.setConsents()')
     }
 
     var url = this.config.apiUrl.concat(this.uid || '')
@@ -220,7 +220,7 @@ export class GovSingleConsent {
     }
 
     if (typeof this._consentsUpdateCallback !== 'function') {
-      throw new Error('_consentsUpdateCallback must be a function')
+      throw new Error('Argument consentsUpdateCallback must be a function')
     }
   }
 
