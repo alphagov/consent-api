@@ -54,6 +54,8 @@ export class GovSingleConsent {
       "consents": this is the consents object. It has the following properties: "essential", "usage", "campaigns", "settings". Each property is a boolean.
       "consentsPreferencesSet": true if the consents have been set for this user and this domain. Typically, only display the cookie banner if this is true.
       "error": if an error occurred, this is the error object. Otherwise, this is null.
+
+      @arg apiUrl: string - the url of the API. If not provided, the url is read from the data-gov-singleconsent-api-url attribute of the script tag.
       */
 
     this._consentsUpdateCallback = consentsUpdateCallback
