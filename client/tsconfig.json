@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2015", // or "es6" or higher if you want
-    "module": "ES2015", // or "ES2020" or "ESNext" if you're using dynamic import() etc.
+    "target": "es2015",
+    "module": "ES2015",
     "outDir": "./dist/esm",
     "skipLibCheck": true
   },

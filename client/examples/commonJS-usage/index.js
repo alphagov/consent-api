@@ -59,7 +59,7 @@ const onAcceptCustomConsentsButtonClick = (customConsents) => {
  */
 
 const sendToAnalytics = (event) => {
-  if (!singleConsent.hasConsentedToUsage()) {
+  if (!GovSingleConsent.hasConsentedToUsage()) {
     return
   }
   // Send event to analytics here
