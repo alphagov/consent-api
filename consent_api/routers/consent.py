@@ -3,11 +3,9 @@ from typing import Annotated
 
 import fastapi
 from fastapi import APIRouter
-from fastapi import Header
 from fastapi import Request
 from fastapi import Response
 from fastapi_etag import Etag
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import ScalarResult
 from sqlalchemy.sql import functions
 from sqlmodel import col
@@ -28,21 +26,6 @@ async def origins_etag(request: Request) -> str:
     """Generate an ETag from the last update to the origins table."""
     async with db_context() as db:
         return str(await db.scalar(select(functions.max(Origin.updated_at))))
-
-
-async def register_origin(
-    origin: str | None,
-    db: AsyncSession,
-) -> None:
-    """Add an origin to the known origins list."""
-    # normalize
-    if origin:
-        if origin.endswith(":80"):
-            origin = origin[:-3]
-        async with db.begin():
-            await db.execute(
-                insert(Origin).values(origin=origin).on_conflict_do_nothing()
-            )
 
 
 async def get_known_origins(db: AsyncSession) -> ScalarResult:
@@ -68,10 +51,8 @@ async def get_user_consent(
 @consent.get("/")
 async def get_all_consent_statuses(
     db: AsyncSession = fastapi.Depends(db_session),
-    origin: Annotated[str | None, Header()] = None,
 ) -> list[UserConsent]:
     """Get all consent statuses."""
-    await register_origin(origin, db)
     return list(await get_user_consent(None, db))
 
 
@@ -82,10 +63,8 @@ Consent = Annotated[CookieConsent, fastapi.Depends(CookieConsent.as_form)]
 async def create_consent_status(
     consent: Consent,
     db: AsyncSession = fastapi.Depends(db_session),
-    origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent:
     """Create a new user with a generated UID and the specified consent status."""
-    await register_origin(origin, db)
     user_consent = UserConsent(uid=generate_uid(), consent=consent)
     async with db:
         db.add(user_consent)
@@ -99,7 +78,6 @@ async def get_consent_status(
     uid: str,
     response: Response,
     db: AsyncSession = fastapi.Depends(db_session),
-    origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent | None:
     """Fetch a specified user's consent status."""
     status = (await get_user_consent(uid, db)).first()
@@ -113,10 +91,8 @@ async def set_consent_status(
     uid: str,
     consent: Consent,
     db: AsyncSession = fastapi.Depends(db_session),
-    origin: Annotated[str | None, Header()] = None,
 ) -> UserConsent | None:
     """Update a specified user's consent status."""
-    await register_origin(origin, db)
     async with db:
         user_consent = (await get_user_consent(uid, db)).first()
         if user_consent:
