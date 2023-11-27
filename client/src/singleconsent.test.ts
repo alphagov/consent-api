@@ -1,6 +1,7 @@
 // @ts-ignore
 import xhrMock from 'xhr-mock'
 import { GovSingleConsent } from './GovSingleConsent'
+import { GovConsentConfig } from './GovConsentConfig'
 
 import {
   addUrlParameter,
@@ -74,7 +75,7 @@ describe('Consent Management', () => {
   it('should initialise Consent UID to undefined if no initial UID', () => {
     const consentInstance = new GovSingleConsent(jest.fn())
     expect(consentInstance.uid).toBeUndefined()
-    expect(getCookie(consentInstance.config.UID_KEY)).toBe(null)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(null)
   })
 
   it('should initialise Consent UID to cookie value if defined and URL value is not defined', () => {
@@ -89,7 +90,7 @@ describe('Consent Management', () => {
     )
     const consentInstance = new GovSingleConsent(jest.fn())
     expect(consentInstance.uid).toBe(MOCK_UID)
-    expect(getCookie(consentInstance.config.UID_KEY)).toBe(MOCK_UID)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(MOCK_UID)
   })
 
   it('should initialise Consent UID to URL value if defined and cookie value is not defined', () => {
@@ -106,7 +107,7 @@ describe('Consent Management', () => {
     mockWindowURL(mockedUrl)
     const consentInstance = new GovSingleConsent(jest.fn())
     expect(consentInstance.uid).toBe(mockedUrlUid)
-    expect(getCookie(consentInstance.config.UID_KEY)).toBe(mockedUrlUid)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
 
   it('should initialise Consent UID to URL value if both URL and cookie values are defined', () => {
@@ -124,7 +125,7 @@ describe('Consent Management', () => {
     mockWindowURL(mockedUrl)
     const consentInstance = new GovSingleConsent(jest.fn())
     expect(consentInstance.uid).toBe(mockedUrlUid)
-    expect(getCookie(consentInstance.config.UID_KEY)).toBe(mockedUrlUid)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
 
   it('should timeout the consents if the request takes more than one second', () => {
@@ -168,7 +169,7 @@ describe('Consent Management', () => {
 
     it('should return true if the cookie is set', () => {
       const consentInstance = new GovSingleConsent(jest.fn())
-      mockCookie(consentInstance.config.PREFERENCES_SET_COOKIE_NAME, 'true')
+      mockCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, 'true')
       expect(consentInstance.isConsentPreferencesSet()).toBe(true)
     })
   })
