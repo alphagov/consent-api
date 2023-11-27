@@ -42,7 +42,7 @@ export class GovSingleConsent {
 
   uid?: string | null
 
-  constructor(consentsUpdateCallback: ConsentsUpdateCallback) {
+  constructor(consentsUpdateCallback: ConsentsUpdateCallback, apiUrl?: string) {
     /**
       Initialises _GovConsent object by performing the following:
       1. Removes 'uid' from URL.
@@ -60,13 +60,13 @@ export class GovSingleConsent {
 
     this.validateCallback()
 
-    this.config = new GovConsentConfig()
+    this.config = new GovConsentConfig(apiUrl)
     this.hideUIDParameter()
 
     // get the current uid from the cookie or the URL if it exists
     this.updateUID(this.config.uidFromUrl || this.config.uidFromCookie)
     if (this.uid) {
-      var getConsentsUrl = this.config.getApiUrl().concat(this.uid)
+      var getConsentsUrl = this.config.apiUrl.concat(this.uid)
 
       try {
         request(
@@ -97,7 +97,7 @@ export class GovSingleConsent {
       throw new Error('status is required in GovSingleConsent.setStatus()')
     }
 
-    var url = this.config.getApiUrl().concat(this.uid || '')
+    var url = this.config.apiUrl.concat(this.uid || '')
 
     const successCallback = (response) => {
       this.updateUID(response.uid)
@@ -176,7 +176,7 @@ export class GovSingleConsent {
 
     // Get origins
     request(
-      this.config.getApiUrl().replace('/consent/', '/origins/'),
+      this.config.apiUrl.replace('/consent/', '/origins/'),
       {},
       // Update links with UID
       (origins) => this.addUIDtoCrossOriginLinks(origins, uid)

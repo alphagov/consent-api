@@ -9,18 +9,23 @@ export class GovConsentConfig {
   COOKIE_LIFETIME = COOKIE_DAYS * 24 * 60 * 60
   uidFromCookie: string
   uidFromUrl: string
+  apiUrl: string
 
-  constructor() {
+  constructor(apiUrl?: string) {
     this.uidFromCookie = findByKey(this.UID_KEY, document.cookie.split(';'))
     this.uidFromUrl = findByKey(this.UID_KEY, parseUrl(location.href).params)
+
+    this.apiUrl = apiUrl || this.getApiUrlFromHtml()
   }
 
-  getApiUrl() {
+  getApiUrlFromHtml() {
     const el = document.querySelector('[data-gov-singleconsent-api-url]')
     // @ts-ignore
     const govSingleconsentApiUrl = el?.dataset?.govSingleconsentApiUrl
     if (!govSingleconsentApiUrl) {
-      throw new Error('data-gov-singleconsent-api-url is required')
+      throw new Error(
+        'Could not find data-gov-singleconsent-api-url in the html document. Either pass the url to the constructor or add the data attribute to the html document'
+      )
     }
 
     return govSingleconsentApiUrl.replace(/\/?$/, '/')
