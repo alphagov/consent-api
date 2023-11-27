@@ -119,6 +119,7 @@ services:
       - "$PWD/selenoid/opt:/home/app/logs"
       - "$PWD/Makefile:/home/app/Makefile"
       - "$PWD/consent_api/tests:/home/app/consent_api/tests"
+      - "$PWD/.pytest_cache:/home/app/.pytest_cache"
     entrypoint: ["make", "test-all"]
     # entrypoint: ["tail", "-f", "/dev/null"]
     environment:
