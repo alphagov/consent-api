@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "ES2015",
-    "outDir": "./dist",
+    "target": "es2015", // or "es6" or higher if you want
+    "module": "ES2015", // or "ES2020" or "ESNext" if you're using dynamic import() etc.
+    "outDir": "./dist/esm",
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],

@@ -3,7 +3,6 @@ import terser from '@rollup/plugin-terser'
 
 const baseConfig = {
   input: 'src/index.ts',
-  plugins: [typescript()],
 }
 
 const bundleConfig = [
@@ -14,6 +13,7 @@ const bundleConfig = [
       file: 'dist/singleconsent.esm.js',
       format: 'esm',
     },
+    plugins: [typescript()],
   },
   // CommonJS format
   {
@@ -22,6 +22,7 @@ const bundleConfig = [
       file: 'dist/singleconsent.cjs.js',
       format: 'cjs',
     },
+    plugins: [typescript()],
   },
   // IIFE ES5 format (for direct usage in browser via a <script> tag)
   {
@@ -30,6 +31,7 @@ const bundleConfig = [
       file: 'dist/singleconsent.iife.js',
       format: 'iife',
     },
+    plugins: [typescript({ tsconfig: './tsconfig.es5.json' })],
   },
   // Minified IIFE ES5 format (for direct usage in browser via a <script> tag)
   {
@@ -37,8 +39,8 @@ const bundleConfig = [
     output: {
       file: 'dist/singleconsent.iife.min.js',
       format: 'iife',
-      plugins: [terser()],
     },
+    plugins: [typescript({ tsconfig: './tsconfig.es5.json' }), terser()],
   },
 ]
 
