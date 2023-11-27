@@ -1,4 +1,4 @@
-/* global GovSingleConsent, Utils */
+/* global GovSingleConsent */
 
 ;(function () {
   function CookieSettings($module) {
@@ -14,33 +14,20 @@
       .querySelector('form[data-module=cookie-settings]')
       .addEventListener('submit', this.$module.submitSettingsForm)
 
-    this.cookiesPolicy = JSON.parse(Utils.getCookie('cookies_policy'))
-    if (!this.cookiesPolicy) {
-      this.cookiesPolicy = GovSingleConsent.REJECT_ALL
-      Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), {
-        days: 365,
-      })
-    }
+    this.setFormValues(
+      GovSingleConsent.getConsents() || GovSingleConsent.REJECT_ALL
+    )
 
-    this.setFormValues(this.cookiesPolicy)
-
-    function revokeAllConsents(error) {
+    function onConsentsUpdated(consents, consentsPreferencesSet, error) {
+      if (consentsPreferencesSet && consents) {
+        this.setFormValues(consents)
+      }
       if (error) {
         console.error(error)
       }
-      Utils.setCookie(
-        'cookies_policy',
-        JSON.stringify(GovSingleConsent.REJECT_ALL),
-        {
-          days: 365,
-        }
-      )
     }
 
-    this.singleConsent = new GovSingleConsent(
-      this.setFormValues.bind(this),
-      revokeAllConsents.bind(this)
-    )
+    this.singleConsent = new GovSingleConsent(onConsentsUpdated)
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {
@@ -87,12 +74,7 @@
 
     this.cookiesPolicy = this.getFormValues(event.target)
 
-    Utils.setCookie('cookies_policy', JSON.stringify(this.cookiesPolicy), {
-      days: 365,
-    })
-    Utils.setCookie('cookies_preferences_set', true, { days: 365 })
-
-    this.singleConsent.setStatus(this.cookiesPolicy)
+    this.singleConsent.setConsents(this.cookiesPolicy)
 
     this.showConfirmationMessage()
   }

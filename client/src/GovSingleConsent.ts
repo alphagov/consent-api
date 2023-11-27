@@ -133,8 +133,8 @@ export class GovSingleConsent {
     }
   }
 
-  getConsents(): Consents | null {
-    const cookieValue = getCookie(this.config.CONSENTS_COOKIE_NAME, null)
+  static getConsents(): Consents | null {
+    const cookieValue = getCookie(GovConsentConfig.CONSENTS_COOKIE_NAME, null)
     if (cookieValue) {
       return JSON.parse(cookieValue)
     }
@@ -142,27 +142,27 @@ export class GovSingleConsent {
   }
 
   hasConsentedToEssential(): boolean {
-    const consents = this.getConsents()
+    const consents = GovSingleConsent.getConsents()
     return consents.essential
   }
 
   hasConsentedToUsage(): boolean {
-    const consents = this.getConsents()
+    const consents = GovSingleConsent.getConsents()
     return consents.usage
   }
 
   hasConsentedToCampaigns(): boolean {
-    const consents = this.getConsents()
+    const consents = GovSingleConsent.getConsents()
     return consents.campaigns
   }
 
   hasConsentedToSettings(): boolean {
-    const consents = this.getConsents()
+    const consents = GovSingleConsent.getConsents()
     return consents.settings
   }
 
   isConsentPreferencesSet(): boolean {
-    const value = getCookie(this.config.PREFERENCES_SET_COOKIE_NAME, null)
+    const value = getCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, null)
     return value === 'true'
   }
 
@@ -204,7 +204,7 @@ export class GovSingleConsent {
         link.addEventListener('click', (event) => {
           event.target.href = addUrlParameter(
             event.target.href,
-            this.config.UID_KEY,
+            GovConsentConfig.UID_KEY,
             uid
           )
         })
@@ -223,8 +223,8 @@ export class GovSingleConsent {
   }
 
   private setUIDCookie(uid: string): void {
-    const cookieName = this.config.UID_KEY
-    const lifetime = this.config.COOKIE_LIFETIME
+    const cookieName = GovConsentConfig.UID_KEY
+    const lifetime = GovConsentConfig.COOKIE_LIFETIME
     setCookie(cookieName, uid, lifetime)
   }
 
@@ -234,15 +234,15 @@ export class GovSingleConsent {
   }
 
   private setConsentsCookie(consents: Consents): void {
-    const consentsCookieName = this.config.CONSENTS_COOKIE_NAME
+    const consentsCookieName = GovConsentConfig.CONSENTS_COOKIE_NAME
     const value = JSON.stringify(consents)
-    const lifetime = this.config.COOKIE_LIFETIME
+    const lifetime = GovConsentConfig.COOKIE_LIFETIME
     setCookie(consentsCookieName, value, lifetime)
   }
 
   private setPreferencesSetCookie(value: boolean): void {
-    const cookieName = this.config.PREFERENCES_SET_COOKIE_NAME
-    const lifetime = this.config.COOKIE_LIFETIME
+    const cookieName = GovConsentConfig.PREFERENCES_SET_COOKIE_NAME
+    const lifetime = GovConsentConfig.COOKIE_LIFETIME
     setCookie(cookieName, value.toString(), lifetime)
   }
 
@@ -250,7 +250,7 @@ export class GovSingleConsent {
     history.replaceState(
       null,
       null,
-      removeUrlParameter(location.href, this.config.UID_KEY)
+      removeUrlParameter(location.href, GovConsentConfig.UID_KEY)
     )
   }
 }
