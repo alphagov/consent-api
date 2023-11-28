@@ -16,28 +16,17 @@ RUN apt-get update \
     && poetry config virtualenvs.in-project true \
     && poetry install --only main --no-ansi
 
-
 COPY --chown=999:999 client/ client/
 
-# Install Node.js and npm
-RUN apt-get update && apt-get install -y curl && \
-    # Install nvm
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && \
-    # This ensures that nvm is properly loaded
-    export NVM_DIR="$HOME/.nvm" && \
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
-    # Use nvm to install Node 18
-    nvm install 18 && \
-    nvm use 18 && \
-    # Print out the versions to verify installation
-    node --version && \
-    npm --version && \
-    cd client && \
-    npm ci && \
-    # Needed for rollup minify build to run in docker
-    npm i @rollup/rollup-linux-x64-gnu \
-    npm run build
+
+FROM node:20-slim as node-build
+
+WORKDIR /home/client
+
+COPY client/ /home/client
+
+RUN npm install @rollup/rollup-linux-x64-gnu \
+    && npm run build
 
 
 FROM python:3.11-slim@sha256:1591aa8c01b5b37ab31dbe5662c5bdcf40c2f1bce4ef1c1fd24802dae3d01052
@@ -54,7 +43,8 @@ RUN apt-get update && \
 USER 999
 
 COPY --chown=999:999 --from=build /home/app/.venv ./.venv
-COPY --chown=999:999 --from=build /home/app/client ./client
+COPY --chown=999:999 --from=node-build /home/client/dist/ ./client/dist/
+COPY --chown=999:999 --from=node-build /home/client/example/ ./client/example/
 COPY --chown=999:999 consent_api/ consent_api/
 COPY --chown=999:999 migrations/ migrations/
 COPY --chown=999:999 Makefile pytest.ini .
