@@ -52,21 +52,20 @@
       }
     }
 
-    this.singleConsent = new GovSingleConsent(onConsentsUpdated)
+    this.singleConsent = new GovSingleConsent(onConsentsUpdated.bind(this))
   }
 
   CookieBanner.prototype.showBanner = function () {
     var acceptedAdditionalCookies =
-      this.singleConsent.hasConsentedToUsage() ||
-      this.singleConsent.hasConsentedToCampaigns() ||
-      this.singleConsent.hasConsentedToSettings()
+      GovSingleConsent.hasConsentedToUsage() ||
+      GovSingleConsent.hasConsentedToCampaigns() ||
+      GovSingleConsent.hasConsentedToSettings()
 
     this.$component.hidden = false
     this.$component.confirmAccept.hidden =
-      !this.singleConsent.isConsentPreferencesSet() ||
-      !acceptedAdditionalCookies
+      !GovSingleConsent.isConsentPreferencesSet() || !acceptedAdditionalCookies
     this.$component.confirmReject.hidden =
-      !this.singleConsent.isConsentPreferencesSet() || acceptedAdditionalCookies
+      !GovSingleConsent.isConsentPreferencesSet() || acceptedAdditionalCookies
   }
 
   CookieBanner.prototype.hideBanner = function () {

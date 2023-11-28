@@ -116,7 +116,8 @@ export function isBrowser() {
 }
 
 export function setCookie(name: string, value: string, lifetime: number) {
-  const encodedValue = encodeURIComponent(value)
+  // const encodedValue = encodeURIComponent(value)
+  const encodedValue = value
   document.cookie = name
     .concat('=', encodedValue)
     .concat(
@@ -130,7 +131,6 @@ export function getCookie(name: string, defaultValue?: string) {
   name += '='
   const cookies = document.cookie.split(';')
   const cookie = cookies.find((cookie) => cookie.trim().startsWith(name))
-  console.log({ cookies })
 
   if (cookie) {
     return decodeURIComponent(cookie.trim().slice(name.length))

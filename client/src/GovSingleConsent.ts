@@ -66,6 +66,10 @@ export class GovSingleConsent {
     this.hideUIDParameter()
 
     // get the current uid from the cookie or the URL if it exists
+    console.log({
+      'this.config.uidFromUrl': this.config.uidFromUrl,
+      'this.config.uidFromCookie': this.config.uidFromCookie,
+    })
     this.updateUID(this.config.uidFromUrl || this.config.uidFromCookie)
 
     if (!this.uid) {
@@ -74,14 +78,20 @@ export class GovSingleConsent {
       var getConsentsUrl = this.config.apiUrl.concat(this.uid)
 
       try {
+        console.log(`Getting the consents for UID ${this.uid}`)
+        console.log(`getConsentsUrl: ${getConsentsUrl}`)
+        console.log({ currentConsents: GovSingleConsent.getConsents() })
         request(
           getConsentsUrl,
           { timeout: 1000 },
           ({ status: consents }: { status: Consents }) => {
+            console.log({ consentsFromAPI: consents })
             this.updateBrowserConsents(consents)
+            console.log('Consents now updated in browser')
+            console.log({ newConsents: GovSingleConsent.getConsents() })
             this._consentsUpdateCallback(
               consents,
-              this.isConsentPreferencesSet(),
+              GovSingleConsent.isConsentPreferencesSet(),
               null
             )
           }
@@ -90,7 +100,7 @@ export class GovSingleConsent {
         this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
         this._consentsUpdateCallback(
           GovSingleConsent.REJECT_ALL,
-          this.isConsentPreferencesSet(),
+          GovSingleConsent.isConsentPreferencesSet(),
           error
         )
       }
@@ -109,7 +119,7 @@ export class GovSingleConsent {
       this.updateBrowserConsents(consents)
       this._consentsUpdateCallback(
         consents,
-        this.isConsentPreferencesSet(),
+        GovSingleConsent.isConsentPreferencesSet(),
         null
       )
     }
@@ -129,7 +139,7 @@ export class GovSingleConsent {
       this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
       this._consentsUpdateCallback(
         GovSingleConsent.REJECT_ALL,
-        this.isConsentPreferencesSet(),
+        GovSingleConsent.isConsentPreferencesSet(),
         error
       )
     }
@@ -143,27 +153,27 @@ export class GovSingleConsent {
     return null
   }
 
-  hasConsentedToEssential(): boolean {
+  static hasConsentedToEssential(): boolean {
     const consents = GovSingleConsent.getConsents()
-    return consents.essential
+    return consents?.essential
   }
 
-  hasConsentedToUsage(): boolean {
+  static hasConsentedToUsage(): boolean {
     const consents = GovSingleConsent.getConsents()
-    return consents.usage
+    return consents?.usage
   }
 
-  hasConsentedToCampaigns(): boolean {
+  static hasConsentedToCampaigns(): boolean {
     const consents = GovSingleConsent.getConsents()
-    return consents.campaigns
+    return consents?.campaigns
   }
 
-  hasConsentedToSettings(): boolean {
+  static hasConsentedToSettings(): boolean {
     const consents = GovSingleConsent.getConsents()
-    return consents.settings
+    return consents?.settings
   }
 
-  isConsentPreferencesSet(): boolean {
+  static isConsentPreferencesSet(): boolean {
     const value = getCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, null)
     return value === 'true'
   }
@@ -203,6 +213,7 @@ export class GovSingleConsent {
         isCrossOrigin(link) &&
         origins.indexOf(getOriginFromLink(link)) >= 0
       ) {
+        console.log(`Adding UID to link ${link}`)
         link.addEventListener('click', (event) => {
           event.target.href = addUrlParameter(
             event.target.href,

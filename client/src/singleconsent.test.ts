@@ -164,13 +164,13 @@ describe('Consent Management', () => {
   describe('[method]: isConsentPreferencesSet', () => {
     it('should return false if the cookie is not set', () => {
       const consentInstance = new GovSingleConsent(jest.fn())
-      expect(consentInstance.isConsentPreferencesSet()).toBe(false)
+      expect(GovSingleConsent.isConsentPreferencesSet()).toBe(false)
     })
 
     it('should return true if the cookie is set', () => {
       const consentInstance = new GovSingleConsent(jest.fn())
       mockCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, 'true')
-      expect(consentInstance.isConsentPreferencesSet()).toBe(true)
+      expect(GovSingleConsent.isConsentPreferencesSet()).toBe(true)
     })
   })
 })

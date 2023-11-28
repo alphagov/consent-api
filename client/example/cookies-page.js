@@ -27,7 +27,7 @@
       }
     }
 
-    this.singleConsent = new GovSingleConsent(onConsentsUpdated)
+    this.singleConsent = new GovSingleConsent(onConsentsUpdated.bind(this))
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {
