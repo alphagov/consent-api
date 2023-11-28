@@ -11,7 +11,7 @@ export class GovConsentConfig {
   uidFromUrl: string
   apiUrl: string
 
-  constructor(apiUrl?: string) {
+  constructor(apiUrl: string) {
     this.uidFromCookie = findByKey(
       GovConsentConfig.UID_KEY,
       document.cookie.split(';')
@@ -21,19 +21,6 @@ export class GovConsentConfig {
       parseUrl(location.href).params
     )
 
-    this.apiUrl = apiUrl || this.getApiUrlFromHtml()
-  }
-
-  getApiUrlFromHtml() {
-    const el = document.querySelector('[data-gov-singleconsent-api-url]')
-    // @ts-ignore
-    const govSingleconsentApiUrl = el?.dataset?.govSingleconsentApiUrl
-    if (!govSingleconsentApiUrl) {
-      throw new Error(
-        'Could not find data-gov-singleconsent-api-url in the html document. Either pass the url to the constructor or add the data attribute to the html document'
-      )
-    }
-
-    return govSingleconsentApiUrl.replace(/\/?$/, '/')
+    this.apiUrl = apiUrl
   }
 }

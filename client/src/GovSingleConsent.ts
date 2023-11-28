@@ -42,7 +42,7 @@ export class GovSingleConsent {
 
   uid?: string | null
 
-  constructor(consentsUpdateCallback: ConsentsUpdateCallback, apiUrl?: string) {
+  constructor(consentsUpdateCallback: ConsentsUpdateCallback, apiUrl: string) {
     /**
       Initialises _GovConsent object by performing the following:
       1. Removes 'uid' from URL.
@@ -55,7 +55,7 @@ export class GovSingleConsent {
       "consentsPreferencesSet": true if the consents have been set for this user and this domain. Typically, only display the cookie banner if this is true.
       "error": if an error occurred, this is the error object. Otherwise, this is null.
 
-      @arg apiUrl: string - the url of the API. If not provided, the url is read from the data-gov-singleconsent-api-url attribute of the script tag.
+      @arg apiUrl: string - the url of the API. Required.
       */
 
     this._consentsUpdateCallback = consentsUpdateCallback
@@ -66,10 +66,6 @@ export class GovSingleConsent {
     this.hideUIDParameter()
 
     // get the current uid from the cookie or the URL if it exists
-    console.log({
-      'this.config.uidFromUrl': this.config.uidFromUrl,
-      'this.config.uidFromCookie': this.config.uidFromCookie,
-    })
     this.updateUID(this.config.uidFromUrl || this.config.uidFromCookie)
 
     if (!this.uid) {
@@ -78,17 +74,11 @@ export class GovSingleConsent {
       var getConsentsUrl = this.config.apiUrl.concat(this.uid)
 
       try {
-        console.log(`Getting the consents for UID ${this.uid}`)
-        console.log(`getConsentsUrl: ${getConsentsUrl}`)
-        console.log({ currentConsents: GovSingleConsent.getConsents() })
         request(
           getConsentsUrl,
           { timeout: 1000 },
           ({ status: consents }: { status: Consents }) => {
-            console.log({ consentsFromAPI: consents })
             this.updateBrowserConsents(consents)
-            console.log('Consents now updated in browser')
-            console.log({ newConsents: GovSingleConsent.getConsents() })
             this._consentsUpdateCallback(
               consents,
               GovSingleConsent.isConsentPreferencesSet(),
@@ -213,7 +203,6 @@ export class GovSingleConsent {
         isCrossOrigin(link) &&
         origins.indexOf(getOriginFromLink(link)) >= 0
       ) {
-        console.log(`Adding UID to link ${link}`)
         link.addEventListener('click', (event) => {
           event.target.href = addUrlParameter(
             event.target.href,
@@ -236,9 +225,11 @@ export class GovSingleConsent {
   }
 
   private setUIDCookie(uid: string): void {
-    const cookieName = GovConsentConfig.UID_KEY
-    const lifetime = GovConsentConfig.COOKIE_LIFETIME
-    setCookie(cookieName, uid, lifetime)
+    setCookie({
+      name: GovConsentConfig.UID_KEY,
+      value: uid,
+      lifetime: GovConsentConfig.COOKIE_LIFETIME,
+    })
   }
 
   private updateBrowserConsents(consents: Consents): void {
@@ -247,16 +238,19 @@ export class GovSingleConsent {
   }
 
   private setConsentsCookie(consents: Consents): void {
-    const consentsCookieName = GovConsentConfig.CONSENTS_COOKIE_NAME
-    const value = JSON.stringify(consents)
-    const lifetime = GovConsentConfig.COOKIE_LIFETIME
-    setCookie(consentsCookieName, value, lifetime)
+    setCookie({
+      name: GovConsentConfig.CONSENTS_COOKIE_NAME,
+      value: JSON.stringify(consents),
+      lifetime: GovConsentConfig.COOKIE_LIFETIME,
+    })
   }
 
   private setPreferencesSetCookie(value: boolean): void {
-    const cookieName = GovConsentConfig.PREFERENCES_SET_COOKIE_NAME
-    const lifetime = GovConsentConfig.COOKIE_LIFETIME
-    setCookie(cookieName, value.toString(), lifetime)
+    setCookie({
+      name: GovConsentConfig.PREFERENCES_SET_COOKIE_NAME,
+      value: value.toString(),
+      lifetime: GovConsentConfig.COOKIE_LIFETIME,
+    })
   }
 
   private hideUIDParameter(): void {

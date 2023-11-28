@@ -115,7 +115,12 @@ export function isBrowser() {
   return typeof module === 'undefined'
 }
 
-export function setCookie(name: string, value: string, lifetime: number) {
+type setCookieParams = {
+  name: string
+  value: string
+  lifetime: number
+}
+export function setCookie({ name, value, lifetime }: setCookieParams) {
   // const encodedValue = encodeURIComponent(value)
   const encodedValue = value
   document.cookie = name
