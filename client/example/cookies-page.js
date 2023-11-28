@@ -27,7 +27,10 @@
       }
     }
 
-    this.singleConsent = new GovSingleConsent(onConsentsUpdated.bind(this))
+    this.singleConsent = new GovSingleConsent(
+      onConsentsUpdated.bind(this),
+      window.GovSingleConsentApiURL
+    )
   }
 
   CookieSettings.prototype.setFormValues = function (cookiesPolicy) {

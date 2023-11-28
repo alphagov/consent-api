@@ -52,7 +52,10 @@
       }
     }
 
-    this.singleConsent = new GovSingleConsent(onConsentsUpdated.bind(this))
+    this.singleConsent = new GovSingleConsent(
+      onConsentsUpdated.bind(this),
+      window.GovSingleConsentApiURL
+    )
   }
 
   CookieBanner.prototype.showBanner = function () {

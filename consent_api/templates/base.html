@@ -35,8 +35,7 @@
         'hidden': False,
         'ariaLabel': 'Cookies on GOV.UK',
         'attributes': {
-          'data-module': 'govuk-cookie-banner consent',
-          'data-gov-singleconsent-api-url': CONSENT_API_URL,
+          'data-module': 'govuk-cookie-banner consent'
         },
         'messages': [
           {
@@ -152,6 +151,7 @@
       </div>
     </footer>
     {% block bodyEnd %}
+      <script>window.GovSingleConsentApiURL="{{ CONSENT_API_URL }}"</script>
       <script src="{{ url_for('client', path='dist/singleconsent.js') }}"></script>
       <script src="{{ url_for('client', path='example/cookie-banner.js') }}"></script>
     {% endblock %}
