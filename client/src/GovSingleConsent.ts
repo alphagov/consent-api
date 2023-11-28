@@ -22,6 +22,12 @@ type ConsentsUpdateCallback = (
   error?: Error | null
 ) => void
 
+interface CustomWindow extends Window {
+  cachedConsentsCookie: Consents | null
+}
+
+declare const window: CustomWindow
+
 export class GovSingleConsent {
   static ACCEPT_ALL: Consents = {
     essential: true,
@@ -37,10 +43,9 @@ export class GovSingleConsent {
   }
 
   _consentsUpdateCallback: ConsentsUpdateCallback
-
   config: GovConsentConfig
-
   uid?: string | null
+  cachedConsentsCookie: Consents | null = null
 
   constructor(consentsUpdateCallback: ConsentsUpdateCallback, apiUrl: string) {
     /**
@@ -58,6 +63,7 @@ export class GovSingleConsent {
       @arg apiUrl: string - the url of the API. Required.
       */
 
+    window.cachedConsentsCookie = null
     this._consentsUpdateCallback = consentsUpdateCallback
 
     this.validateCallback()
@@ -136,6 +142,9 @@ export class GovSingleConsent {
   }
 
   static getConsents(): Consents | null {
+    if (window.cachedConsentsCookie) {
+      return window.cachedConsentsCookie
+    }
     const cookieValue = getCookie(GovConsentConfig.CONSENTS_COOKIE_NAME, null)
     if (cookieValue) {
       return JSON.parse(cookieValue)
@@ -235,6 +244,7 @@ export class GovSingleConsent {
   private updateBrowserConsents(consents: Consents): void {
     this.setConsentsCookie(consents)
     this.setPreferencesSetCookie(true)
+    window.cachedConsentsCookie = consents
   }
 
   private setConsentsCookie(consents: Consents): void {
