@@ -114,3 +114,32 @@ export function getOriginFromLink(link) {
 export function isBrowser() {
   return typeof module === 'undefined'
 }
+
+type setCookieParams = {
+  name: string
+  value: string
+  lifetime: number
+}
+export function setCookie({ name, value, lifetime }: setCookieParams) {
+  // const encodedValue = encodeURIComponent(value)
+  const encodedValue = value
+  document.cookie = name
+    .concat('=', encodedValue)
+    .concat(
+      '; path=/',
+      '; max-age='.concat(lifetime.toString()),
+      document.location.protocol === 'https:' ? '; Secure' : ''
+    )
+}
+
+export function getCookie(name: string, defaultValue?: string) {
+  name += '='
+  const cookies = document.cookie.split(';')
+  const cookie = cookies.find((cookie) => cookie.trim().startsWith(name))
+
+  if (cookie) {
+    return decodeURIComponent(cookie.trim().slice(name.length))
+  }
+
+  return defaultValue || null
+}

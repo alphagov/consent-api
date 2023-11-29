@@ -1,6 +1,7 @@
 // @ts-ignore
 import xhrMock from 'xhr-mock'
 import { GovSingleConsent } from './GovSingleConsent'
+import { GovConsentConfig } from './GovConsentConfig'
 
 import {
   addUrlParameter,
@@ -10,6 +11,7 @@ import {
   findByKey,
   isCrossOrigin,
   getOriginFromLink,
+  getCookie,
 } from './utils'
 
 const MOCK_API_URL = 'https://test-url.com/api/consent/'
@@ -23,18 +25,12 @@ let originalCookie
 
 jest.useFakeTimers()
 
-const mockCookie = (
-  name = MOCK_COOKIE_NAME,
-  value = MOCK_UID,
-  days = 1
-): void => {
-  const date = new Date()
-  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
-  const expires = `; expires=${date.toUTCString()}`
-
+const mockCookie = (name = MOCK_COOKIE_NAME, value = MOCK_UID): void => {
+  // A simple cookie logic for testing
+  // No timeout, no expiration, no path, no domain
   Object.defineProperty(document, 'cookie', {
     writable: true,
-    value: `${name}=${value}${expires}; path=/`,
+    value: `${document.cookie}${name}=${value};`,
   })
 }
 
@@ -77,8 +73,9 @@ describe('Consent Management', () => {
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
-    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_URL)
     expect(consentInstance.uid).toBeUndefined()
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(null)
   })
 
   it('should initialise Consent UID to cookie value if defined and URL value is not defined', () => {
@@ -91,8 +88,9 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) =>
       res.status(200).body(JSON.stringify(response2))
     )
-    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_URL)
     expect(consentInstance.uid).toBe(MOCK_UID)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(MOCK_UID)
   })
 
   it('should initialise Consent UID to URL value if defined and cookie value is not defined', () => {
@@ -107,8 +105,9 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response2))
     )
     mockWindowURL(mockedUrl)
-    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_URL)
     expect(consentInstance.uid).toBe(mockedUrlUid)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
 
   it('should initialise Consent UID to URL value if both URL and cookie values are defined', () => {
@@ -124,8 +123,9 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response2))
     )
     mockWindowURL(mockedUrl)
-    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_URL)
     expect(consentInstance.uid).toBe(mockedUrlUid)
+    expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
 
   it('should timeout the consents if the request takes more than one second', () => {
@@ -139,7 +139,7 @@ describe('Consent Management', () => {
     })
     let err
     try {
-      new GovSingleConsent(jest.fn(), jest.fn())
+      new GovSingleConsent(jest.fn(), MOCK_API_URL)
       jest.advanceTimersByTime(1001)
     } catch (e) {
       err = e
@@ -156,9 +156,22 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_URL}${MOCK_UID}`, (req, res) => {
       return new Promise(() => {})
     })
-    const consentInstance = new GovSingleConsent(jest.fn(), jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_URL)
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
+  })
+
+  describe('[method]: isConsentPreferencesSet', () => {
+    it('should return false if the cookie is not set', () => {
+      new GovSingleConsent(jest.fn(), MOCK_API_URL)
+      expect(GovSingleConsent.isConsentPreferencesSet()).toBe(false)
+    })
+
+    it('should return true if the cookie is set', () => {
+      new GovSingleConsent(jest.fn(), MOCK_API_URL)
+      mockCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, 'true')
+      expect(GovSingleConsent.isConsentPreferencesSet()).toBe(true)
+    })
   })
 })
 
@@ -233,6 +246,57 @@ describe('removeUrlParameter', () => {
       expect(removeUrlParameter(url, name)).toEqual(expected)
     })
   })
+})
+
+describe('getCookie', () => {
+  const testSettings: {
+    mockCookies: any[]
+    cookieName: string
+    expected: string
+    defaultValue?: string
+  }[] = [
+    // get cookie when it exists
+    {
+      mockCookies: [{ name: 'foo', value: '1' }],
+      cookieName: 'foo',
+      expected: '1',
+    },
+    // get cookie when it exists amongst other cookies
+    {
+      mockCookies: [
+        { name: 'foo1', value: '1' },
+        { name: 'foo2', value: '2' },
+        { name: 'foo3', value: '3' },
+      ],
+      cookieName: 'foo2',
+      expected: '2',
+    },
+    // get cookie when it doesn't exist and no default value specified
+    {
+      mockCookies: [{ name: 'foo', value: '1' }],
+      cookieName: 'none',
+      expected: null,
+    },
+    // get cookie when it doesn't exist and default value specified
+    {
+      mockCookies: [{ name: 'foo', value: '1' }],
+      cookieName: 'none',
+      defaultValue: '123',
+      expected: '123',
+    },
+  ]
+
+  testSettings.forEach(
+    ({ mockCookies, cookieName, expected, defaultValue }) => {
+      test(`returns ${expected} when the cookie is amongst ${mockCookies.length} cookies and the name is ${cookieName} and the default value is ${defaultValue}`, () => {
+        mockCookies.forEach((cookie) => {
+          const { name, value } = cookie
+          mockCookie(name, value)
+        })
+        expect(getCookie(cookieName, defaultValue)).toEqual(expected)
+      })
+    }
+  )
 })
 
 describe('parseUrl', () => {
