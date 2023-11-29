@@ -119,6 +119,9 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
         )
 
         cloudrun_service_name = resource_name("$-consent-api", stack)
+        next_color: ProductionColor | None = None
+        latest_color: ProductionColor | None = None
+        latest_rev_name: str | None = None
         if env == "production":
             print("🚀 Deploying new Cloud Run revision to production")
             dot = {
@@ -145,7 +148,7 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
                     "annotations": {
                         "autoscaling.knative.dev/maxScale": "5",
                         "run.googleapis.com/cloudsql-instances": db_connection,
-                        "production-color": next_color.value,
+                        "production-color": next_color.value if next_color else "none",
                     }
                 },
                 "spec": {
@@ -191,6 +194,15 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
             ),
         )
 
+        default_rule = compute.SecurityPolicyRuleArgs(
+            priority=2147483647,
+            action="allow",
+            match=compute.SecurityPolicyRuleMatchArgs(
+                versioned_expr="SRC_IPS_V1",
+                config=compute.SecurityPolicyRuleMatchConfigArgs(src_ip_ranges=["*"]),
+            ),
+        )
+
         rate_limiting_rule = compute.SecurityPolicyRuleArgs(
             priority=1000,
             action="rate_based_ban",
@@ -211,7 +223,7 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
 
         security_policy = compute.SecurityPolicy(
             resource_name=resource_name(f"{env}--$--security-policy", branch),
-            rules=[rate_limiting_rule],
+            rules=[default_rule, rate_limiting_rule],
         )
 
         backend_service = compute.BackendService(
