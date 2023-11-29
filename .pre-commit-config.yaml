@@ -35,7 +35,7 @@ repos:
       - id: dodgy
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.5
+    rev: v0.1.6
     hooks:
       - id: ruff
         args:
@@ -59,7 +59,7 @@ repos:
       - id: black
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.0
+    rev: v1.7.1
     hooks:
       - id: mypy
         additional_dependencies:
@@ -76,6 +76,6 @@ repos:
         types_or: ["javascript", "css"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.53.0
+    rev: v8.54.0
     hooks:
       - id: eslint
