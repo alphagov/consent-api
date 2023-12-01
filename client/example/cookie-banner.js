@@ -1,4 +1,4 @@
-/* global GovSingleConsent, Utils */
+/* global GovSingleConsent */
 
 ;(function () {
   function CookieBanner($component) {
@@ -6,9 +6,7 @@
   }
 
   CookieBanner.prototype.init = function () {
-    this.cookies_preferences_set =
-      Utils.getCookie('cookies_preferences_set') === 'true'
-    this.cookies_policy = JSON.parse(Utils.getCookie('cookies_policy', '{}'))
+    this.$component.hidden = true
 
     this.$component.message = this.$component.querySelector(
       '.js-cookie-banner-message'
@@ -43,41 +41,34 @@
       )
     }
 
-    function updateConsents(responseStatus) {
-      this.setCookiesPolicyCookie(responseStatus)
-      this.hideBanner()
-    }
-
-    function revokeAllConsents(error) {
+    function onConsentsUpdated(consents, consentsPreferencesSet, error) {
+      if (consentsPreferencesSet) {
+        this.hideBanner()
+      } else {
+        this.showBanner()
+      }
       if (error) {
         console.error(error)
       }
-      this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
     }
 
     this.singleConsent = new GovSingleConsent(
-      updateConsents.bind(this),
-      revokeAllConsents.bind(this)
+      onConsentsUpdated.bind(this),
+      window.GovSingleConsentApiURL
     )
-
-    this.showBanner()
   }
 
   CookieBanner.prototype.showBanner = function () {
-    var noResponse = Utils.isEmpty(this.cookiesPolicy)
-    var acceptedAdditionalCookies = Utils.acceptedAdditionalCookies(
-      this.cookies_policy
-    )
+    var acceptedAdditionalCookies =
+      GovSingleConsent.hasConsentedToUsage() ||
+      GovSingleConsent.hasConsentedToCampaigns() ||
+      GovSingleConsent.hasConsentedToSettings()
 
-    if (this.cookies_preferences_set) {
-      this.hideBanner()
-    } else {
-      this.$component.hidden = false
-      this.$component.confirmAccept.hidden =
-        noResponse || !acceptedAdditionalCookies
-      this.$component.confirmReject.hidden =
-        noResponse || acceptedAdditionalCookies
-    }
+    this.$component.hidden = false
+    this.$component.confirmAccept.hidden =
+      !GovSingleConsent.isConsentPreferencesSet() || !acceptedAdditionalCookies
+    this.$component.confirmReject.hidden =
+      !GovSingleConsent.isConsentPreferencesSet() || acceptedAdditionalCookies
   }
 
   CookieBanner.prototype.hideBanner = function () {
@@ -86,15 +77,7 @@
 
   CookieBanner.prototype.acceptCookies = function () {
     this.$component.showAcceptConfirmation()
-    this.setCookiesPolicyCookie(GovSingleConsent.ACCEPT_ALL)
-    this.singleConsent.setStatus(GovSingleConsent.ACCEPT_ALL)
-  }
-
-  CookieBanner.prototype.setCookiesPolicyCookie = function (cookiesPolicy) {
-    Utils.setCookie('cookies_policy', JSON.stringify(cookiesPolicy), {
-      days: 365,
-    })
-    Utils.setCookie('cookies_preferences_set', 'true', { days: 365 })
+    this.singleConsent.setConsents(GovSingleConsent.ACCEPT_ALL)
   }
 
   CookieBanner.prototype.showAcceptConfirmation = function () {
@@ -105,8 +88,7 @@
 
   CookieBanner.prototype.rejectCookies = function () {
     this.$component.showRejectConfirmation()
-    this.setCookiesPolicyCookie(GovSingleConsent.REJECT_ALL)
-    this.singleConsent.setStatus(GovSingleConsent.REJECT_ALL)
+    this.singleConsent.setConsents(GovSingleConsent.REJECT_ALL)
   }
 
   CookieBanner.prototype.showRejectConfirmation = function () {

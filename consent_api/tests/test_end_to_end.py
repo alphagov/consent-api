@@ -30,8 +30,9 @@ def test_single_service(browser, dummy_service, consent_api):
     cookie_banner.reject_cookies()
     assert not cookie_banner.message.visible
 
-    policy = browser.cookies.all()["cookies_policy"]
+    import time
 
+    time.sleep(2)
     # consent status is stored in a cookie
     policy = browser.cookies.all()["cookies_policy"]
     assert CookieConsent(**json.loads(policy)) == CookieConsent.REJECT_ALL
