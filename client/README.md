@@ -8,33 +8,65 @@ See the [Single Consent service README](../README.md).
 
 ## Quick start
 
-### 1. Install
+See the [CommonJS example](https://github.com/alphagov/consent-api/blob/main/client/examples/commonJS-usage/index.js).
+
+Contact data-tools-team@digital.cabinet-office.gov.uk  to get the URL of the API endpoint.
+
+The library provides the following static methods for finding out which types of
+cookies a user has consented to.
+
+* `hasConsentedToEssential`
+* `hasConsentedToUsage`
+* `hasConsentedToCampaigns`
+* `hasConsentedToSetting`
+
+The method `GovSingleConsent.getConsents()` provides the current state of the
+user's consents to all types of cookies.
+
+### 1. Install with npm
 
 In order to set first-party cookies, the client Javascript must be served with
 your application.
 
-#### Option A. Install with npm (recommended)
 
 We recommend installing the Single Consent client using
 [node package manager (npm)](https://www.npmjs.com/).
 
-Add the following to your `package.json` file in the `dependencies` section:
-
-```json
-"@alphagov/consent-api": "alphagov/consent-api#semver:^1.7",
+```sh
+npm i govuk-single-consent
 ```
 
-#### Option B. Install by using downloaded file
-
-Alternatively, you can download the client from Github. You will need to check
-for updates manually.
+https://www.npmjs.com/package/govuk-single-consent
 
 ### 2. Including the Javascript client
 
-The client needs to be loaded on any page that could be an entry point to your
-web application, that allows modifying cookie consent, or provides a link to
-another domain with which you want to share cookie consent status. It is
-probably easiest to add the script to a base template used for all pages.
+
+The javascript client can be included in different ways.  Choose one below.
+
+#### CommonJS
+
+See the [example](https://github.com/alphagov/consent-api/blob/main/client/examples/commonJS-usage/index.js).
+
+#### Typescript
+
+See the [example](https://github.com/alphagov/consent-api/blob/main/client/examples/typescript-usage/index.ts).
+
+#### HTML script tag (IIFE)
+
+The javascript client makes available the object `window.GovSingleConsent` for
+interacting with the API. It needs to be loaded on any page that could be an
+entry point to your web application, that allows modifying cookie consent, or
+provides a link to another domain with which you want to share cookie consent
+status. It is probably easiest to add the script to a base template used for all
+pages.
+
+On the same pages, you need to load your javascript for interacting with the
+`window.GovSingleConsent` object.
+
+See the following examples.
+
+* [Cookie banner script](https://github.com/alphagov/consent-api/blob/main/client/example/cookie-banner.js)
+* [Cooke page script](https://github.com/alphagov/consent-api/blob/main/client/example/cookies-page.js)
 
 It is common practice to add Javascript tags just before the end `</body>` tag,
 eg:
@@ -43,64 +75,30 @@ eg:
     ...
 
     <script src="{path_to_client_js}/singleconsent.js"></script>
+    <script src="{path_to_cookie_banner_script}.js"></script>
+    <script src="{path_to_cookies_page_script}.js"></script>
   </body>
 </html>
 ```
 
-### 3. Register a callback
-
-The client will automatically check for a unique ID in a cookie or URL parameter
-on page load. If it finds one, it will query the Single Consent API and call any
-registered callback functions with the returned consent data.
-
-To trigger your Javascript code to (for example) hide your cookie banner if the
-user has shared consent, you need to register a callback function with the
-following example Javascript code:
-
-```javascript
-GovSingleConsent.onStatusLoaded(function (consentData) {
-  document.querySelector('#example-cookie-banner-id').hidden = true
-})
-```
-
-### 4. Share the user's consent to cookies via the API
+### 3. Share the user's consent to cookies via the API
 
 When the user interacts with your cookie banner or cookie settings page to
 consent to or reject cookies you can update the central database by invoking the
 following function:
 
-```javascript
-exampleCookieConsentStatusObject = {
+```typescript
+exampleCookieConsentStatusObject: Consents = {
   essential: true,
   settings: false,
   usage: true,
   campaigns: false,
 }
 
-GovSingleConsent.setStatus(exampleCookieConsentStatusObject)
+singleConsentObject.setConsents(exampleCookieConsentStatusObject)
 ```
 
-The structure of the consent data object is currently based on the
-[GOV.UK `cookies_policy` cookie](https://www.gov.uk/help/cookies). If your
-website cookies do not fall into any of the four categories listed, please
-contact us.
-
-### 5. Configuration
-
-The client connects to the Single Consent service Production environment by
-default.
-
-If you need to direct the client to an alternative URL (for example, during
-testing), you can add a `data-gov-singleconsent-api-url` attribute to the `body` tag in
-your HTML file, eg:
-
-```html
-<body
-  data-gov-singleconsent-api-url="https://consent-api-nw.a.run.app/api/v1/consent/"
-></body>
-```
-
-#### Content Security Policy
+## Content Security Policy
 
 If your website is served with a
 [`Content-Security-Policy` HTTP header or `<meta>` element](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP), you
@@ -111,71 +109,28 @@ The value of the header or meta element should contain the following:
 connect-src 'self' https://consent-api-nw.a.run.app/api/v1/consent [... other site URLs separated by spaces];
 ```
 
-## API
+## What the library does
 
-The client Javascript adds a `Consent` object to the `window`, allowing you to
-call its methods from your own script.
+The library manages all read/write operations with a cookie that stores the
+state of a user's consent.
 
-### Methods
+### Callback
 
-#### onStatusLoaded
+Websites using the Consent API must provide a callback function.  This will be
+invoked each time the consent has been updated.  It will be called with three
+parameters:
 
-Add a callback function to be invoked when the client receives a consent status
-from the API. The consent status is automatically requested on page load, and if
-the API responds, the callback will be invoked with the consent status object as
-an argument.
+* `consents` An object describing the new consent state.
+* `consentsPreferencesSet` Boolean, the cookie banner must be displayed if this
+  value is `false`.
+* `error` An object describing any error, otherwise `null`.  If there is an
+  error, then the `consents` object will say that the consents have been
+  revoked.
 
-##### Arguments
-
-<table>
-<tr valign="top"><th align="left"><code>callback</code> (required)</th><td align="left">A callback function which will be called
-with the consent status object as an argument.</td></tr>
-</table>
-
-##### Example
-
-```javascript
-GovSingleConsent.onStatusLoaded((status) => {
-  console.log('Consent Status:')
-  console.log(`- Essential cookies (${status.essential})`)
-  console.log(`- Campaign cookies (${status.campaigns})`)
-  console.log(`- Settings cookies (${status.settings})`)
-  console.log(`- Usage cookies (${status.usage})`)
-})
-```
-
-#### setStatus
-
-Set the current user's consent status in the API, to be shared with other
-domains. The method returns immediately, but is processed asynchronously. When
-the API has been successfully updated, the callback method is invoked (if
-provided).
-
-##### Arguments
-
-<table>
-<tr valign="top"><th align="left"><code>status</code> (required)</th><td align="left">A consent status JSON object. Eg:
-<pre>
-{
-  "essential": true,
-  "campaigns": false,
-  "settings": false,
-  "usage": false
-}
-</pre>
-</td></tr>
-<tr valign="top"><th align="left"><code>callback</code></th><td align="left">An
-optional callback function which will be called
-with the consent status as an argument.</td></tr>
-</table>
-
-##### Example
-
-```javascript
-GovSingleConsent.setStatus(acceptAllCookies, (status) => {
-  console.log('Consent status successfully updated to', status)
-})
-```
+The structure of the consent data object is currently based on the
+[GOV.UK `cookies_policy` cookie](https://www.gov.uk/help/cookies). If your
+website cookies do not fall into any of the four categories listed, please
+contact us.
 
 ## Getting updates
 
