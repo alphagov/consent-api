@@ -39,6 +39,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
       ENV: "${ENV}"
+      FLAG_FIXTURES: "True"
 
   dummy-service-1:
     container_name: dummy-service-1

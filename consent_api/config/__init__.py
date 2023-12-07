@@ -64,3 +64,6 @@ OTHER_SERVICE_ORIGIN = {
     ),
     Environment.PRODUCTION: defaults.PROD.DEFAULT_OTHER_SERVICE_ORIGIN,
 }.get(Environment(ENV), defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN)
+
+
+FLAG_FIXTURES = os.getenv("FLAG_FIXTURES", False) == "True"
