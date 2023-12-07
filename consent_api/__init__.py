@@ -11,8 +11,17 @@ from consent_api.routers import consent
 from consent_api.routers import dummy_service
 from consent_api.routers import healthcheck
 from consent_api.routers import self_service
+from consent_api.util import register_origins_for_e2e_testing
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+async def startup_event():
+    if config.FLAG_FIXTURES:
+        await register_origins_for_e2e_testing()
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

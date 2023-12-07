@@ -39,6 +39,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
       ENV: "${ENV}"
+      FLAG_FIXTURES: "True"
 
   dummy-service-1:
     container_name: dummy-service-1
@@ -119,6 +120,7 @@ services:
       - "$PWD/selenoid/opt:/home/app/logs"
       - "$PWD/Makefile:/home/app/Makefile"
       - "$PWD/consent_api/tests:/home/app/consent_api/tests"
+      - "$PWD/.pytest_cache:/home/app/.pytest_cache"
     entrypoint: ["make", "test-all"]
     # entrypoint: ["tail", "-f", "/dev/null"]
     environment:
