@@ -3,21 +3,45 @@ import terser from '@rollup/plugin-terser'
 
 const baseConfig = {
   input: 'src/index.ts',
-  plugins: [typescript()],
 }
 
-const unminifiedOutput = {
-  format: 'iife',
-  file: 'dist/singleconsent.js',
-}
-
-const minifiedOutput = {
-  ...unminifiedOutput,
-  file: 'dist/singleconsent.min.js',
-  plugins: [terser()],
-}
-
-export default [
-  { ...baseConfig, output: unminifiedOutput },
-  { ...baseConfig, output: minifiedOutput },
+const bundleConfig = [
+  // ES Module format
+  {
+    ...baseConfig,
+    output: {
+      file: 'dist/singleconsent.esm.js',
+      format: 'esm',
+    },
+    plugins: [typescript()],
+  },
+  // CommonJS format
+  {
+    ...baseConfig,
+    output: {
+      file: 'dist/singleconsent.cjs.js',
+      format: 'cjs',
+    },
+    plugins: [typescript()],
+  },
+  // IIFE ES5 format (for direct usage in browser via a <script> tag)
+  {
+    ...baseConfig,
+    output: {
+      file: 'dist/singleconsent.iife.js',
+      format: 'iife',
+    },
+    plugins: [typescript({ tsconfig: './tsconfig.es5.json' })],
+  },
+  // Minified IIFE ES5 format (for direct usage in browser via a <script> tag)
+  {
+    ...baseConfig,
+    output: {
+      file: 'dist/singleconsent.iife.min.js',
+      format: 'iife',
+    },
+    plugins: [typescript({ tsconfig: './tsconfig.es5.json' }), terser()],
+  },
 ]
+
+export default bundleConfig

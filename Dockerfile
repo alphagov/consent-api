@@ -44,7 +44,7 @@ USER 999
 
 COPY --chown=999:999 --from=build /home/app/.venv ./.venv
 COPY --chown=999:999 --from=node-build /home/client/dist/ ./client/dist/
-COPY --chown=999:999 --from=node-build /home/client/example/ ./client/example/
+COPY --chown=999:999 --from=node-build /home/client/examples/ ./client/examples/
 COPY --chown=999:999 consent_api/ consent_api/
 COPY --chown=999:999 migrations/ migrations/
 COPY --chown=999:999 Makefile pytest.ini .
