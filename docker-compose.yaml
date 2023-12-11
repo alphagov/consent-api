@@ -35,6 +35,7 @@ services:
     volumes:
       - "./client:/home/app/client"
       - "./consent_api:/home/app/consent_api"
+    entrypoint: ["make", "migrate-and-run"]
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
@@ -48,12 +49,18 @@ services:
     image: "${DOCKER_IMAGE}"
     ports:
       - "8001:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      consent-api:
+        condition: service_started
     volumes:
       - "./client:/home/app/client"
       - "./Makefile:/home/app/Makefile"
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       PORT: "80"
       CONSENT_API_ORIGIN: "http://localhost:8000"
       OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-2"
@@ -67,11 +74,17 @@ services:
     image: "${DOCKER_IMAGE}"
     ports:
       - "8002:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      consent-api:
+        condition: service_started
     volumes:
       - "./client:/home/app/client"
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       CONSENT_API_ORIGIN: "http://localhost:8000"
       PORT: "80"
       OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-1"

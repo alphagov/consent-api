@@ -96,6 +96,10 @@ else
 endif
 
 
+.PHONY: migrate-and-run
+migrate-and-run: migrations run
+
+
 ## docker-build: Build a Docker image
 .PHONY: docker-build
 docker-build: clean

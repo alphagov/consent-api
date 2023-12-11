@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from consent_api import config
+from consent_api.config import settings
 
 engine = create_async_engine(
-    config.SQLALCHEMY_DATABASE_URI,
+    str(settings.sqlalchemy_database_uri),
     json_serializer=FriendlyEncoder().encode,
     pool_size=20,
     max_overflow=20,

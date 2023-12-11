@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler
 from starlette.middleware.sessions import SessionMiddleware
 
-from consent_api import config
+from consent_api.config import settings
 from consent_api.routers import consent
 from consent_api.routers import dummy_service
 from consent_api.routers import healthcheck
@@ -18,7 +18,7 @@ app = FastAPI()
 
 @app.on_event("startup")
 async def startup_event():
-    if config.FLAG_FIXTURES:
+    if settings.flag_fixtures:
         await register_origins_for_e2e_testing()
 
 
@@ -28,7 +28,7 @@ app.add_middleware(
 )
 app.add_middleware(
     SessionMiddleware,
-    secret_key=config.SECRET_KEY,
+    secret_key=settings.secret_key,
 )
 app.include_router(consent.router)
 app.include_router(healthcheck.router)

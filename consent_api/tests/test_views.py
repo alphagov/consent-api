@@ -37,7 +37,7 @@ async def test_set_consent(client, db_session):
     assert response.status_code == 201
     response_json = response.json()
     assert len(response_json["uid"]) == 22
-    assert response_json["status"] == CookieConsent.ACCEPT_ALL.dict()
+    assert response_json["consent"] == CookieConsent.ACCEPT_ALL.dict()
 
     uc = (await get_user_consent(response_json["uid"], db_session)).first()
     assert uc.consent == CookieConsent.ACCEPT_ALL.dict()
@@ -58,7 +58,7 @@ async def test_get_consent(client, db_session):
     assert response.status_code == 200
     response_json = response.json()
     assert response_json["uid"] == existing.uid
-    assert response_json["status"] == existing.consent
+    assert response_json["consent"] == existing.consent
 
 
 @pytest.mark.asyncio
@@ -79,7 +79,7 @@ async def test_update_consent(client, db_session):
     assert response.status_code == 200
     response_json = response.json()
     assert response_json["uid"] == existing.uid
-    assert response_json["status"] == CookieConsent.REJECT_ALL.dict()
+    assert response_json["consent"] == CookieConsent.REJECT_ALL.dict()
 
     uc = (await get_user_consent(existing.uid, db_session)).first()
     assert uc.consent == CookieConsent.REJECT_ALL.dict()
