@@ -48,14 +48,6 @@ async def get_user_consent(
         return await db.scalars(query)
 
 
-@consent.get("/")
-async def get_all_consent_statuses(
-    db: AsyncSession = fastapi.Depends(db_session),
-) -> list[UserConsent]:
-    """Get all consent statuses."""
-    return list(await get_user_consent(None, db))
-
-
 Consent = Annotated[CookieConsent, fastapi.Depends(CookieConsent.as_form)]
 
 
