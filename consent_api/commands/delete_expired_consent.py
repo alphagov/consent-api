@@ -7,7 +7,7 @@ from datetime import timedelta
 from sqlalchemy.sql.expression import delete
 from sqlmodel import col
 
-from consent_api import config
+from consent_api.config import settings
 from consent_api.database import engine
 from consent_api.models import UserConsent
 
@@ -18,7 +18,7 @@ async def delete_expired_consent():
         await conn.execute(
             delete(UserConsent).where(
                 col(UserConsent.updated_at)
-                < (datetime.now() - timedelta(days=config.CONSENT_EXPIRY_DAYS)),
+                < (datetime.now() - timedelta(days=settings.consent_expiry_days)),
             )
         )
     await engine.dispose()

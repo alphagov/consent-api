@@ -83,10 +83,10 @@ export class GovSingleConsent {
         request(
           getConsentsUrl,
           { timeout: 1000 },
-          ({ status: consents }: { status: Consents }) => {
-            this.updateBrowserConsents(consents)
+          ({consent}) => {
+            this.updateBrowserConsents(consent)
             this._consentsUpdateCallback(
-              consents,
+              consent,
               GovSingleConsent.isConsentPreferencesSet(),
               null
             )

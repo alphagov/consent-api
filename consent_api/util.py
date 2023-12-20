@@ -4,7 +4,9 @@ import uuid
 
 from sqlalchemy.dialects.postgresql import insert
 
-from consent_api import config
+from consent_api.config import Development
+from consent_api.config import Testing
+from consent_api.config import settings
 from consent_api.database import db_context
 from consent_api.models import Origin
 
@@ -19,9 +21,9 @@ def generate_uid():
 
 
 async def register_origins_for_e2e_testing():
-    if config.ENV in [
-        config.Environment.DEVELOPMENT.value,
-        config.Environment.TESTING.value,
+    if settings.__class__ in [
+        Development,
+        Testing,
     ]:
         test_origins = [
             "http://consent-api",

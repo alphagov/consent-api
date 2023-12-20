@@ -5,14 +5,14 @@ from fastapi import APIRouter
 from fastapi import Request
 from starlette.responses import Response
 
-from consent_api import config
+from consent_api.config import settings
 from consent_api.jinja import templates
 
 router = APIRouter(include_in_schema=False)
 get = router.get
 
 DUMMY_SERVICE_PREFIX = "/dummy-service"
-OTHER_SERVICE_URL = f"{config.OTHER_SERVICE_ORIGIN}{DUMMY_SERVICE_PREFIX}/"
+OTHER_SERVICE_URL = f"{settings.other_service_origin}{DUMMY_SERVICE_PREFIX}/"
 
 
 @get("/")

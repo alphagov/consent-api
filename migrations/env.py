@@ -3,7 +3,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from consent_api import models  # noqa
-from consent_api.config import SQLALCHEMY_DATABASE_URI
+from consent_api.config import settings
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -21,7 +21,9 @@ if config.config_file_name is not None:
 # set_main_option value is passed to ConfigParser.set, which supports variable
 # interpolation using pyformat (eg: '%(some_value)s'). Raw percent signs must be
 # escaped (eg: '%%')
-config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI.replace("%", "%%"))
+config.set_main_option(
+    "sqlalchemy.url", str(settings.sqlalchemy_database_uri).replace("%", "%%")
+)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -48,7 +50,7 @@ def run_migrations_offline() -> None:
 
     """
     context.configure(
-        url=SQLALCHEMY_DATABASE_URI,
+        url=str(settings.sqlalchemy_database_uri),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},

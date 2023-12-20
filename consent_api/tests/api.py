@@ -17,6 +17,6 @@ class ConsentAPI:
     def get_consent(self, uid):
         """Retrieve the consent status for the given UID, if it exists."""
         obj = httpx.get(f"{self.url}/api/v1/consent/{uid}").json()
-        if obj and obj["status"]:
-            return CookieConsent(**obj["status"])
+        if obj and obj["consent"]:
+            return CookieConsent(**obj["consent"])
         return None
