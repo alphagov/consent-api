@@ -4,7 +4,7 @@ class DEV:
 
 
 class STAGING:
-    DEFAULT_CONSENT_API_ORIGIN = "https://consent-api-bgzqvpmbyq-nw.a.run.app"
+    DEFAULT_CONSENT_API_ORIGIN = "https://gds-single-consent-staging.app/"
     DEFAULT_OTHER_SERVICE_ORIGIN = ""
 
 
