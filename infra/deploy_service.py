@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pulumi
 from resources.abstract_resource import ResourceConfig
+from resources.alerting_monitoring import AlertingMonitoring
 from resources.cloudrun import CloudRun
 from resources.database import Database
 from resources.load_balancers import LoadBalancers
@@ -28,9 +29,11 @@ def deploy_service(env: str, branch: str | None, tag: str) -> Callable:
 
         db = Database(config=config)
         cloud_run = CloudRun(config=config, db=db)
+        AlertingMonitoring(config=config, cloud_run=cloud_run)
         LoadBalancers(config=config, cloud_run=cloud_run)
 
-        pulumi.export("service_url", cloud_run.service.statuses[0].url)
+        if cloud_run.service is not None:
+            pulumi.export("service_url", cloud_run.service.statuses[0].url)
 
     return _deploy
 

@@ -26,6 +26,9 @@ class CloudRun(AbstractResource):
     next_color: ProductionColor | None = field(init=False, default=None)
     latest_color: ProductionColor | None = field(init=False, default=None)
     latest_rev_name: str | None = field(init=False, default=None)
+    traffics: list[dict] | None = field(init=False, default=None)
+    service_name: str | None = field(init=False, default=None)
+    service: cloudrun.Service | None = field(init=False, default=None)
 
     def _create(self):
         if self.config.env == "production":
