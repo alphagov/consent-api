@@ -64,62 +64,91 @@ export class GovSingleConsent {
       "error": if an error occurred, this is the error object. Otherwise, this is null.
       */
 
+    this.validateConstructorArguments(baseUrl, consentsUpdateCallback)
+    this._consentsUpdateCallback = consentsUpdateCallback
+    this.config = new GovConsentConfig(baseUrl)
+    this.urls = new ApiV1(this.config.baseUrl)
+    window.cachedConsentsCookie = null
+    this.hideUIDParameter()
+    this.initialiseUIDandConsents()
+  }
+
+  validateConstructorArguments(
+    baseUrl: string,
+    consentsUpdateCallback: ConsentsUpdateCallback
+  ) {
     if (!baseUrl) {
       throw new Error('Argument baseUrl is required')
     }
-    if (!this._consentsUpdateCallback) {
+    if (typeof baseUrl !== 'string') {
+      throw new Error('Argument baseUrl must be a string')
+    }
+    if (!consentsUpdateCallback) {
       throw new Error('Argument consentsUpdateCallback is required')
     }
-    if (typeof this._consentsUpdateCallback !== 'function') {
+    if (typeof consentsUpdateCallback !== 'function') {
       throw new Error('Argument consentsUpdateCallback must be a function')
-    }
-
-    window.cachedConsentsCookie = null
-    this._consentsUpdateCallback = consentsUpdateCallback
-    this.urls = new ApiV1(baseUrl)
-
-    this.config = new GovConsentConfig(baseUrl)
-    this.hideUIDParameter()
-
-    // get the current uid from the cookie or the URL if it exists
-    this.updateUID(this.config.uidFromUrl || this.config.uidFromCookie)
-
-    if (!this.uid) {
-      this._consentsUpdateCallback(null, false, null)
-    } else {
-      const consentsUrl = this.urls.consents(this.uid)
-
-      try {
-        request(
-          consentsUrl,
-          { timeout: 1000 },
-          ({ status: consents }: { status: Consents }) => {
-            this.updateBrowserConsents(consents)
-            this._consentsUpdateCallback(
-              consents,
-              GovSingleConsent.isConsentPreferencesSet(),
-              null
-            )
-          }
-        )
-      } catch (error) {
-        this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
-        this._consentsUpdateCallback(
-          GovSingleConsent.REJECT_ALL,
-          GovSingleConsent.isConsentPreferencesSet(),
-          error
-        )
-      }
     }
   }
 
-  setConsents(consents: Consents): void {
+  initialiseUIDandConsents() {
+    const currentUID = this.getCurrentUID()
+    if (this.isNewUID(currentUID)) {
+      this.handleNewUID(currentUID)
+    }
+
+    if (this.uid) {
+      this.fetchAndUpdateConsents()
+    } else {
+      this._consentsUpdateCallback(null, false, null)
+    }
+  }
+
+  handleNewUID(newUID: string): void {
+    this.uid = newUID
+    this.updateLinksEventHandlers(newUID)
+    this.setUIDCookie(newUID)
+  }
+
+  private isNewUID(currentUID: string | null): boolean {
+    return currentUID && currentUID !== this.uid
+  }
+
+  fetchAndUpdateConsents() {
+    const consentsUrl = this.urls.consents(this.uid)
+
+    try {
+      request(
+        consentsUrl,
+        { timeout: 1000 },
+        ({ status: consents }: { status: Consents }) => {
+          this.updateBrowserConsents(consents)
+          this._consentsUpdateCallback(
+            consents,
+            GovSingleConsent.isConsentPreferencesSet(),
+            null
+          )
+        }
+      )
+    } catch (error) {
+      this.defaultToRejectAllConsents(error)
+    }
+  }
+
+  getCurrentUID(): string | null | undefined {
+    // Get the current uid from URL or from the cookie if it exists
+    return this.config.uidFromUrl || this.config.uidFromCookie
+  }
+
+  setConsents(consents: Consents) {
     if (!consents) {
       throw new Error('consents is required in GovSingleConsent.setConsents()')
     }
 
     const successCallback = (response) => {
-      this.updateUID(response.uid)
+      if (this.isNewUID(response.uid)) {
+        this.handleNewUID(response.uid)
+      }
       this.updateBrowserConsents(consents)
       this._consentsUpdateCallback(
         consents,
@@ -141,13 +170,17 @@ export class GovSingleConsent {
       )
     } catch (error) {
       // The request failed. For security reasons, we assume the user has rejected all cookies.
-      this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
-      this._consentsUpdateCallback(
-        GovSingleConsent.REJECT_ALL,
-        GovSingleConsent.isConsentPreferencesSet(),
-        error
-      )
+      this.defaultToRejectAllConsents(error)
     }
+  }
+
+  private defaultToRejectAllConsents(error?: Error): void {
+    this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
+    this._consentsUpdateCallback(
+      GovSingleConsent.REJECT_ALL,
+      GovSingleConsent.isConsentPreferencesSet(),
+      error
+    )
   }
 
   static getConsents(): Consents | null {
@@ -186,27 +219,13 @@ export class GovSingleConsent {
     return value === 'true'
   }
 
-  private updateUID(uid): void {
-    /**
-     * Sets the new UID, updates page links and sets the UID cookie.
-     */
-
-    if (!uid || uid === this.uid) {
-      return
-    }
-
-    this.uid = uid
-
-    // Get origins
+  private updateLinksEventHandlers(currentUID): void {
     request(
       this.urls.origins(),
       {},
       // Update links with UID
-      (origins) => this.addUIDtoCrossOriginLinks(origins, uid)
+      (origins) => this.addUIDtoCrossOriginLinks(origins, currentUID)
     )
-
-    // Update UID cookie
-    this.setUIDCookie(uid)
   }
 
   private addUIDtoCrossOriginLinks(origins, uid): void {
@@ -215,7 +234,7 @@ export class GovSingleConsent {
      * Only links with known origins are updated.
      */
 
-    var links = document.querySelectorAll('a[href]')
+    const links = document.querySelectorAll('a[href]')
     Array.prototype.forEach.call(links, (link) => {
       if (
         isCrossOrigin(link) &&

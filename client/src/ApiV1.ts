@@ -4,7 +4,7 @@ class ApiV1 {
 
   static readonly Routes = {
     origins: '/origins',
-    consents: '/consents',
+    consents: '/consent',
   }
 
   constructor(baseUrl: string) {

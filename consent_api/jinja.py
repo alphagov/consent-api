@@ -4,7 +4,7 @@
 import jinja2
 from starlette.templating import Jinja2Templates
 
-from consent_api.config import CONSENT_API_URL
+from consent_api.config import CONSENT_API_ORIGIN
 
 templates = Jinja2Templates(
     directory="consent_api/templates",  # required but overridden by loader arg
@@ -18,5 +18,5 @@ templates = Jinja2Templates(
     ),
 )
 templates.env.globals.update(
-    {"CONSENT_API_URL": CONSENT_API_URL},
+    {"CONSENT_API_BASE_URL": CONSENT_API_ORIGIN},
 )
