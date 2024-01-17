@@ -1,4 +1,5 @@
 import { GovConsentConfig } from './GovConsentConfig'
+import ApiV1 from './ApiV1'
 import {
   addUrlParameter,
   getOriginFromLink,
@@ -46,8 +47,9 @@ export class GovSingleConsent {
   config: GovConsentConfig
   uid?: string | null
   cachedConsentsCookie: Consents | null = null
+  urls: ApiV1
 
-  constructor(consentsUpdateCallback: ConsentsUpdateCallback, apiUrl: string) {
+  constructor(baseUrl: string, consentsUpdateCallback: ConsentsUpdateCallback) {
     /**
       Initialises _GovConsent object by performing the following:
       1. Removes 'uid' from URL.
@@ -55,20 +57,28 @@ export class GovSingleConsent {
       3. Fetches consent status from API if 'uid' exists.
       4. Notifies event listeners with API response.
 
+      @arg baseUrl: string - the domain of where the single consent API is. Required.
       @arg consentsUpdateCallback: function(consents, consentsPreferencesSet, error) - callback when the consents are updated
       "consents": this is the consents object. It has the following properties: "essential", "usage", "campaigns", "settings". Each property is a boolean.
       "consentsPreferencesSet": true if the consents have been set for this user and this domain. Typically, only display the cookie banner if this is true.
       "error": if an error occurred, this is the error object. Otherwise, this is null.
-
-      @arg apiUrl: string - the url of the API. Required.
       */
+
+    if (!baseUrl) {
+      throw new Error('Argument baseUrl is required')
+    }
+    if (!this._consentsUpdateCallback) {
+      throw new Error('Argument consentsUpdateCallback is required')
+    }
+    if (typeof this._consentsUpdateCallback !== 'function') {
+      throw new Error('Argument consentsUpdateCallback must be a function')
+    }
 
     window.cachedConsentsCookie = null
     this._consentsUpdateCallback = consentsUpdateCallback
+    this.urls = new ApiV1(baseUrl)
 
-    this.validateCallback()
-
-    this.config = new GovConsentConfig(apiUrl)
+    this.config = new GovConsentConfig(baseUrl)
     this.hideUIDParameter()
 
     // get the current uid from the cookie or the URL if it exists
@@ -77,11 +87,11 @@ export class GovSingleConsent {
     if (!this.uid) {
       this._consentsUpdateCallback(null, false, null)
     } else {
-      var getConsentsUrl = this.config.apiUrl.concat(this.uid)
+      const consentsUrl = this.urls.consents(this.uid)
 
       try {
         request(
-          getConsentsUrl,
+          consentsUrl,
           { timeout: 1000 },
           ({ status: consents }: { status: Consents }) => {
             this.updateBrowserConsents(consents)
@@ -108,8 +118,6 @@ export class GovSingleConsent {
       throw new Error('consents is required in GovSingleConsent.setConsents()')
     }
 
-    var url = this.config.apiUrl.concat(this.uid || '')
-
     const successCallback = (response) => {
       this.updateUID(response.uid)
       this.updateBrowserConsents(consents)
@@ -120,6 +128,7 @@ export class GovSingleConsent {
       )
     }
 
+    const url = this.urls.consents(this.uid)
     try {
       request(
         url,
@@ -190,7 +199,7 @@ export class GovSingleConsent {
 
     // Get origins
     request(
-      this.config.apiUrl.replace('/consent/', '/origins/'),
+      this.urls.origins(),
       {},
       // Update links with UID
       (origins) => this.addUIDtoCrossOriginLinks(origins, uid)
@@ -221,16 +230,6 @@ export class GovSingleConsent {
         })
       }
     })
-  }
-
-  private validateCallback(): void {
-    if (!this._consentsUpdateCallback) {
-      throw new Error('Argument consentsUpdateCallback is required')
-    }
-
-    if (typeof this._consentsUpdateCallback !== 'function') {
-      throw new Error('Argument consentsUpdateCallback must be a function')
-    }
   }
 
   private setUIDCookie(uid: string): void {
