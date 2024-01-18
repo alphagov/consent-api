@@ -49,8 +49,6 @@ CONSENT_API_ORIGIN = {
     ),
 }.get(Environment(ENV), defaults.DEV.DEFAULT_CONSENT_API_ORIGIN)
 
-CONSENT_API_URL = f"{CONSENT_API_ORIGIN}/api/v1/consent/"
-
 
 OTHER_SERVICE_ORIGIN = {
     Environment.TESTING: os.getenv(
