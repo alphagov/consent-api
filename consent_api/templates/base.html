@@ -151,7 +151,7 @@
       </div>
     </footer>
     {% block bodyEnd %}
-      <script>window.GovSingleConsentApiURL="{{ CONSENT_API_URL }}"</script>
+      <script>window.GovSingleConsentApiBaseURL="{{ CONSENT_API_BASE_URL }}"</script>
       <script src="{{ url_for('client', path='dist/singleconsent.iife.js') }}"></script>
       <script src="{{ url_for('client', path='examples/cookie-banner.js') }}"></script>
     {% endblock %}

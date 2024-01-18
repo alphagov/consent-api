@@ -9,9 +9,9 @@ export class GovConsentConfig {
   static COOKIE_LIFETIME = COOKIE_DAYS * 24 * 60 * 60
   uidFromCookie: string
   uidFromUrl: string
-  apiUrl: string
+  baseUrl: string
 
-  constructor(apiUrl: string) {
+  constructor(baseUrl: string) {
     this.uidFromCookie = findByKey(
       GovConsentConfig.UID_KEY,
       document.cookie.split(';')
@@ -21,6 +21,6 @@ export class GovConsentConfig {
       parseUrl(location.href).params
     )
 
-    this.apiUrl = apiUrl
+    this.baseUrl = baseUrl
   }
 }

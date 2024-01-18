@@ -12,13 +12,13 @@
  * Functions such as "hideCookieBanner" or "sendErrorLog" are conceptual and represent
  * placeholders for your actual implementation.
  *
- * The constant `SINGLE_CONSENT_API_URL` is a dummy URL and should be replaced with the actual
+ * The constant `SINGLE_CONSENT_API_BASE_URL` is a dummy URL and should be replaced with the actual
  * endpoint from which the consent status can be fetched or to which it can be sent.
  */
 
 const { GovSingleConsent } = require('govuk-single-consent')
 
-const SINGLE_CONSENT_API_URL = 'dummy-url.gov.uk'
+const SINGLE_CONSENT_API_BASE_URL = 'dummy-url.gov.uk'
 
 const onConsentsUpdated = (consents, consentsPreferencesSet, error) => {
   // Do something with the consents
@@ -35,7 +35,7 @@ const onConsentsUpdated = (consents, consentsPreferencesSet, error) => {
 
 const singleConsent = new GovSingleConsent(
   onConsentsUpdated,
-  SINGLE_CONSENT_API_URL
+  SINGLE_CONSENT_API_BASE_URL
 )
 
 /**
