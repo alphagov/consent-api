@@ -10,15 +10,15 @@ See the [Single Consent service README](../README.md).
 
 See the [CommonJS example](https://github.com/alphagov/consent-api/blob/main/client/examples/commonJS-usage/index.js).
 
-Contact data-tools-team@digital.cabinet-office.gov.uk  to get the URL of the API endpoint.
+Contact data-tools-team@digital.cabinet-office.gov.uk to get the URL of the API endpoint.
 
 The library provides the following static methods for finding out which types of
 cookies a user has consented to.
 
-* `hasConsentedToEssential`
-* `hasConsentedToUsage`
-* `hasConsentedToCampaigns`
-* `hasConsentedToSetting`
+- `hasConsentedToEssential`
+- `hasConsentedToUsage`
+- `hasConsentedToCampaigns`
+- `hasConsentedToSetting`
 
 The method `GovSingleConsent.getConsents()` provides the current state of the
 user's consents to all types of cookies.
@@ -27,7 +27,6 @@ user's consents to all types of cookies.
 
 In order to set first-party cookies, the client Javascript must be served with
 your application.
-
 
 We recommend installing the Single Consent client using
 [node package manager (npm)](https://www.npmjs.com/).
@@ -40,8 +39,7 @@ https://www.npmjs.com/package/govuk-single-consent
 
 ### 2. Including the Javascript client
 
-
-The javascript client can be included in different ways.  Choose one below.
+The javascript client can be included in different ways. Choose one below.
 
 #### CommonJS
 
@@ -65,8 +63,8 @@ On the same pages, you need to load your javascript for interacting with the
 
 See the following examples.
 
-* [Cookie banner script](https://github.com/alphagov/consent-api/blob/main/client/example/cookie-banner.js)
-* [Cooke page script](https://github.com/alphagov/consent-api/blob/main/client/example/cookies-page.js)
+- [Cookie banner script](https://github.com/alphagov/consent-api/blob/main/client/example/cookie-banner.js)
+- [Cooke page script](https://github.com/alphagov/consent-api/blob/main/client/example/cookies-page.js)
 
 It is common practice to add Javascript tags just before the end `</body>` tag,
 eg:
@@ -81,7 +79,28 @@ eg:
 </html>
 ```
 
-### 3. Share the user's consent to cookies via the API
+### 3. Passing the base URL to the constructor
+
+You can either pass an environment string, or a custom base URL.
+
+If using an environment string, its value should be either `staging` or `production`.
+
+e.g
+
+```javascript
+const dummyCallback = () => {}
+
+// With an environemnt string to the staging environment
+new GovSingleConsent(dummyCallback, 'staging')
+
+// With an environemnt string to the production environment
+new GovSingleConsent(dummyCallback, 'production')
+
+// With a custom base URL
+new GovSingleConsent(dummyCallback, 'http://some-development-url.com')
+```
+
+### 4. Share the user's consent to cookies via the API
 
 When the user interacts with your cookie banner or cookie settings page to
 consent to or reject cookies you can update the central database by invoking the
@@ -116,14 +135,14 @@ state of a user's consent.
 
 ### Callback
 
-Websites using the Consent API must provide a callback function.  This will be
-invoked each time the consent has been updated.  It will be called with three
+Websites using the Consent API must provide a callback function. This will be
+invoked each time the consent has been updated. It will be called with three
 parameters:
 
-* `consents` An object describing the new consent state.
-* `consentsPreferencesSet` Boolean, the cookie banner must be displayed if this
+- `consents` An object describing the new consent state.
+- `consentsPreferencesSet` Boolean, the cookie banner must be displayed if this
   value is `false`.
-* `error` An object describing any error, otherwise `null`.  If there is an
+- `error` An object describing any error, otherwise `null`. If there is an
   error, then the `consents` object will say that the consents have been
   revoked.
 
