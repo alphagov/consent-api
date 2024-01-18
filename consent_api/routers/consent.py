@@ -104,6 +104,19 @@ async def known_origins(db: AsyncSession = fastapi.Depends(db_session)) -> list[
     return list(await get_known_origins(db))
 
 
+@origins.post("/filter")
+async def filter_origins(
+    origins: list[str],
+    db: AsyncSession = fastapi.Depends(db_session),
+) -> list[str]:
+    async with db:
+        return list(
+            await db.scalars(
+                select(col(Origin.origin)).where(col(Origin.origin).in_(origins))
+            )
+        )
+
+
 router = APIRouter(prefix="/api/v1")
 router.include_router(consent, prefix="/consent")
 router.include_router(origins, prefix="/origins")
