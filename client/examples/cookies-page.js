@@ -28,8 +28,8 @@
     }
 
     this.singleConsent = new GovSingleConsent(
-      window.GovSingleConsentApiBaseURL,
-      onConsentsUpdated.bind(this)
+      onConsentsUpdated.bind(this),
+      window.GovSingleConsentApiBaseURL
     )
   }
 

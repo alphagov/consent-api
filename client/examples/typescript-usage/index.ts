@@ -32,8 +32,8 @@ const onConsentsUpdated = (consents, consentsPreferencesSet, error) => {
 }
 
 const singleConsent = new GovSingleConsent(
-  SINGLE_CONSENT_API_BASE_URL,
-  onConsentsUpdated
+  onConsentsUpdated,
+  SINGLE_CONSENT_API_BASE_URL
 )
 
 /**

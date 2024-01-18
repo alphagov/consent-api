@@ -73,7 +73,7 @@ describe('Consent Management', () => {
   })
 
   it('should initialise Consent UID to undefined if no initial UID', () => {
-    const consentInstance = new GovSingleConsent(MOCK_API_BASE_URL, jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     expect(consentInstance.uid).toBeUndefined()
     expect(getCookie(GovConsentConfig.UID_KEY)).toBe(null)
   })
@@ -82,13 +82,14 @@ describe('Consent Management', () => {
     mockCookie()
     const response1 = ['a', 'b']
     const response2 = { data: 'ok' }
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/origins`, (req, res) =>
+    xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/consents/${MOCK_UID}`, (req, res) =>
-      res.status(200).body(JSON.stringify(response2))
+    xhrMock.get(
+      `${MOCK_API_BASE_URL}/api/v1/consents/${MOCK_UID}`,
+      (req, res) => res.status(200).body(JSON.stringify(response2))
     )
-    const consentInstance = new GovSingleConsent(MOCK_API_BASE_URL, jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     expect(consentInstance.uid).toBe(MOCK_UID)
     expect(getCookie(GovConsentConfig.UID_KEY)).toBe(MOCK_UID)
   })
@@ -98,15 +99,15 @@ describe('Consent Management', () => {
     const response2 = { data: 'ok' }
     const mockedUrlUid = `test-url-uid`
     const mockedUrl = `${MOCK_URL}?${MOCK_COOKIE_NAME}=${mockedUrlUid}`
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/origins`, (req, res) =>
+    xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/v1/consents/${mockedUrlUid}`,
+      `${MOCK_API_BASE_URL}/api/v1/consents/${mockedUrlUid}`,
       (req, res) => res.status(200).body(JSON.stringify(response2))
     )
     mockWindowURL(mockedUrl)
-    const consentInstance = new GovSingleConsent(MOCK_API_BASE_URL, jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     expect(consentInstance.uid).toBe(mockedUrlUid)
     expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
@@ -117,15 +118,15 @@ describe('Consent Management', () => {
     const response2 = { data: 'ok' }
     const mockedUrlUid = `test-url-uid`
     const mockedUrl = `${MOCK_URL}?${MOCK_COOKIE_NAME}=${mockedUrlUid}`
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/origins`, (req, res) =>
+    xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/v1/consents/${mockedUrlUid}`,
+      `${MOCK_API_BASE_URL}/api/v1/consents/${mockedUrlUid}`,
       (req, res) => res.status(200).body(JSON.stringify(response2))
     )
     mockWindowURL(mockedUrl)
-    const consentInstance = new GovSingleConsent(MOCK_API_BASE_URL, jest.fn())
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     expect(consentInstance.uid).toBe(mockedUrlUid)
     expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
@@ -133,15 +134,18 @@ describe('Consent Management', () => {
   it('should timeout the consents if the request takes more than one second', () => {
     mockCookie()
     const response1 = ['a', 'b']
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/origins`, (req, res) =>
+    xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/consents/${MOCK_UID}`, (req, res) => {
-      return new Promise(() => {})
-    })
+    xhrMock.get(
+      `${MOCK_API_BASE_URL}/api/v1/consents/${MOCK_UID}`,
+      (req, res) => {
+        return new Promise(() => {})
+      }
+    )
     let err
     try {
-      new GovSingleConsent(MOCK_API_BASE_URL, jest.fn())
+      new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
       jest.advanceTimersByTime(1001)
     } catch (e) {
       err = e
@@ -152,25 +156,28 @@ describe('Consent Management', () => {
   it('should not timeout the consents if the request takes less than one second', () => {
     mockCookie()
     const response1 = ['a', 'b']
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/origins`, (req, res) =>
+    xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(`${MOCK_API_BASE_URL}/v1/consents/${MOCK_UID}`, (req, res) => {
-      return new Promise(() => {})
-    })
-    const consentInstance = new GovSingleConsent(MOCK_API_BASE_URL, jest.fn())
+    xhrMock.get(
+      `${MOCK_API_BASE_URL}/api/v1/consents/${MOCK_UID}`,
+      (req, res) => {
+        return new Promise(() => {})
+      }
+    )
+    const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     jest.advanceTimersByTime(500)
     expect(consentInstance.uid).toBe(MOCK_UID)
   })
 
   describe('[method]: isConsentPreferencesSet', () => {
     it('should return false if the cookie is not set', () => {
-      new GovSingleConsent(`${MOCK_API_BASE_URL}/v1/consents`, jest.fn())
+      new GovSingleConsent(jest.fn(), `${MOCK_API_BASE_URL}/api/v1/consents`)
       expect(GovSingleConsent.isConsentPreferencesSet()).toBe(false)
     })
 
     it('should return true if the cookie is set', () => {
-      new GovSingleConsent(`${MOCK_API_BASE_URL}/v1/consents`, jest.fn())
+      new GovSingleConsent(jest.fn(), `${MOCK_API_BASE_URL}/api/v1/consents`)
       mockCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, 'true')
       expect(GovSingleConsent.isConsentPreferencesSet()).toBe(true)
     })

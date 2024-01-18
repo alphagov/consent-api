@@ -29,6 +29,8 @@ interface CustomWindow extends Window {
 
 declare const window: CustomWindow
 
+export type Env = 'staging' | 'production'
+
 export class GovSingleConsent {
   static ACCEPT_ALL: Consents = {
     essential: true,
@@ -49,7 +51,10 @@ export class GovSingleConsent {
   cachedConsentsCookie: Consents | null = null
   urls: ApiV1
 
-  constructor(baseUrl: string, consentsUpdateCallback: ConsentsUpdateCallback) {
+  constructor(
+    consentsUpdateCallback: ConsentsUpdateCallback,
+    baseUrlOrEnv: Env | string
+  ) {
     /**
       Initialises _GovConsent object by performing the following:
       1. Removes 'uid' from URL.
@@ -64,7 +69,8 @@ export class GovSingleConsent {
       "error": if an error occurred, this is the error object. Otherwise, this is null.
       */
 
-    this.validateConstructorArguments(baseUrl, consentsUpdateCallback)
+    this.validateConstructorArguments(baseUrlOrEnv, consentsUpdateCallback)
+    const baseUrl = this.resolveBaseUrl(baseUrlOrEnv)
     this._consentsUpdateCallback = consentsUpdateCallback
     this.config = new GovConsentConfig(baseUrl)
     this.urls = new ApiV1(this.config.baseUrl)
@@ -74,13 +80,13 @@ export class GovSingleConsent {
   }
 
   validateConstructorArguments(
-    baseUrl: string,
+    baseUrlOrEnv: string | Env,
     consentsUpdateCallback: ConsentsUpdateCallback
   ) {
-    if (!baseUrl) {
+    if (!baseUrlOrEnv) {
       throw new Error('Argument baseUrl is required')
     }
-    if (typeof baseUrl !== 'string') {
+    if (typeof baseUrlOrEnv !== 'string') {
       throw new Error('Argument baseUrl must be a string')
     }
     if (!consentsUpdateCallback) {
@@ -89,6 +95,17 @@ export class GovSingleConsent {
     if (typeof consentsUpdateCallback !== 'function') {
       throw new Error('Argument consentsUpdateCallback must be a function')
     }
+  }
+
+  resolveBaseUrl(baseUrlOrEnv: string): string {
+    if (baseUrlOrEnv === 'staging') {
+      return 'https://gds-single-consent-staging.app'
+    } else if (baseUrlOrEnv === 'production') {
+      return 'https://consent-api-bgzqvpmbyq-nw.a.run.app'
+    }
+
+    // If not "staging" or "production", assume it's a custom URL
+    return baseUrlOrEnv
   }
 
   initialiseUIDandConsents() {
