@@ -2,10 +2,13 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 
+from types_ import EnvType
+
 
 @dataclass(kw_only=True)
 class ResourceConfig:
     stack: str
+    env: EnvType
     region: str
     project_id: str
     tag: str

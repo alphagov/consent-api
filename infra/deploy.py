@@ -12,15 +12,17 @@ from resources.database import Database
 from resources.iam import Iam
 from resources.load_balancers import LoadBalancers
 from ruamel.yaml import YAML
+from types_ import EnvType
 
 
-def deploy_service(tag: str) -> Callable:
+def deploy_service(tag: str, env: EnvType) -> Callable:
     """Wrapper around Pulumi inline program to pass in variables."""
 
     def _deploy() -> None:
         """Execute the inline Pulumi program."""
         config = ResourceConfig(
             tag=tag,
+            env=env,
             stack=pulumi.get_stack(),
             region=pulumi.Config("gcp").require("region"),
             project_id=pulumi.Config("gcp").require("project"),
@@ -50,17 +52,17 @@ def main():
 
     stack_name = args.stack
 
+    config_env: EnvType = "development" if stack_name.startswith("dev") else stack_name
+
     stack = pulumi.automation.create_or_select_stack(
         stack_name=stack_name,
         project_name="sde-consent-api",
-        program=deploy_service(args.tag),
+        program=deploy_service(args.tag, config_env),
     )
     print(f"Initialised stack {stack_name}")
 
     print("Installing plugins...")
     stack.workspace.install_plugin("gcp", "v6.67.0")
-
-    config_env = "development" if stack_name.startswith("dev") else stack_name
 
     config_file = Path(__file__).parent / "config" / f"Pulumi.{config_env}.yaml"
     config = YAML(typ="safe").load(config_file)

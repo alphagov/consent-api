@@ -19,30 +19,34 @@ class Iam(AbstractResource):
             display_name=f"{self.config.stack} Service Account",
         )
 
-        wi_pool = iam.WorkloadIdentityPool.get(
+        # WARNING: one wi_pool per environment, not stack
+        # Shared across stacks of the same environment
+        self.wi_pool = iam.WorkloadIdentityPool.get(
             "workload-identity-pool",
-            id=f"{self.config.stack}-github-wi-pool",
+            id=f"{self.config.env}-github-wi-pool",
         )
-        if not wi_pool:
-            wi_pool = iam.WorkloadIdentityPool(
+        if not self.wi_pool:
+            self.wi_pool = iam.WorkloadIdentityPool(
                 "workload-identity-pool",
-                display_name=f"{self.config.stack} Github WI pool",
-                workload_identity_pool_id=f"{self.config.stack}-github-wi-pool",
+                display_name=f"{self.config.env} Github WI pool",
+                workload_identity_pool_id=f"{self.config.env}-github-wi-pool",
             )
 
-        wi_provider = iam.WorkloadIdentityPoolProvider.get(
+        # WARNING: one wi_provider per environment, not stack
+        # Shared across stacks of the same environment
+        self.wi_provider = iam.WorkloadIdentityPoolProvider.get(
             "workload-identity-pool-provider",
             id=pulumi.Output.concat(
-                wi_pool.name,
-                f"/providers/{self.config.stack}-github-wi-provider",
+                self.wi_pool.name,
+                f"/providers/{self.config.env}-github-wi-provider",
             ),
         )
-        if not wi_provider:
-            wi_provider = iam.WorkloadIdentityPoolProvider(
-                "workload-identity-pool-provider",
+        if not self.wi_provider:
+            self.wi_provider = iam.WorkloadIdentityPoolProvider(
+                "workload-identity-self.pool-provider",
                 workload_identity_pool_provider_id=f"{self.config.stack}-github-wi-provider",
                 display_name=f"{self.config.stack} Github",
-                workload_identity_pool_id=wi_pool.workload_identity_pool_id,
+                workload_identity_pool_id=self.wi_pool.workload_identity_pool_id,
                 oidc={
                     "issuer_uri": "https://token.actions.githubusercontent.com",
                 },
@@ -56,7 +60,7 @@ class Iam(AbstractResource):
 
         github_oidc_member = pulumi.Output.format(
             "principalSet://iam.googleapis.com/{wi_pool}/attribute.repository/{repo}",
-            wi_pool=wi_pool.name,
+            wi_pool=self.wi_pool.name,
             repo="alphagov/consent-api",
         )
 
@@ -176,8 +180,8 @@ class Iam(AbstractResource):
             role=access_to_storage_role.name,
         )
 
-        self.workload_identity_provider = wi_provider.name
-        pulumi.export("workload_identity_provider", wi_provider.name)
+        self.workload_identity_provider = self.wi_provider.name
+        pulumi.export("workload_identity_provider", self.wi_provider.name)
 
         self.service_account = self.sa.email
         pulumi.export("service_account", self.sa.email)
