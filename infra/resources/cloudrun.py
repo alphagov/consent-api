@@ -72,7 +72,7 @@ class CloudRun(AbstractResource):
                         "image": f"gcr.io/{self.config.project_id}/consent-api:{self.config.tag}",  # noqa: E501
                         "envs": [
                             {"name": "DATABASE_URL", "value": self.db.db_url},
-                            {"name": "ENV", "value": self.config.stack},
+                            {"name": "ENV", "value": self.config.env},
                         ],
                     },
                 ],

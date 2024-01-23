@@ -26,6 +26,7 @@ class Iam(AbstractResource):
             id=f"{self.config.env}-github-wi-pool",
         )
         if not self.wi_pool:
+            print("No pool found, creating one")
             self.wi_pool = iam.WorkloadIdentityPool(
                 "workload-identity-pool",
                 display_name=f"{self.config.env} Github WI pool",
@@ -42,9 +43,10 @@ class Iam(AbstractResource):
             ),
         )
         if not self.wi_provider:
+            print("No pool provider, creating one")
             self.wi_provider = iam.WorkloadIdentityPoolProvider(
                 "workload-identity-self.pool-provider",
-                workload_identity_pool_provider_id=f"{self.config.stack}-github-wi-provider",
+                workload_identity_pool_provider_id=f"{self.config.env}-github-wi-provider",
                 display_name=f"{self.config.stack} Github",
                 workload_identity_pool_id=self.wi_pool.workload_identity_pool_id,
                 oidc={
@@ -142,7 +144,7 @@ class Iam(AbstractResource):
                 "compute.globalForwardingRules.get",
                 "compute.globalForwardingRules.delete",
             ],
-            role_id=f"{self.config.stack}_deploy",
+            role_id=f"{self._format_role(self.config.stack)}_deploy",
             title=f"{self.config.stack} deployment",
         )
 
@@ -169,7 +171,7 @@ class Iam(AbstractResource):
                 "storage.objects.get",
                 "storage.objects.list",
             ],
-            role_id=f"{self.config.stack}_pushToGCR",
+            role_id=f"{self._format_role(self.config.stack)}_pushToGCR",
             title=f"{self.config.stack} push to GCR",
         )
 
@@ -185,3 +187,6 @@ class Iam(AbstractResource):
 
         self.service_account = self.sa.email
         pulumi.export("service_account", self.sa.email)
+
+    def _format_role(self, role: str) -> str:
+        return role.replace(".", "_").replace("/", "_").replace("-", "_")

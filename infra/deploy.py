@@ -46,13 +46,20 @@ def main():
     parser.add_argument("--destroy", action="store_true")
     parser.add_argument("--preview", action="store_true")
     parser.add_argument("-s", "--stack", default="development")
-    parser.add_argument("-t", "--tag")
+    parser.add_argument("-t", "--tag", default="latest")
 
     args = parser.parse_args()
 
     stack_name = args.stack
 
-    config_env: EnvType = "development" if stack_name.startswith("dev") else stack_name
+    if stack_name.startswith("dev"):
+        config_env: EnvType = "development"
+    elif stack_name.startswith("staging"):
+        config_env: EnvType = "staging"
+    elif stack_name.startswith("prod"):
+        config_env: EnvType = "production"
+    else:
+        raise ValueError(f"Unknown stack name: {stack_name}")
 
     stack = pulumi.automation.create_or_select_stack(
         stack_name=stack_name,
@@ -67,12 +74,6 @@ def main():
     config_file = Path(__file__).parent / "config" / f"Pulumi.{config_env}.yaml"
     config = YAML(typ="safe").load(config_file)
     for name, value in config["config"].items():
-        print(
-            {
-                "name": name,
-                "value": value,
-            }
-        )
         stack.set_config(name, pulumi.automation.ConfigValue(value=value))
 
     stack.refresh(on_output=print)
