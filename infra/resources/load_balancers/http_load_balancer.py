@@ -12,13 +12,9 @@ class HTTPLoadBalancer(AbstractResource):
     ip_address: compute.GlobalAddress
 
     def _create(self):
-        http_path_matcher_name = self.resource_name(
-            f"{self.config.stack}--$--http--path-matcher", self.config.stack
-        )
+        http_path_matcher_name = f"{self.config.stack}--http--path-matcher"
         http_paths = compute.URLMap(
-            self.resource_name(
-                f"{self.config.stack}--$--http--load-balancer", self.config.stack
-            ),
+            f"{self.config.stack}--http--load-balancer",
             default_service=self.backend_service.id,
             host_rules=[
                 compute.URLMapHostRuleArgs(
@@ -43,9 +39,7 @@ class HTTPLoadBalancer(AbstractResource):
         )
 
         http_proxy = compute.TargetHttpProxy(
-            resource_name=self.resource_name(
-                f"{self.config.stack}--$--http-proxy", self.config.stack
-            ),
+            resource_name=f"{self.config.stack}--http-proxy",
             url_map=http_paths.id,
         )
 

@@ -14,15 +14,13 @@ class LoadBalancers(AbstractResource):
 
     def _create(self):
         self.ip_address = compute.GlobalAddress(
-            self.resource_name(f"{self.config.stack}--$--ipaddress", self.config.stack),
+            f"{self.config.stack}--ipaddress",
             address_type="EXTERNAL",
             project=self.config.project_id,
         )
 
         self.endpoint_group = compute.RegionNetworkEndpointGroup(
-            self.resource_name(
-                f"{self.config.stack}--$--endpoint-group", self.config.stack
-            ),
+            f"{self.config.stack}--endpoint-group",
             network_endpoint_type="SERVERLESS",
             region=self.config.region,
             cloud_run=compute.RegionNetworkEndpointGroupCloudRunArgs(
@@ -60,16 +58,12 @@ class LoadBalancers(AbstractResource):
         self.security_rules = [self.default_rule, self.rate_limiting_rule]
 
         self.security_policy = compute.SecurityPolicy(
-            resource_name=self.resource_name(
-                f"{self.config.stack}--$--security-policy", self.config.stack
-            ),
+            resource_name=f"{self.config.stack}--security-policy",
             rules=self.security_rules,
         )
 
         self.backend_service = compute.BackendService(
-            self.resource_name(
-                f"{self.config.stack}--$--backend-service", self.config.stack
-            ),
+            f"{self.config.stack}--backend-service",
             enable_cdn=False,
             connection_draining_timeout_sec=10,
             log_config=compute.BackendServiceLogConfigArgs(

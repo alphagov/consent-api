@@ -48,7 +48,7 @@ class Iam(AbstractResource):
                 "workload-identity-self.pool-provider",
                 workload_identity_pool_provider_id=f"{self.config.env}-github-wi-provider",
                 display_name=f"{self.config.stack} Github",
-                workload_identity_pool_id=self.wi_pool.workload_identity_pool_id,
+                workload_identity_pool_id=self.wi_pool.id,
                 oidc={
                     "issuer_uri": "https://token.actions.githubusercontent.com",
                 },
