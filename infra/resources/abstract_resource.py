@@ -5,18 +5,10 @@ from dataclasses import dataclass
 
 @dataclass(kw_only=True)
 class ResourceConfig:
-    env: str
     stack: str
     region: str
     project_id: str
     tag: str
-    branch: str | None
-
-    def __post_init__(self):
-        if self.branch:
-            self.name = f"consent-api--{self.branch}"
-        else:
-            self.name = "consent-api"
 
 
 @dataclass(kw_only=True)

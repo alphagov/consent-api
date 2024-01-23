@@ -31,14 +31,14 @@ class CloudRun(AbstractResource):
     service: cloudrun.Service | None = field(init=False, default=None)
 
     def _create(self):
-        if self.config.env == "production":
+        if self.config.stack == "production":
             self.prepare_production()
 
         self.traffics = self.configure_traffics()
 
         self.service_name = self.resource_name("$-consent-api", self.config.stack)
         self.service = cloudrun.Service(
-            self.config.name,
+            self.config.stack,
             name=self.service_name,
             location=self.config.region,
             template=self.make_template(),
@@ -48,7 +48,7 @@ class CloudRun(AbstractResource):
         # TODO only allow public access to production - other envs should be behind some
         # kind of auth
         cloudrun.IamBinding(
-            self.resource_name("$--public-access-binding", self.config.name),
+            self.resource_name("$--public-access-binding", self.config.stack),
             location=self.service.location,
             service=self.service.name,
             role="roles/run.invoker",
@@ -72,7 +72,7 @@ class CloudRun(AbstractResource):
                         "image": f"gcr.io/{self.config.project_id}/consent-api:{self.config.tag}",  # noqa: E501
                         "envs": [
                             {"name": "DATABASE_URL", "value": self.db.db_url},
-                            {"name": "ENV", "value": self.config.env},
+                            {"name": "ENV", "value": self.config.stack},
                         ],
                     },
                 ],
@@ -117,7 +117,7 @@ class CloudRun(AbstractResource):
     def configure_traffics(
         self,
     ) -> list[dict]:
-        if self.config.env != "production":
+        if self.config.stack != "production":
             return [
                 {
                     "latest_revision": True,

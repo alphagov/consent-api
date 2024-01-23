@@ -14,14 +14,14 @@ class LoadBalancers(AbstractResource):
 
     def _create(self):
         self.ip_address = compute.GlobalAddress(
-            self.resource_name(f"{self.config.env}--$--ipaddress", self.config.name),
+            self.resource_name(f"{self.config.stack}--$--ipaddress", self.config.stack),
             address_type="EXTERNAL",
             project=self.config.project_id,
         )
 
         self.endpoint_group = compute.RegionNetworkEndpointGroup(
             self.resource_name(
-                f"{self.config.env}--$--endpoint-group", self.config.name
+                f"{self.config.stack}--$--endpoint-group", self.config.stack
             ),
             network_endpoint_type="SERVERLESS",
             region=self.config.region,
@@ -61,14 +61,14 @@ class LoadBalancers(AbstractResource):
 
         self.security_policy = compute.SecurityPolicy(
             resource_name=self.resource_name(
-                f"{self.config.env}--$--security-policy", self.config.branch
+                f"{self.config.stack}--$--security-policy", self.config.stack
             ),
             rules=self.security_rules,
         )
 
         self.backend_service = compute.BackendService(
             self.resource_name(
-                f"{self.config.env}--$--backend-service", self.config.name
+                f"{self.config.stack}--$--backend-service", self.config.stack
             ),
             enable_cdn=False,
             connection_draining_timeout_sec=10,

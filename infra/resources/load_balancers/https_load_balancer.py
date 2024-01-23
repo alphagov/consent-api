@@ -13,11 +13,11 @@ class HTTPSLoadBalancer(AbstractResource):
 
     def _create(self):
         https_path_matcher_name = self.resource_name(
-            f"{self.config.stack}--$--https--path-matcher", self.config.name
+            f"{self.config.stack}--$--https--path-matcher", self.config.stack
         )
         https_paths = compute.URLMap(
             self.resource_name(
-                f"{self.config.env}--$--https--load-balancer", self.config.name
+                f"{self.config.stack}--$--https--load-balancer", self.config.stack
             ),
             default_service=self.backend_service.id,
             host_rules=[
@@ -41,7 +41,9 @@ class HTTPSLoadBalancer(AbstractResource):
         )
 
         certificate = compute.ManagedSslCertificate(
-            self.resource_name(f"{self.config.env}--$--certificate", self.config.name),
+            self.resource_name(
+                f"{self.config.stack}--$--certificate", self.config.stack
+            ),
             managed=compute.ManagedSslCertificateManagedArgs(
                 domains=[pulumi.Config("sde-consent-api").require("domain")],
             ),
@@ -49,14 +51,14 @@ class HTTPSLoadBalancer(AbstractResource):
 
         https_proxy = compute.TargetHttpsProxy(
             resource_name=self.resource_name(
-                f"{self.config.env}--$--https-proxy", self.config.name
+                f"{self.config.stack}--$--https-proxy", self.config.stack
             ),
             url_map=https_paths.id,
             ssl_certificates=[certificate.id],
         )
 
         compute.GlobalForwardingRule(
-            resource_name=f"{self.config.env}--https--forwarding-rule",
+            resource_name=f"{self.config.stack}--https--forwarding-rule",
             target=https_proxy.self_link,
             ip_address=self.ip_address.address,
             port_range="443",
