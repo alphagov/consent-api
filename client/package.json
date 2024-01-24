@@ -1,6 +1,6 @@
 {
   "name": "govuk-single-consent",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "main": "dist/singleconsent.cjs.js",
   "module": "dist/singleconsent.esm.js",
   "browser": "dist/singleconsent.iife.js",
@@ -12,7 +12,8 @@
     "test": "jest",
     "format": "prettier --write .",
     "lint": "eslint . --fix",
-    "build": "npx rollup --config rollup.config.mjs"
+    "build": "npx rollup --config rollup.config.mjs",
+    "publish-package": "sh ./scripts/publish-package.sh"
   },
   "files": [
     "dist/*"
