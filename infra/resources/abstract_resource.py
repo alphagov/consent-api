@@ -2,21 +2,16 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 
+from types_ import EnvType
+
 
 @dataclass(kw_only=True)
 class ResourceConfig:
-    env: str
     stack: str
+    env: EnvType
     region: str
     project_id: str
     tag: str
-    branch: str | None
-
-    def __post_init__(self):
-        if self.branch:
-            self.name = f"consent-api--{self.branch}"
-        else:
-            self.name = "consent-api"
 
 
 @dataclass(kw_only=True)

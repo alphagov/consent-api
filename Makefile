@@ -126,11 +126,11 @@ infra-destroy:
 ## deploy: Deploy the service to an environment
 .PHONY: deploy
 deploy:
-	python infra/deploy_service.py -e $(ENV) $(PREVIEW) -b main
+	python infra/deploy.py -e $(ENV) $(PREVIEW) -b main
 
 .PHONY: destroy-deployment
 destroy-deployment:
-	python infra/deploy_service.py --destroy -e $(ENV) $(PREVIEW) -b main
+	python infra/deploy.py --destroy -e $(ENV) $(PREVIEW) -b main
 
 ## dist: Build client distribution file
 .PHONY: dist

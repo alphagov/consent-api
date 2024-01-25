@@ -12,20 +12,26 @@ from resources import AbstractResource
 @dataclass
 class Database(AbstractResource):
     def _create(self) -> None:
-        self.db_instance = sql.DatabaseInstance.get(
-            f"{self.config.env}-db-instance",
-            self.get_db_instance_id(self.config.env),
+        self.db_deletion_protected = (
+            pulumi.Config("sde-consent-api").require("db-deletion-protected") == "true"
+        )
+
+        self.db_instance = sql.DatabaseInstance(
+            f"{self.config.stack}-db-instance",
+            database_version=pulumi.Config().require("db-version"),
+            deletion_protection=self.db_deletion_protected,
+            settings={"tier": pulumi.Config().require("db-tier")},
         )
 
         self.db = sql.Database(
-            self.resource_name("$--db", self.config.name),
-            name=self.config.name,
+            self.resource_name("$--db", self.config.stack),
+            name=self.config.stack,
             instance=self.db_instance.name,
         )
 
         self.db_user = sql.User(
-            self.resource_name("$--db-user", self.config.name),
-            name=self.config.name,
+            self.resource_name("$--db-user", self.config.stack),
+            name=self.config.stack,
             instance=self.db_instance.name,
             password=self.generate_password(),
         )

@@ -110,7 +110,7 @@ jobs:
       - run: poetry install --only infra
 
       - run: |
-          poetry run python infra/deploy_service.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
+          poetry run python infra/deploy.py --env ${ENV} ${BRANCH} ${TAG} ${PREVIEW}
         env:
           ENV: ${{ inputs.environment }}
           BRANCH: ${{ inputs.is_branch && format('--branch {0}', inputs.branch_name) || '' }}

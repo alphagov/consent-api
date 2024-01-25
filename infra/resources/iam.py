@@ -1,69 +1,54 @@
-"""Pulumi inline program to deploy a stack."""
-
-import argparse
-from collections.abc import Callable
-from pathlib import Path
+from dataclasses import dataclass
 
 import pulumi
 from pulumi_gcp import compute
 from pulumi_gcp import iam
 from pulumi_gcp import projects
 from pulumi_gcp import serviceaccount
-from pulumi_gcp import sql
 from pulumi_gcp import storage
-from ruamel.yaml import YAML
 
-# Setup the project before deployments
-# DB instance
-# Github deploy service account with Workload Identity Pools
-# IAM permissions
+from resources import AbstractResource
 
 
-def setup_env(env: str) -> Callable:
-    """Wrapper around Pulumi inline program to pass in variables."""
-
-    def _setup() -> None:
-        """Execute the inline Pulumi program."""
-        db_deletion_protected = (
-            pulumi.Config("sde-consent-api").require("db-deletion-protected") == "true"
-        )
-        sql.DatabaseInstance(
-            f"{env}-db-instance",
-            database_version=pulumi.Config().require("db-version"),
-            deletion_protection=db_deletion_protected,
-            settings={"tier": pulumi.Config().require("db-tier")},
-        )
-
-        sa = serviceaccount.Account(
+@dataclass
+class Iam(AbstractResource):
+    def _create(self) -> None:
+        self.sa = serviceaccount.Account(
             "service-account",
-            account_id=f"{env}",
-            display_name=f"{env.title()} Service Account",
+            account_id=f"{self.config.stack}",
+            display_name=f"{self.config.stack} Service Account",
         )
 
-        wi_pool = iam.WorkloadIdentityPool.get(
+        # WARNING: one wi_pool per environment, not stack
+        # Shared across stacks of the same environment
+        self.wi_pool = iam.WorkloadIdentityPool.get(
             "workload-identity-pool",
-            id=f"{env}-github-wi-pool",
+            id=f"{self.config.env}-github-wi-pool",
         )
-        if not wi_pool:
-            wi_pool = iam.WorkloadIdentityPool(
+        if not self.wi_pool:
+            print("No pool found, creating one")
+            self.wi_pool = iam.WorkloadIdentityPool(
                 "workload-identity-pool",
-                display_name=f"{env.title()} Github WI pool",
-                workload_identity_pool_id=f"{env}-github-wi-pool",
+                display_name=f"{self.config.env} Github WI pool",
+                workload_identity_pool_id=f"{self.config.env}-github-wi-pool",
             )
 
-        wi_provider = iam.WorkloadIdentityPoolProvider.get(
+        # WARNING: one wi_provider per environment, not stack
+        # Shared across stacks of the same environment
+        self.wi_provider = iam.WorkloadIdentityPoolProvider.get(
             "workload-identity-pool-provider",
             id=pulumi.Output.concat(
-                wi_pool.name,
-                f"/providers/{env}-github-wi-provider",
+                self.wi_pool.name,
+                f"/providers/{self.config.env}-github-wi-provider",
             ),
         )
-        if not wi_provider:
-            wi_provider = iam.WorkloadIdentityPoolProvider(
-                "workload-identity-pool-provider",
-                workload_identity_pool_provider_id=f"{env}-github-wi-provider",
-                display_name=f"{env.title()} Github",
-                workload_identity_pool_id=wi_pool.workload_identity_pool_id,
+        if not self.wi_provider:
+            print("No pool provider, creating one")
+            self.wi_provider = iam.WorkloadIdentityPoolProvider(
+                "workload-identity-self.pool-provider",
+                workload_identity_pool_provider_id=f"{self.config.env}-github-wi-provider",
+                display_name=f"{self.config.stack} Github",
+                workload_identity_pool_id=self.wi_pool.id,
                 oidc={
                     "issuer_uri": "https://token.actions.githubusercontent.com",
                 },
@@ -77,7 +62,7 @@ def setup_env(env: str) -> Callable:
 
         github_oidc_member = pulumi.Output.format(
             "principalSet://iam.googleapis.com/{wi_pool}/attribute.repository/{repo}",
-            wi_pool=wi_pool.name,
+            wi_pool=self.wi_pool.name,
             repo="alphagov/consent-api",
         )
 
@@ -85,17 +70,17 @@ def setup_env(env: str) -> Callable:
             "github-oidc-service-account-binding",
             members=[github_oidc_member],
             role="roles/iam.workloadIdentityUser",
-            service_account_id=sa.name,
+            service_account_id=self.sa.name,
         )
 
         serviceaccount.IAMBinding(
             "cloudrun-binding",
-            members=[sa.member],
+            members=[self.sa.member],
             role="roles/iam.serviceAccountUser",
             service_account_id=compute.get_default_service_account().name,
         )
 
-        deployment_role = projects.IAMCustomRole(
+        self.deployment_role = projects.IAMCustomRole(
             "deployment-role",
             permissions=[
                 "cloudsql.databases.create",
@@ -159,20 +144,20 @@ def setup_env(env: str) -> Callable:
                 "compute.globalForwardingRules.get",
                 "compute.globalForwardingRules.delete",
             ],
-            role_id=f"{env}_deploy",
-            title=f"{env.title()} deployment",
+            role_id=f"{self._format_role(self.config.stack)}_deploy",
+            title=f"{self.config.stack} deployment",
         )
 
         projects.IAMMember(
             "project-deployer",
-            member=sa.member,
+            member=self.sa.member,
             project="sde-consent-api",
-            role=deployment_role.name,
+            role=self.deployment_role.name,
         )
 
         projects.IAMMember(
             "project-cloudsql",
-            member=sa.member,
+            member=self.sa.member,
             project="sde-consent-api",
             role="roles/cloudsql.admin",
         )
@@ -186,77 +171,22 @@ def setup_env(env: str) -> Callable:
                 "storage.objects.get",
                 "storage.objects.list",
             ],
-            role_id=f"{env}_pushToGCR",
-            title=f"{env.title()} push to GCR",
+            role_id=f"{self._format_role(self.config.stack)}_pushToGCR",
+            title=f"{self.config.stack} push to GCR",
         )
 
         storage.BucketIAMBinding(
             "gcr-binding",
             bucket=storage.get_bucket("artifacts.sde-consent-api.appspot.com").name,
-            members=[sa.member],
+            members=[self.sa.member],
             role=access_to_storage_role.name,
         )
 
-        pulumi.export("workload_identity_provider", wi_provider.name)
-        pulumi.export("service_account", sa.email)
+        self.workload_identity_provider = self.wi_provider.name
+        pulumi.export("workload_identity_provider", self.wi_provider.name)
 
-    return _setup
+        self.service_account = self.sa.email
+        pulumi.export("service_account", self.sa.email)
 
-
-def main():
-    """Spin up (or down) the environment."""
-    parser = argparse.ArgumentParser(description="Spin up an environment")
-    parser.add_argument(
-        "--destroy", action="store_true", help="Destroy the environment"
-    )
-    parser.add_argument(
-        "--preview",
-        action="store_true",
-        help=(
-            "Do not actually create or update the environment, but preview what "
-            "would be done"
-        ),
-    )
-    parser.add_argument(
-        "-e", "--env", default="development", help="Name of the environment"
-    )
-
-    args = parser.parse_args()
-
-    stack_name = args.env
-
-    stack = pulumi.automation.create_or_select_stack(
-        stack_name=stack_name,
-        project_name="sde-consent-api",
-        program=setup_env(args.env),
-        work_dir=Path(__file__).parent.parent,
-    )
-    print(f"Initialised stack {stack_name}")
-
-    print("Installing plugins...")
-    stack.workspace.install_plugin("gcp", "v6.67.0")
-
-    config_file = Path(__file__).parent / "config" / f"Pulumi.{args.env}.yaml"
-    config = YAML(typ="safe").load(config_file)
-    for name, value in config["config"].items():
-        stack.set_config(name, pulumi.automation.ConfigValue(value=value))
-
-    stack.refresh(on_output=print)
-
-    result = None
-    if args.destroy:
-        print("Destroying stack...")
-        stack.destroy(on_output=print)
-
-    elif args.preview:
-        stack.preview(on_output=print)
-
-    else:
-        print("Updating stack...")
-        result = stack.up(on_output=print)
-        for name, output in result.outputs.items():
-            print(f"{name}: {output.value}")
-
-
-if __name__ == "__main__":
-    main()
+    def _format_role(self, role: str) -> str:
+        return role.replace(".", "_").replace("/", "_").replace("-", "_")
