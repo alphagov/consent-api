@@ -1,11 +1,11 @@
 {
   "name": "govuk-single-consent",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "main": "dist/singleconsent.cjs.js",
   "module": "dist/singleconsent.esm.js",
   "browser": "dist/singleconsent.iife.js",
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=18.0.0"
   },
   "description": "Client code for the Cookie Consent Sharing API",
   "scripts": {
