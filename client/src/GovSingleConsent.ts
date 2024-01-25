@@ -101,7 +101,7 @@ export class GovSingleConsent {
     if (baseUrlOrEnv === 'staging') {
       return 'https://gds-single-consent-staging.app'
     } else if (baseUrlOrEnv === 'production') {
-      return 'https://consent-api-bgzqvpmbyq-nw.a.run.app'
+      return 'https://gds-single-consent.app'
     }
 
     // If not "staging" or "production", assume it's a custom URL
