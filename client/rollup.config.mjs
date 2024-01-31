@@ -1,11 +1,13 @@
 import typescript from '@rollup/plugin-typescript'
 import terser from '@rollup/plugin-terser'
+import resolve from '@rollup/plugin-node-resolve'
+import { babel } from '@rollup/plugin-babel'
 
 const baseConfig = {
   input: 'src/index.ts',
 }
 
-const bundleConfig = [
+let bundleConfig = [
   // ES Module format
   {
     ...baseConfig,
@@ -43,5 +45,28 @@ const bundleConfig = [
     plugins: [typescript({ tsconfig: './tsconfig.es5.json' }), terser()],
   },
 ]
+
+bundleConfig = bundleConfig.map((config) => {
+  config.plugins.unshift(
+    // babel({
+    //   babelHelpers: 'bundled',
+    //   extensions: ['.js', '.ts'],
+    // })
+    babel({
+      babelHelpers: 'bundled',
+      presets: [
+        [
+          '@babel/preset-env',
+          {
+            useBuiltIns: 'usage',
+            corejs: 3,
+          },
+        ],
+      ],
+    })
+  )
+  config.plugins.unshift(resolve())
+  return config
+})
 
 export default bundleConfig
