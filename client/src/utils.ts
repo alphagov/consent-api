@@ -1,6 +1,6 @@
 // Polyfills
-// import 'core-js/stable'
-import 'core-js/features/array/find'
+import 'core-js/stable'
+// import 'core-js/features/array/find'
 
 export function request(url, options, onSuccess) {
   var req = new XMLHttpRequest()

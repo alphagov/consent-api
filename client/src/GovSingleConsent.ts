@@ -1,6 +1,3 @@
-// Polyfills
-import 'core-js'
-
 import { GovConsentConfig } from './GovConsentConfig'
 import ApiV1 from './ApiV1'
 import {
