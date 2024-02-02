@@ -134,22 +134,19 @@ export class GovSingleConsent {
   fetchAndUpdateConsents() {
     const consentsUrl = this.urls.consents(this.uid)
 
-    try {
-      request(
-        consentsUrl,
-        { timeout: 1000 },
-        ({ status: consents }: { status: Consents }) => {
-          this.updateBrowserConsents(consents)
-          this._consentsUpdateCallback(
-            consents,
-            GovSingleConsent.isConsentPreferencesSet(),
-            null
-          )
-        }
-      )
-    } catch (error) {
-      this.defaultToRejectAllConsents(error)
-    }
+    request(
+      consentsUrl,
+      { timeout: 1000 },
+      ({ status: consents }: { status: Consents }) => {
+        this.updateBrowserConsents(consents)
+        this._consentsUpdateCallback(
+          consents,
+          GovSingleConsent.isConsentPreferencesSet(),
+          null
+        )
+      },
+      (error) => this.defaultToRejectAllConsents(error)
+    )
   }
 
   getCurrentUID(): string | null | undefined {
@@ -175,20 +172,16 @@ export class GovSingleConsent {
     }
 
     const url = this.urls.consents(this.uid)
-    try {
-      request(
-        url,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'status='.concat(JSON.stringify(consents)),
-        },
-        successCallback
-      )
-    } catch (error) {
-      // The request failed. For security reasons, we assume the user has rejected all cookies.
-      this.defaultToRejectAllConsents(error)
-    }
+    request(
+      url,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'status='.concat(JSON.stringify(consents)),
+      },
+      successCallback,
+      (error) => this.defaultToRejectAllConsents(error)
+    )
   }
 
   private defaultToRejectAllConsents(error?: Error): void {
@@ -241,7 +234,10 @@ export class GovSingleConsent {
       this.urls.origins(),
       {},
       // Update links with UID
-      (origins) => this.addUIDtoCrossOriginLinks(origins, currentUID)
+      (origins) => this.addUIDtoCrossOriginLinks(origins, currentUID),
+      (error) => {
+        throw error
+      }
     )
   }
 

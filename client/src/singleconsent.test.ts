@@ -144,13 +144,16 @@ describe('Consent Management', () => {
       }
     )
     let err
-    try {
-      new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
-      jest.advanceTimersByTime(1001)
-    } catch (e) {
-      err = e
-    }
-    expect(err.message).toMatch(/timed out/)
+    const mockCallback = jest.fn()
+
+    new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+    jest.advanceTimersByTime(1001)
+    expect(mockCallback).toHaveBeenCalledWith(
+      { campaigns: false, essential: true, settings: false, usage: false },
+      true,
+      expect.any(Error)
+    )
+    expect(mockCallback.mock.calls[0][2].message).toMatch(/timed out/)
   })
 
   it('should not timeout the consents if the request takes less than one second', () => {

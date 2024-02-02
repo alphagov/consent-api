@@ -1,4 +1,4 @@
-export function request(url, options, onSuccess) {
+export function request(url, options, onSuccess, onError) {
   var req = new XMLHttpRequest()
   var isTimeout = false
   options = options || {}
@@ -16,13 +16,15 @@ export function request(url, options, onSuccess) {
           if (isTimeout) {
             return
           }
-          throw new Error(
-            'Request to ' + url + ' failed with status: ' + req.status
+          onError(
+            new Error(
+              'Request to ' + url + ' failed with status: ' + req.status
+            )
           )
         }, 500)
       } else {
-        throw new Error(
-          'Request to ' + url + ' failed with status: ' + req.status
+        onError(
+          new Error('Request to ' + url + ' failed with status: ' + req.status)
         )
       }
     }
@@ -34,7 +36,7 @@ export function request(url, options, onSuccess) {
 
   req.ontimeout = function () {
     isTimeout = true
-    throw new Error('Request to ' + url + ' timed out')
+    onError(new Error('Request to ' + url + ' timed out'))
   }
 
   req.open(options.method || 'GET', url, true)
