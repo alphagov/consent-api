@@ -12,6 +12,7 @@ import {
   isCrossOrigin,
   getOriginFromLink,
   getCookie,
+  validateConsentObject
 } from './utils'
 
 const MOCK_API_BASE_URL = 'https://test-url.com'
@@ -445,5 +446,28 @@ describe('origin', function () {
       link.href = url
       expect(getOriginFromLink(link)).toEqual(expected)
     })
+  })
+})
+
+describe("validateConsentObject",  () => {
+  it("should return true if the object is valid", () => {
+    const response = { essential: true, settings: false, usage: false, campaigns: false }
+    expect(validateConsentObject(response)).toBe(true)
+  })
+  it("should return false if the object is not an object", () => {
+    const response = 'not an object'
+    expect(validateConsentObject(response)).toBe(false)
+  })
+  it("should return false if the object is null", () => {
+    const response = null
+    expect(validateConsentObject(response)).toBe(false)
+  })
+  it("should return false if the object is missing keys", () => {
+    const response = { essential: true, usage: false, campaigns: false }
+    expect(validateConsentObject(response)).toBe(false)
+  })
+  it("should return false if the object has extra keys", () => {
+    const response = { essential: true, settings: false, usage: false, campaigns: false, extra: true }
+    expect(validateConsentObject(response)).toBe(false)
   })
 })

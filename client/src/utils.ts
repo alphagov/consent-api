@@ -1,57 +1,67 @@
 const DEFAULT_TIMEOUT = 10000
 
 export function request(url, options, onSuccess, onError) {
-  var req = new XMLHttpRequest()
-  var isTimeout = false
-  options = options || {}
+  try {
+    var req = new XMLHttpRequest()
+    var isTimeout = false
+    options = options || {}
 
-  req.onreadystatechange = function () {
-    if (req.readyState === req.DONE) {
-      if (req.status >= 200 && req.status < 400) {
-        onSuccess(JSON.parse(req.responseText))
-      } else if (req.status === 0 && req.timeout > 0) {
-        // Possible timeout, waiting for ontimeout event
-        // Timeout will throw a status = 0 request
-        // onreadystatechange preempts ontimeout
-        // And we can't know for sure at this stage if it's a timeout
-        setTimeout(function () {
-          if (isTimeout) {
-            return
+    req.onreadystatechange = function () {
+      if (req.readyState === req.DONE) {
+        if (req.status >= 200 && req.status < 400) {
+          let jsonResponse;
+          try {
+            jsonResponse = JSON.parse(req.responseText)
+          } catch (error) {
+            return onError(error)
           }
-          onError(
-            new Error(
-              'Request to ' + url + ' failed with status: ' + req.status
+          onSuccess(JSON.parse(req.responseText))
+        } else if (req.status === 0 && req.timeout > 0) {
+          // Possible timeout, waiting for ontimeout event
+          // Timeout will throw a status = 0 request
+          // onreadystatechange preempts ontimeout
+          // And we can't know for sure at this stage if it's a timeout
+          setTimeout(function () {
+            if (isTimeout) {
+              return
+            }
+            return onError(
+              new Error(
+                'Request to ' + url + ' failed with status: ' + req.status
+              )
             )
+          }, 500)
+        } else {
+          return onError(
+            new Error('Request to ' + url + ' failed with status: ' + req.status)
           )
-        }, 500)
-      } else {
-        onError(
-          new Error('Request to ' + url + ' failed with status: ' + req.status)
-        )
+        }
       }
     }
+
+    req.open(options.method || 'GET', url, true)
+
+    if (options.timeout) {
+      req.timeout = options.timeout
+    } else {
+      req.timeout = DEFAULT_TIMEOUT
+    }
+
+    req.ontimeout = function () {
+      isTimeout = true
+      return onError(new Error('Request to ' + url + ' timed out'))
+    }
+
+
+    var headers = options.headers || {}
+    for (var name in headers) {
+      req.setRequestHeader(name, headers[name])
+    }
+
+    req.send(options.body || null)
+  } catch (error) {
+    return onError(error)
   }
-
-  req.open(options.method || 'GET', url, true)
-
-
-  if (options.timeout) {
-    req.timeout = options.timeout
-  } else {
-    req.timeout = DEFAULT_TIMEOUT
-  }
-
-  req.ontimeout = function () {
-    isTimeout = true
-    onError(new Error('Request to ' + url + ' timed out'))
-  }
-
-  var headers = options.headers || {}
-  for (var name in headers) {
-    req.setRequestHeader(name, headers[name])
-  }
-
-  req.send(options.body || null)
 }
 
 export function addUrlParameter(url, name, value) {
@@ -157,4 +167,41 @@ export function getCookie(name: string, defaultValue?: string) {
   }
 
   return defaultValue || null
+}
+
+export function validateConsentObject(response) {
+  try {
+    if (typeof response !== 'object' || response === null) {
+      return false;
+    }
+
+    var expectedKeys = ['essential', 'settings', 'usage', 'campaigns'];
+    var allKeysPresent = true;
+    var responseKeysCount = 0;
+
+    for (var i = 0; i < expectedKeys.length; i++) {
+      if (!(expectedKeys[i] in response)) {
+        allKeysPresent = false;
+        break;
+      }
+    }
+
+    var allValuesBoolean = true;
+    for (var key in response) {
+      if (response.hasOwnProperty(key)) {
+        responseKeysCount++;
+        if (typeof response[key] !== 'boolean') {
+          allValuesBoolean = false;
+          break;
+        }
+      }
+    }
+
+    var correctNumberOfKeys = responseKeysCount === expectedKeys.length;
+
+  } catch (err) {
+    return false;
+  }
+
+  return allKeysPresent && allValuesBoolean && correctNumberOfKeys;
 }
