@@ -18,7 +18,7 @@ services:
       timeout: 2s
       retries: 10
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_PASSWORD: postgres
 
@@ -55,7 +55,9 @@ services:
     entrypoint: ["make", "run"]
     environment:
       PORT: "80"
-      CONSENT_API_ORIGIN: "http://localhost:8000"
+      # CONSENT_API_ORIGIN: "http://consent-api"
+      # CONSENT_API_ORIGIN: "http://localhost:3000"
+      CONSENT_API_ORIGIN: "https://expired.badssl.com"
       OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-2"
       OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8002"
       ENV: ${ENV}
@@ -77,6 +79,21 @@ services:
       OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-1"
       OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8001"
       ENV: ${ENV}
+
+
+  express-app:
+    container_name: express-app
+    networks:
+      - e2e
+    build:
+      context: ./express-app
+      dockerfile: .Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./express-app/main.js:/usr/src/app/main.js"
+
+
 
   selenoid-ui:
     profiles:
