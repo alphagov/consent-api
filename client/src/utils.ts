@@ -135,7 +135,15 @@ export function setCookie({ name, value, lifetime }: setCookieParams) {
 export function getCookie(name: string, defaultValue?: string) {
   name += '='
   const cookies = document.cookie.split(';')
-  const cookie = cookies.find((cookie) => cookie.trim().startsWith(name))
+  let cookie = null
+
+  for (let i = 0; i < cookies.length; i++) {
+    let currentCookie = cookies[i].trim()
+    if (currentCookie.indexOf(name) === 0) {
+      cookie = currentCookie
+      break
+    }
+  }
 
   if (cookie) {
     return decodeURIComponent(cookie.trim().slice(name.length))
