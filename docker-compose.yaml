@@ -41,13 +41,10 @@ services:
       ENV: "${ENV}"
       FLAG_FIXTURES: "True"
 
-  dummy-service-1:
-    container_name: dummy-service-1
+  dummy-base: &dummy-service-base
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
-    ports:
-      - "8001:80"
     volumes:
       - "./client:/home/app/client"
       - "./Makefile:/home/app/Makefile"
@@ -55,31 +52,54 @@ services:
     entrypoint: ["make", "run"]
     environment:
       PORT: "80"
-      # CONSENT_API_ORIGIN: "http://consent-api"
-      CONSENT_API_ORIGIN: "http://localhost:8000"
-      # CONSENT_API_ORIGIN: "http://localhost:3000"
-      # CONSENT_API_ORIGIN: "https://expired.badssl.com"
-      OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-2"
-      OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8002"
       ENV: ${ENV}
+  
+  dummy-service-1:
+    <<: *dummy-service-base
+    profiles:
+      - "test"
+      - "test-ui"
+      - "debug"
+    container_name: dummy-service-1
+    environment:
+      CONSENT_API_ORIGIN: "http://consent-api"
+      OTHER_SERVICE_ORIGIN: "http://dummy-service-2"
+  
 
-  dummy-service-2:
-    container_name: dummy-service-2
-    networks:
-      - e2e
-    image: "${DOCKER_IMAGE}"
+  dummy-service-1-local:
+    <<: *dummy-service-base
+    profiles:
+      - "local"
     ports:
-      - "8002:80"
-    volumes:
-      - "./client:/home/app/client"
-      - "./consent_api:/home/app/consent_api"
-    entrypoint: ["make", "run"]
+      - "8001:80"
+    container_name: dummy-service-1-local
     environment:
       CONSENT_API_ORIGIN: "http://localhost:8000"
-      PORT: "80"
-      OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-1"
-      OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8001"
-      ENV: ${ENV}
+      OTHER_SERVICE_ORIGIN: "http://localhost:8002"
+
+
+  dummy-service-2:
+    <<: *dummy-service-base
+    profiles:
+      - "test"
+      - "test-ui"
+      - "debug"
+    container_name: dummy-service-2
+    environment:
+      CONSENT_API_ORIGIN: "http://consent-api"
+      OTHER_SERVICE_ORIGIN: "http://dummy-service-1"
+  
+
+  dummy-service-2-local:
+    <<: *dummy-service-base
+    profiles:
+      - "local"
+    ports:
+      - "8002:80"
+    container_name: dummy-service-2-local
+    environment:
+      CONSENT_API_ORIGIN: "http://localhost:8000"
+      OTHER_SERVICE_ORIGIN: "http://localhost:8001"
 
 
   # express-app:
@@ -95,7 +115,9 @@ services:
   #     - "./express-app:/usr/src/app"
 
 
-  playwright:
+  playwright: &playwright
+    profiles:
+      - "test"
     container_name: playwright
     networks:
       - e2e
@@ -105,69 +127,26 @@ services:
     volumes:
       - "./e2e-tests:/home/app"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-    entrypoint: ["npx", "playwright", "test", "--ui"]
+    entrypoint: ["npx", "playwright", "test"]
     environment:
       DISPLAY: host.docker.internal:0
-    depends_on:
-      - dummy-service-1
-      - consent-api
-
-  selenoid-ui:
-    profiles:
-      - "testing"
-    container_name: selenoid-ui
-    image: "aerokube/selenoid-ui:latest-release"
-    networks:
-      - e2e
-    links:
-      - selenoid
-    command: ["--selenoid-uri", "http://selenoid:4444"]
-    ports:
-      - "8080:8080"
-
-  selenoid:
-    profiles:
-      - "testing"
-    container_name: selenoid
-    networks:
-      - e2e
-    image: "aerokube/selenoid:latest-release"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./selenoid/config:/etc/selenoid/"
-      - "$PWD/selenoid/opt:/opt/selenoid/video"
-      - "$PWD/selenoid/opt:/opt/selenoid/logs"
-    environment:
-      OVERRIDE_VIDEO_OUTPUT_DIR: "$PWD/selenoid/opt"
-    command: ["-service-startup-timeout", "1m", "-container-network", "e2e"]
-    ports:
-      - "4444:4444"
-
-  test:
-    profiles:
-      - "testing"
-    container_name: test
-    networks:
-      - e2e
-    image: "${DOCKER_IMAGE}"
-    volumes:
-      - "$PWD/selenoid/opt:/home/app/logs"
-      - "$PWD/Makefile:/home/app/Makefile"
-      - "$PWD/consent_api/tests:/home/app/consent_api/tests"
-      - "$PWD/.pytest_cache:/home/app/.pytest_cache"
-    entrypoint: ["make", "test-all"]
-    # entrypoint: ["tail", "-f", "/dev/null"]
-    environment:
-      ENV: ${ENV}
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
-      E2E_TEST_CONSENT_API_URL: "http://consent-api"
-      E2E_TEST_DUMMY_SERVICE_1_URL: "http://dummy-service-1"
-      E2E_TEST_DUMMY_SERVICE_2_URL: "http://dummy-service-2"
-      SELENIUM_DRIVER: remote
-      SELENIUM_REMOTE_URL: http://selenoid:4444/wd/hub/
-      SPLINTER_REMOTE_BROWSER_VERSION: "${SPLINTER_REMOTE_BROWSER_VERSION}"
     depends_on:
       - consent-api
       - dummy-service-1
       - dummy-service-2
-      - selenoid
+  
+
+  playwright-ui:
+    <<: *playwright
+    profiles:
+      - "test-ui"
+    container_name: playwright-ui
+    entrypoint: ["npx", "playwright", "test", "--debug"]
+
+
+  playwright-debug:
+    <<: *playwright
+    profiles:
+      - "debug"
+    container_name: playwright-debug
+    entrypoint: ["npx", "playwright", "test", "--debug"]

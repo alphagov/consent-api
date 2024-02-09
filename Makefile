@@ -149,3 +149,25 @@ help: Makefile
 .PHONY: generate-openapi
 generate-openapi:
 	python scripts/generate_openapi.py
+
+
+
+# ------------------------------------------------------------
+
+.PHONY: run
+a-run:
+	docker-compose --profile local up
+
+.PHONY: run-e2e
+a-run-e2e:
+	docker-compose --profile test up
+
+.PHONY: run-e2e-ui
+a-run-e2e-ui:
+	docker-compose --profile test-ui up
+
+.PHONY: run-e2e-debug
+a-run-e2e-debug:
+	docker-compose --profile debug up
+
+
