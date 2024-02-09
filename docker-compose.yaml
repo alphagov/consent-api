@@ -104,7 +104,13 @@ services:
       dockerfile: .Dockerfile
     volumes:
       - "./e2e-tests:/home/app"
-    entrypoint: ["npx", "playwright", "test"]
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+    entrypoint: ["npx", "playwright", "test", "--ui"]
+    environment:
+      DISPLAY: host.docker.internal:0
+    depends_on:
+      - dummy-service-1
+      - consent-api
 
   selenoid-ui:
     profiles:
