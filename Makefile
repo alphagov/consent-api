@@ -169,5 +169,3 @@ a-run-e2e-ui:
 .PHONY: run-e2e-debug
 a-run-e2e-debug:
 	docker-compose --profile debug up
-
-

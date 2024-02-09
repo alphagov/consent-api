@@ -41,7 +41,12 @@ services:
       ENV: "${ENV}"
       FLAG_FIXTURES: "True"
 
-  dummy-base: &dummy-service-base
+  dummy-service-1:
+    container_name: dummy-service-1
+    profiles:
+      - "test"
+      - "test-ui"
+      - "debug"
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
@@ -51,55 +56,71 @@ services:
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
-      PORT: "80"
-      ENV: ${ENV}
-  
-  dummy-service-1:
-    <<: *dummy-service-base
-    profiles:
-      - "test"
-      - "test-ui"
-      - "debug"
-    container_name: dummy-service-1
-    environment:
       CONSENT_API_ORIGIN: "http://consent-api"
       OTHER_SERVICE_ORIGIN: "http://dummy-service-2"
-  
+      PORT: "80"
+      ENV: ${ENV}
 
   dummy-service-1-local:
-    <<: *dummy-service-base
+    container_name: dummy-service-1-local
     profiles:
       - "local"
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
     ports:
       - "8001:80"
-    container_name: dummy-service-1-local
+    volumes:
+      - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
+    entrypoint: ["make", "run"]
     environment:
       CONSENT_API_ORIGIN: "http://localhost:8000"
       OTHER_SERVICE_ORIGIN: "http://localhost:8002"
-
-
+      PORT: "80"
+      ENV: ${ENV}
+  
+  
   dummy-service-2:
-    <<: *dummy-service-base
+    container_name: dummy-service-2
     profiles:
       - "test"
       - "test-ui"
       - "debug"
-    container_name: dummy-service-2
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
+    volumes:
+      - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
+    entrypoint: ["make", "run"]
     environment:
       CONSENT_API_ORIGIN: "http://consent-api"
       OTHER_SERVICE_ORIGIN: "http://dummy-service-1"
-  
+      PORT: "80"
+      ENV: ${ENV}
 
   dummy-service-2-local:
-    <<: *dummy-service-base
+    container_name: dummy-service-2-local
     profiles:
       - "local"
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
     ports:
       - "8002:80"
-    container_name: dummy-service-2-local
+    volumes:
+      - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
+    entrypoint: ["make", "run"]
     environment:
       CONSENT_API_ORIGIN: "http://localhost:8000"
       OTHER_SERVICE_ORIGIN: "http://localhost:8001"
+      PORT: "80"
+      ENV: ${ENV}
 
 
   # express-app:
@@ -134,14 +155,14 @@ services:
       - consent-api
       - dummy-service-1
       - dummy-service-2
-  
+
 
   playwright-ui:
     <<: *playwright
     profiles:
       - "test-ui"
     container_name: playwright-ui
-    entrypoint: ["npx", "playwright", "test", "--debug"]
+    entrypoint: ["npx", "playwright", "test", "--ui"]
 
 
   playwright-debug:
