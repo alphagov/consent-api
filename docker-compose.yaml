@@ -95,6 +95,16 @@ services:
   #     - "./express-app:/usr/src/app"
 
 
+  playwright:
+    container_name: playwright
+    networks:
+      - e2e
+    build:
+      context: ./e2e-tests
+      dockerfile: .Dockerfile
+    volumes:
+      - "./e2e-tests:/home/app"
+    entrypoint: ["npx", "playwright", "test"]
 
   selenoid-ui:
     profiles:
