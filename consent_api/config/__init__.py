@@ -1,17 +1,12 @@
 """App configuration."""
+
 import os
-from enum import Enum
 
 from dotenv import load_dotenv
 
 from consent_api.config import defaults
-
-
-class Environment(Enum):
-    DEVELOPMENT = "development"
-    STAGING = "staging"
-    TESTING = "testing"
-    PRODUCTION = "production"
+from consent_api.config.types import Environment
+from consent_api.config import defaults
 
 
 load_dotenv()
@@ -36,32 +31,16 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
 CONSENT_EXPIRY_DAYS = 7
 
 
-CONSENT_API_ORIGIN = {
-    Environment.TESTING: "http://consent-api",
-    Environment.DEVELOPMENT: os.getenv(
-        "CONSENT_API_ORIGIN", defaults.DEV.DEFAULT_CONSENT_API_ORIGIN
-    ),
-    Environment.STAGING: os.getenv(
-        "CONSENT_API_ORIGIN", defaults.STAGING.DEFAULT_CONSENT_API_ORIGIN
-    ),
-    Environment.PRODUCTION: os.getenv(
-        "CONSENT_API_ORIGIN", defaults.PROD.DEFAULT_CONSENT_API_ORIGIN
-    ),
-}.get(Environment(ENV), defaults.DEV.DEFAULT_CONSENT_API_ORIGIN)
+default_api_origin = defaults.consent_api_origins.get(
+    Environment(ENV), defaults.consent_api_origins[Environment.DEVELOPMENT]
+)
 
+default_other_service_origin = defaults.other_service_origins.get(
+    Environment(ENV), defaults.other_service_origins[Environment.DEVELOPMENT]
+)
 
-OTHER_SERVICE_ORIGIN = {
-    Environment.TESTING: os.getenv(
-        "OTHER_SERVICE_ORIGIN_DOCKER", defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN
-    ),
-    Environment.DEVELOPMENT: os.getenv(
-        "OTHER_SERVICE_ORIGIN_HOST", defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN
-    ),
-    Environment.STAGING: os.getenv(
-        "OTHER_SERVICE_ORIGIN_HOST", defaults.STAGING.DEFAULT_OTHER_SERVICE_ORIGIN
-    ),
-    Environment.PRODUCTION: defaults.PROD.DEFAULT_OTHER_SERVICE_ORIGIN,
-}.get(Environment(ENV), defaults.DEV.DEFAULT_OTHER_SERVICE_ORIGIN)
+CONSENT_API_ORIGIN = os.getenv("CONSENT_API_ORIGIN", default_api_origin)
+OTHER_SERVICE_ORIGIN = os.getenv("OTHER_SERVICE_ORIGIN", default_other_service_origin)
 
 
 FLAG_FIXTURES = os.getenv("FLAG_FIXTURES", False) == "True"
