@@ -2,7 +2,7 @@ ci:
   autoupdate_commit_msg: |
     [pre-commit.ci] pre-commit autoupdate [norelease]
 
-exclude: ^migrations/ ^static/ ^node_modules/ ^e2e-tests/tests/*.spec.ts
+exclude: ^migrations/ ^static/ ^node_modules/ ^e2e-tests/tests/\w.spec.ts
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

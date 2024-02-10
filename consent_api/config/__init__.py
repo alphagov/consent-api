@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 
 from consent_api.config import defaults
 from consent_api.config.types import Environment
-from consent_api.config import defaults
-
 
 load_dotenv()
 
