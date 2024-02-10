@@ -47,6 +47,7 @@ services:
       - "test"
       - "test-ui"
       - "debug"
+      - "codegen"
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
@@ -80,14 +81,15 @@ services:
       OTHER_SERVICE_ORIGIN: "http://localhost:8002"
       PORT: "80"
       ENV: ${ENV}
-  
-  
+
+
   dummy-service-2:
     container_name: dummy-service-2
     profiles:
       - "test"
       - "test-ui"
       - "debug"
+      - "codegen"
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
@@ -171,3 +173,11 @@ services:
       - "debug"
     container_name: playwright-debug
     entrypoint: ["npx", "playwright", "test", "--debug"]
+
+
+  playwright-codegen:
+    <<: *playwright
+    profiles:
+      - "codegen"
+    container_name: playwright-codegen
+    entrypoint: ["npx", "playwright", "codegen"]
