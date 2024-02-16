@@ -36,16 +36,14 @@ target_metadata = SQLModel.metadata
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+    """
+    Run migrations in 'offline' mode.
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
+    This configures the context with just a URL and not an Engine, though an Engine is
+    acceptable here as well.  By skipping the Engine creation we don't even need a DBAPI
+    to be available.
 
-    Calls to context.execute() here emit the given string to the
-    script output.
-
+    Calls to context.execute() here emit the given string to the script output.
     """
     context.configure(
         url=SQLALCHEMY_DATABASE_URI,
@@ -66,10 +64,8 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
+    """In this scenario we need to create an Engine and associate a connection with the
+    context."""
 
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
