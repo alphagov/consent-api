@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 export const assertCookie = async (page, name: string, value?) => {
   let cookies = await page.context().cookies();

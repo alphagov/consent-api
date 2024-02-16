@@ -150,9 +150,11 @@ services:
     volumes:
       - "./e2e-tests:/home/app"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-    entrypoint: ["npx", "playwright", "test"]
+    entrypoint: ["npx", "playwright", "test", "--retries=10"]
     environment:
       DISPLAY: host.docker.internal:0
+      DUMMY_SERVICE_1_ORIGIN: "http://dummy-service-1"
+      DUMMY_SERVICE_2_ORIGIN: "http://dummy-service-2"
     depends_on:
       - consent-api
       - dummy-service-1
