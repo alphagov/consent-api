@@ -1,3 +1,5 @@
+const DEFAULT_TIMEOUT = 10000
+
 export function request(url, options, onSuccess, onError) {
   var req = new XMLHttpRequest()
   var isTimeout = false
@@ -30,16 +32,19 @@ export function request(url, options, onSuccess, onError) {
     }
   }
 
+  req.open(options.method || 'GET', url, true)
+
+
   if (options.timeout) {
     req.timeout = options.timeout
+  } else {
+    req.timeout = DEFAULT_TIMEOUT
   }
 
   req.ontimeout = function () {
     isTimeout = true
     onError(new Error('Request to ' + url + ' timed out'))
   }
-
-  req.open(options.method || 'GET', url, true)
 
   var headers = options.headers || {}
   for (var name in headers) {
