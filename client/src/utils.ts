@@ -112,7 +112,7 @@ export function isCrossOrigin(link) {
 
 export function getOriginFromLink(link) {
   var origin = link.protocol.concat('//', link.hostname)
-  if (link.port && link.port !== '80') {
+  if (link.port && link.port !== '80' && link.port !== '443') {
     origin = origin.concat(':', link.port)
   }
   return origin
