@@ -1,5 +1,17 @@
 ## [3.0.2] - 2024-01-18
 
+### Fixed
+
+fix: ie11 cross origin 443 ports (#235)
+
+* fix(client): IE11: req.timeout should be defined after req.open
+* fix(client): cross origin getOriginFromLink() should also check for port
+443
+* fix(client): IE11: req.timeout should be defined after req.open (#234)
+
+
+## [3.0.2] - 2024-01-18
+
 ### Changed
 
 - **IE9 Compatibility**: Removed usage of the `Array.prototype.find` method
