@@ -82,17 +82,17 @@ services:
       ENV: ${ENV}
 
 
-  express-app:
-    container_name: express-app
-    networks:
-      - e2e
-    build:
-      context: ./express-app
-      dockerfile: .Dockerfile
-    ports:
-      - "3000:3000"
-    volumes:
-      - "./express-app:/usr/src/app"
+  # express-app:
+  #   container_name: express-app
+  #   networks:
+  #     - e2e
+  #   build:
+  #     context: ./express-app
+  #     dockerfile: .Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - "./express-app:/usr/src/app"
 
 
 
