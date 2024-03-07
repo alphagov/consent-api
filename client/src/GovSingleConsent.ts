@@ -8,6 +8,7 @@ import {
   request,
   setCookie,
   getCookie,
+  validateConsentObject,
 } from './utils'
 
 type Consents = {
@@ -138,6 +139,10 @@ export class GovSingleConsent {
       consentsUrl,
       { timeout: 1000 },
       ({ status: consents }: { status: Consents }) => {
+        if (!validateConsentObject(consents)) {
+          const error = new Error('Invalid consents object returned from the API: ' + JSON.stringify({consents}))
+          return this.defaultToRejectAllConsents(error)
+        }
         this.updateBrowserConsents(consents)
         this._consentsUpdateCallback(
           consents,
@@ -160,6 +165,9 @@ export class GovSingleConsent {
     }
 
     const successCallback = (response) => {
+      if (!response.uid) {
+        throw new Error('No UID returned from the API')
+      }
       if (this.isNewUID(response.uid)) {
         this.handleNewUID(response.uid)
       }
