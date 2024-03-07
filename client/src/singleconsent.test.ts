@@ -12,7 +12,7 @@ import {
   isCrossOrigin,
   getOriginFromLink,
   getCookie,
-  validateConsentObject
+  validateConsentObject,
 } from './utils'
 
 const MOCK_API_BASE_URL = 'https://test-url.com'
@@ -26,7 +26,7 @@ let originalCookie
 
 // jest.useFakeTimers()
 
-const waitFor = (time) => new Promise(resolve => setTimeout(resolve, time));
+const waitFor = (time) => new Promise((resolve) => setTimeout(resolve, time))
 
 const waitForPromises = () => waitFor(0)
 
@@ -66,7 +66,7 @@ describe('Consent Management', () => {
     originalCookie = Object.getOwnPropertyDescriptor(document, 'cookie')
   })
   beforeEach(() => {
-    jest.useRealTimers();
+    jest.useRealTimers()
     xhrMock.setup()
     document.body.innerHTML = `<div data-gov-singleconsent-api-url="${MOCK_API_BASE_URL}"></div>`
   })
@@ -91,9 +91,8 @@ describe('Consent Management', () => {
     xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
       res.status(200).body(JSON.stringify(response1))
     )
-    xhrMock.get(
-      `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
-      (req, res) => res.status(200).body(JSON.stringify(response2))
+    xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`, (req, res) =>
+      res.status(200).body(JSON.stringify(response2))
     )
     const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     expect(consentInstance.uid).toBe(MOCK_UID)
@@ -137,15 +136,16 @@ describe('Consent Management', () => {
     expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
   })
 
-  describe("fetching consents", () => {
-    it("should reject the consents if fetchconsents response format is bad JSON", async () => {
+  describe('fetching consents', () => {
+    it('should reject the consents if fetchconsents response format is bad JSON', async () => {
       mockCookie()
       const response1 = ['a', 'b']
       xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
         res.status(200).body(JSON.stringify(response1))
       )
-      xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`, (req, res) =>
-        res.status(200).body('bad response')
+      xhrMock.get(
+        `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+        (req, res) => res.status(200).body('bad response')
       )
       const mockCallback = jest.fn()
       new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
@@ -155,17 +155,21 @@ describe('Consent Management', () => {
         true,
         expect.any(Error)
       )
-      expect(mockCallback.mock.calls[0][2].message).toMatch(/Unexpected token b in JSON/)
+      expect(mockCallback.mock.calls[0][2].message).toMatch(
+        /Unexpected token b in JSON/
+      )
     })
 
-    it("should reject the consents if fetchconsents response format is bad object shape", async () => {
+    it('should reject the consents if fetchconsents response format is bad object shape', async () => {
       mockCookie()
       const response1 = ['a', 'b']
       xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
         res.status(200).body(JSON.stringify(response1))
       )
-      xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`, (req, res) =>
-        res.status(200).body(JSON.stringify({someKey: "someValue"}))
+      xhrMock.get(
+        `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+        (req, res) =>
+          res.status(200).body(JSON.stringify({ someKey: 'someValue' }))
       )
       const mockCallback = jest.fn()
       new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
@@ -175,7 +179,9 @@ describe('Consent Management', () => {
         true,
         expect.any(Error)
       )
-      expect(mockCallback.mock.calls[0][2].message).toMatch(/Invalid consents object returned from the API/)
+      expect(mockCallback.mock.calls[0][2].message).toMatch(
+        /Invalid consents object returned from the API/
+      )
     })
   })
 
@@ -496,29 +502,40 @@ describe('origin', function () {
   })
 })
 
-describe("validateConsentObject",  () => {
-  it("should return false if the object is undefined", () => {
+describe('validateConsentObject', () => {
+  it('should return false if the object is undefined', () => {
     const response = undefined
     expect(validateConsentObject(response)).toBe(false)
   })
-  it("should return false if the object is null", () => {
+  it('should return false if the object is null', () => {
     const response = null
     expect(validateConsentObject(response)).toBe(false)
   })
-  it("should return true if the object is valid", () => {
-    const response = { essential: true, settings: false, usage: false, campaigns: false }
+  it('should return true if the object is valid', () => {
+    const response = {
+      essential: true,
+      settings: false,
+      usage: false,
+      campaigns: false,
+    }
     expect(validateConsentObject(response)).toBe(true)
   })
-  it("should return false if the object is not an object", () => {
+  it('should return false if the object is not an object', () => {
     const response = 'not an object'
     expect(validateConsentObject(response)).toBe(false)
   })
-  it("should return false if the object is missing keys", () => {
+  it('should return false if the object is missing keys', () => {
     const response = { essential: true, usage: false, campaigns: false }
     expect(validateConsentObject(response)).toBe(false)
   })
-  it("should return false if the object has extra keys", () => {
-    const response = { essential: true, settings: false, usage: false, campaigns: false, extra: true }
+  it('should return false if the object has extra keys', () => {
+    const response = {
+      essential: true,
+      settings: false,
+      usage: false,
+      campaigns: false,
+      extra: true,
+    }
     expect(validateConsentObject(response)).toBe(false)
   })
 })
