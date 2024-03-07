@@ -137,51 +137,141 @@ describe('Consent Management', () => {
   })
 
   describe('fetching consents', () => {
-    it('should reject the consents if fetchconsents response format is bad JSON', async () => {
-      mockCookie()
-      const response1 = ['a', 'b']
-      xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
-        res.status(200).body(JSON.stringify(response1))
-      )
-      xhrMock.get(
-        `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
-        (req, res) => res.status(200).body('bad response')
-      )
-      const mockCallback = jest.fn()
-      new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
-      await waitForPromises()
-      expect(mockCallback).toHaveBeenCalledWith(
-        { campaigns: false, essential: true, settings: false, usage: false },
-        true,
-        expect.any(Error)
-      )
-      expect(mockCallback.mock.calls[0][2].message).toMatch(
-        /Unexpected token b in JSON/
-      )
-    })
+    describe('Happy path', () => {
+      it('should set the consents to whatever the server returns when fetching [case 1]', async () => {
+        mockCookie()
+        const response1 = ['a', 'b']
+        xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+          res.status(200).body(JSON.stringify(response1))
+        )
+        xhrMock.get(
+          `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+          (req, res) =>
+            res.status(200).body(
+              JSON.stringify({
+                status: {
+                  campaigns: true,
+                  essential: true,
+                  settings: true,
+                  usage: true,
+                },
+              })
+            )
+        )
+        const mockCallback = jest.fn()
+        new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+        await waitForPromises()
+        expect(mockCallback).toHaveBeenCalledWith(
+          { campaigns: true, essential: true, settings: true, usage: true },
+          true,
+          null
+        )
+      })
 
-    it('should reject the consents if fetchconsents response format is bad object shape', async () => {
-      mockCookie()
-      const response1 = ['a', 'b']
-      xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
-        res.status(200).body(JSON.stringify(response1))
-      )
-      xhrMock.get(
-        `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
-        (req, res) =>
-          res.status(200).body(JSON.stringify({ someKey: 'someValue' }))
-      )
-      const mockCallback = jest.fn()
-      new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
-      await waitForPromises()
-      expect(mockCallback).toHaveBeenCalledWith(
-        { campaigns: false, essential: true, settings: false, usage: false },
-        true,
-        expect.any(Error)
-      )
-      expect(mockCallback.mock.calls[0][2].message).toMatch(
-        /Invalid consents object returned from the API/
-      )
+      it('should set the consents to whatever the server returns when fetching [case 2]', async () => {
+        mockCookie()
+        const response1 = ['a', 'b']
+        xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+          res.status(200).body(JSON.stringify(response1))
+        )
+        xhrMock.get(
+          `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+          (req, res) =>
+            res.status(200).body(
+              JSON.stringify({
+                status: {
+                  campaigns: false,
+                  essential: true,
+                  settings: false,
+                  usage: true,
+                },
+              })
+            )
+        )
+        const mockCallback = jest.fn()
+        new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+        await waitForPromises()
+        expect(mockCallback).toHaveBeenCalledWith(
+          { campaigns: false, essential: true, settings: false, usage: true },
+          true,
+          null
+        )
+      })
+    })
+    describe('Unhappy paths', () => {
+      it('should reject the consents if fetchconsents response format is bad JSON', async () => {
+        mockCookie()
+        const response1 = ['a', 'b']
+        xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+          res.status(200).body(JSON.stringify(response1))
+        )
+        xhrMock.get(
+          `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+          (req, res) => res.status(200).body('bad response')
+        )
+        const mockCallback = jest.fn()
+        new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+        await waitForPromises()
+        expect(mockCallback).toHaveBeenCalledWith(
+          { campaigns: false, essential: true, settings: false, usage: false },
+          true,
+          expect.any(Error)
+        )
+        expect(mockCallback.mock.calls[0][2].message).toMatch(
+          /Unexpected token b in JSON/
+        )
+      })
+
+      it('should reject the consents if fetchconsents response format is bad object shape', async () => {
+        mockCookie()
+        const response1 = ['a', 'b']
+        xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+          res.status(200).body(JSON.stringify(response1))
+        )
+        xhrMock.get(
+          `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+          (req, res) =>
+            res.status(200).body(JSON.stringify({ someKey: 'someValue' }))
+        )
+        const mockCallback = jest.fn()
+        new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+        await waitForPromises()
+        expect(mockCallback).toHaveBeenCalledWith(
+          { campaigns: false, essential: true, settings: false, usage: false },
+          true,
+          expect.any(Error)
+        )
+        expect(mockCallback.mock.calls[0][2].message).toMatch(
+          /Invalid consents object returned from the API/
+        )
+      })
+
+      it('should reject the consents if fetchconsents request fails', async () => {
+        mockCookie()
+        const response1 = ['a', 'b']
+        xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+          res.status(200).body(JSON.stringify(response1))
+        )
+        xhrMock.get(
+          `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+          (req, res) => res.status(500).body('Some error')
+        )
+        const mockCallback = jest.fn()
+        new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+        await waitForPromises()
+        expect(mockCallback).toHaveBeenCalledWith(
+          { campaigns: false, essential: true, settings: false, usage: false },
+          true,
+          expect.any(Error)
+        )
+        expect(mockCallback.mock.calls[0][2].message).toMatch(
+          /Request to https:[\/\.\w\s-]+failed with status: 500/
+        )
+      })
+
+      it('should reject the consents if fetchconsents times out', async () => {
+        // How?
+      })
     })
   })
 
