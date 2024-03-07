@@ -1,7 +1,6 @@
 const DEFAULT_TIMEOUT = 10000
 
 export function request(url, options, onSuccess, onError) {
-  console.log(`\n\n\n\n\nreq to ${url}\n\n\n\n\n`)
   try {
     var req = new XMLHttpRequest()
     var isTimeout = false
@@ -13,10 +12,10 @@ export function request(url, options, onSuccess, onError) {
           let jsonResponse;
           try {
             jsonResponse = JSON.parse(req.responseText)
+            onSuccess(jsonResponse)
           } catch (error) {
             return onError(error)
           }
-          onSuccess(JSON.parse(req.responseText))
         } else if (req.status === 0 && req.timeout > 0) {
           // Possible timeout, waiting for ontimeout event
           // Timeout will throw a status = 0 request

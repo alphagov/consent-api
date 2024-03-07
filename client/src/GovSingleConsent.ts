@@ -139,7 +139,6 @@ export class GovSingleConsent {
       consentsUrl,
       { timeout: 1000 },
       (jsonResponse: { status: Consents }) => {
-        console.log("GOT RESPONSE")
         if (!validateConsentObject(jsonResponse.status)) {
           const error = new Error('Invalid consents object returned from the API: ' + JSON.stringify(jsonResponse))
           return this.defaultToRejectAllConsents(error)
@@ -195,11 +194,7 @@ export class GovSingleConsent {
   }
 
   private defaultToRejectAllConsents(error?: Error): void {
-    console.log(1)
-    console.log(document.cookie)
     this.updateBrowserConsents(GovSingleConsent.REJECT_ALL)
-    console.log(2)
-    console.log(document.cookie)
     this._consentsUpdateCallback(
       GovSingleConsent.REJECT_ALL,
       GovSingleConsent.isConsentPreferencesSet(),
