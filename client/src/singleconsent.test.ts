@@ -149,12 +149,7 @@ describe('Consent Management', () => {
           (req, res) =>
             res.status(200).body(
               JSON.stringify({
-                status: {
-                  campaigns: true,
-                  essential: true,
-                  settings: true,
-                  usage: true,
-                },
+                status: GovSingleConsent.ACCEPT_ALL,
               })
             )
         )
@@ -162,7 +157,7 @@ describe('Consent Management', () => {
         new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
         await waitForPromises()
         expect(mockCallback).toHaveBeenCalledWith(
-          { campaigns: true, essential: true, settings: true, usage: true },
+          GovSingleConsent.ACCEPT_ALL,
           true,
           null
         )
@@ -213,7 +208,7 @@ describe('Consent Management', () => {
         new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
         await waitForPromises()
         expect(mockCallback).toHaveBeenCalledWith(
-          { campaigns: false, essential: true, settings: false, usage: false },
+          GovSingleConsent.REJECT_ALL,
           true,
           expect.any(Error)
         )
@@ -237,7 +232,7 @@ describe('Consent Management', () => {
         new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
         await waitForPromises()
         expect(mockCallback).toHaveBeenCalledWith(
-          { campaigns: false, essential: true, settings: false, usage: false },
+          GovSingleConsent.REJECT_ALL,
           true,
           expect.any(Error)
         )
@@ -260,7 +255,7 @@ describe('Consent Management', () => {
         new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
         await waitForPromises()
         expect(mockCallback).toHaveBeenCalledWith(
-          { campaigns: false, essential: true, settings: false, usage: false },
+          GovSingleConsent.REJECT_ALL,
           true,
           expect.any(Error)
         )
@@ -269,8 +264,30 @@ describe('Consent Management', () => {
         )
       })
 
-      it('should reject the consents if fetchconsents times out', async () => {
-        // How?
+      it('should reject the consents if fetchconsents times out', () => {
+        jest.useFakeTimers()
+        mockCookie()
+        const response1 = ['a', 'b']
+        xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+          res.status(200).body(JSON.stringify(response1))
+        )
+        xhrMock.get(
+          `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
+          (req, res) => {
+            return new Promise(() => {})
+          }
+        )
+        let err
+        const mockCallback = jest.fn()
+
+        new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+        jest.advanceTimersByTime(1001)
+        expect(mockCallback).toHaveBeenCalledWith(
+          GovSingleConsent.REJECT_ALL,
+          true,
+          expect.any(Error)
+        )
+        expect(mockCallback.mock.calls[0][2].message).toMatch(/timed out/)
       })
     })
   })
@@ -287,12 +304,7 @@ describe('Consent Management', () => {
           (req, res) =>
             res.status(200).body(
               JSON.stringify({
-                status: {
-                  campaigns: true,
-                  essential: true,
-                  settings: true,
-                  usage: true,
-                },
+                status: GovSingleConsent.ACCEPT_ALL,
               })
             )
         )
@@ -336,12 +348,7 @@ describe('Consent Management', () => {
           (req, res) =>
             res.status(200).body(
               JSON.stringify({
-                status: {
-                  campaigns: true,
-                  essential: true,
-                  settings: true,
-                  usage: true,
-                },
+                status: GovSingleConsent.ACCEPT_ALL,
               })
             )
         )
@@ -381,12 +388,7 @@ describe('Consent Management', () => {
           (req, res) =>
             res.status(200).body(
               JSON.stringify({
-                status: {
-                  campaigns: true,
-                  essential: true,
-                  settings: true,
-                  usage: true,
-                },
+                status: GovSingleConsent.ACCEPT_ALL,
               })
             )
         )
@@ -426,12 +428,7 @@ describe('Consent Management', () => {
           (req, res) =>
             res.status(200).body(
               JSON.stringify({
-                status: {
-                  campaigns: true,
-                  essential: true,
-                  settings: true,
-                  usage: true,
-                },
+                status: GovSingleConsent.ACCEPT_ALL,
               })
             )
         )
@@ -471,12 +468,7 @@ describe('Consent Management', () => {
           (req, res) =>
             res.status(200).body(
               JSON.stringify({
-                status: {
-                  campaigns: true,
-                  essential: true,
-                  settings: true,
-                  usage: true,
-                },
+                status: GovSingleConsent.ACCEPT_ALL,
               })
             )
         )
@@ -506,53 +498,8 @@ describe('Consent Management', () => {
         )
       })
 
-      it('should set the consents to rejected if the update consents request times out', async () => {
-        // How?
-      })
     })
   })
-
-  // it('should timeout the consents if the request takes more than one second', () => {
-  //   mockCookie()
-  //   const response1 = ['a', 'b']
-  //   xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
-  //     res.status(200).body(JSON.stringify(response1))
-  //   )
-  //   xhrMock.get(
-  //     `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
-  //     (req, res) => {
-  //       return new Promise(() => {})
-  //     }
-  //   )
-  //   let err
-  //   const mockCallback = jest.fn()
-
-  //   new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
-  //   jest.advanceTimersByTime(1001)
-  //   expect(mockCallback).toHaveBeenCalledWith(
-  //     { campaigns: false, essential: true, settings: false, usage: false },
-  //     true,
-  //     expect.any(Error)
-  //   )
-  //   expect(mockCallback.mock.calls[0][2].message).toMatch(/timed out/)
-  // })
-
-  // it('should not timeout the consents if the request takes less than one second', () => {
-  //   mockCookie()
-  //   const response1 = ['a', 'b']
-  //   xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
-  //     res.status(200).body(JSON.stringify(response1))
-  //   )
-  //   xhrMock.get(
-  //     `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
-  //     (req, res) => {
-  //       return new Promise(() => {})
-  //     }
-  //   )
-  //   const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
-  //   jest.advanceTimersByTime(500)
-  //   expect(consentInstance.uid).toBe(MOCK_UID)
-  // })
 
   describe('[method]: isConsentPreferencesSet', () => {
     it('should return false if the cookie is not set', () => {
@@ -839,12 +786,7 @@ describe("[Unit tests]: utils", () => {
       expect(validateConsentObject(response)).toBe(false)
     })
     it('should return true if the object is valid', () => {
-      const response = {
-        essential: true,
-        settings: false,
-        usage: false,
-        campaigns: false,
-      }
+      const response = GovSingleConsent.REJECT_ALL
       expect(validateConsentObject(response)).toBe(true)
     })
     it('should return false if the object is not an object', () => {
