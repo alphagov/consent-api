@@ -57,11 +57,22 @@ const resetWindowURL = (): void => {
   })
 }
 
+const waitForCompletion = (func): Promise<void> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      func()
+      return resolve()
+    }, 0)
+  })
+
+}
+
 describe('Consent Management', () => {
   beforeAll(() => {
     originalCookie = Object.getOwnPropertyDescriptor(document, 'cookie')
   })
   beforeEach(() => {
+    jest.useRealTimers();
     xhrMock.setup()
     document.body.innerHTML = `<div data-gov-singleconsent-api-url="${MOCK_API_BASE_URL}"></div>`
   })
@@ -87,7 +98,7 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/api/v1/consents/${MOCK_UID}`,
+      `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
       (req, res) => res.status(200).body(JSON.stringify(response2))
     )
     const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
@@ -104,7 +115,7 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/api/v1/consents/${mockedUrlUid}`,
+      `${MOCK_API_BASE_URL}/api/v1/consent/${mockedUrlUid}`,
       (req, res) => res.status(200).body(JSON.stringify(response2))
     )
     mockWindowURL(mockedUrl)
@@ -123,13 +134,49 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/api/v1/consents/${mockedUrlUid}`,
+      `${MOCK_API_BASE_URL}/api/v1/consent/${mockedUrlUid}`,
       (req, res) => res.status(200).body(JSON.stringify(response2))
     )
     mockWindowURL(mockedUrl)
     const consentInstance = new GovSingleConsent(jest.fn(), MOCK_API_BASE_URL)
     expect(consentInstance.uid).toBe(mockedUrlUid)
     expect(getCookie(GovConsentConfig.UID_KEY)).toBe(mockedUrlUid)
+  })
+
+  describe("fetching consents", () => {
+    it.only("should reject the consents if fetchconsents response format is bad JSON", async () => {
+      console.log(document.cookie)
+      mockCookie()
+      console.log(document.cookie)
+      const response1 = ['a', 'b']
+      xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/origins`, (req, res) =>
+        res.status(200).body(JSON.stringify(response1))
+      )
+      xhrMock.get(`${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`, (req, res) =>
+      {
+        console.log("\n\n\n\n\nreturn\n\n\n\n\n")
+        return res.status(200).body('bad response')
+      }
+      )
+      const mockCallback = jest.fn().mockImplementation((consents, consentsPreferencesSet, error) => {
+        console.log("mockCallback called with:", { consents, consentsPreferencesSet, error });
+        // You can add any additional logic here if needed.
+      });
+      new GovSingleConsent(mockCallback, MOCK_API_BASE_URL)
+      const waitFor = (time) => new Promise(resolve => setTimeout(resolve, time));
+      await waitFor(0)
+      expect(mockCallback).toHaveBeenCalledWith(
+        { campaigns: false, essential: true, settings: false, usage: false },
+        true,
+        expect.any(Error)
+      )
+      expect(mockCallback.mock.calls[0][2].message).toMatch(/Unexpected token b in JSON/)
+      console.log("COOKIE:", getCookie(GovConsentConfig.CONSENTS_COOKIE_NAME))
+      console.log(document.cookie)
+      console.log(document.cookie)
+      console.log(document.cookie)
+      expect(JSON.parse(getCookie(GovConsentConfig.CONSENTS_COOKIE_NAME) || "{}")).toEqual({ campaigns: false, essential: true, settings: false, usage: false })
+    })
   })
 
   it('should timeout the consents if the request takes more than one second', () => {
@@ -139,7 +186,7 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/api/v1/consents/${MOCK_UID}`,
+      `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
       (req, res) => {
         return new Promise(() => {})
       }
@@ -164,7 +211,7 @@ describe('Consent Management', () => {
       res.status(200).body(JSON.stringify(response1))
     )
     xhrMock.get(
-      `${MOCK_API_BASE_URL}/api/v1/consents/${MOCK_UID}`,
+      `${MOCK_API_BASE_URL}/api/v1/consent/${MOCK_UID}`,
       (req, res) => {
         return new Promise(() => {})
       }
@@ -176,12 +223,12 @@ describe('Consent Management', () => {
 
   describe('[method]: isConsentPreferencesSet', () => {
     it('should return false if the cookie is not set', () => {
-      new GovSingleConsent(jest.fn(), `${MOCK_API_BASE_URL}/api/v1/consents`)
+      new GovSingleConsent(jest.fn(), `${MOCK_API_BASE_URL}/api/v1/consent`)
       expect(GovSingleConsent.isConsentPreferencesSet()).toBe(false)
     })
 
     it('should return true if the cookie is set', () => {
-      new GovSingleConsent(jest.fn(), `${MOCK_API_BASE_URL}/api/v1/consents`)
+      new GovSingleConsent(jest.fn(), `${MOCK_API_BASE_URL}/api/v1/consent`)
       mockCookie(GovConsentConfig.PREFERENCES_SET_COOKIE_NAME, 'true')
       expect(GovSingleConsent.isConsentPreferencesSet()).toBe(true)
     })
@@ -450,16 +497,20 @@ describe('origin', function () {
 })
 
 describe("validateConsentObject",  () => {
+  it("should return false if the object is undefined", () => {
+    const response = undefined
+    expect(validateConsentObject(response)).toBe(false)
+  })
+  it("should return false if the object is null", () => {
+    const response = null
+    expect(validateConsentObject(response)).toBe(false)
+  })
   it("should return true if the object is valid", () => {
     const response = { essential: true, settings: false, usage: false, campaigns: false }
     expect(validateConsentObject(response)).toBe(true)
   })
   it("should return false if the object is not an object", () => {
     const response = 'not an object'
-    expect(validateConsentObject(response)).toBe(false)
-  })
-  it("should return false if the object is null", () => {
-    const response = null
     expect(validateConsentObject(response)).toBe(false)
   })
   it("should return false if the object is missing keys", () => {

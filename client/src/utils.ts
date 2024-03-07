@@ -1,6 +1,7 @@
 const DEFAULT_TIMEOUT = 10000
 
 export function request(url, options, onSuccess, onError) {
+  console.log(`\n\n\n\n\nreq to ${url}\n\n\n\n\n`)
   try {
     var req = new XMLHttpRequest()
     var isTimeout = false
