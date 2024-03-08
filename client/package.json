@@ -1,6 +1,6 @@
 {
   "name": "govuk-single-consent",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "main": "dist/singleconsent.cjs.js",
   "module": "dist/singleconsent.esm.js",
   "browser": "dist/singleconsent.iife.js",

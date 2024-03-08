@@ -12,10 +12,10 @@ export function request(url, options, onSuccess, onError) {
           let jsonResponse;
           try {
             jsonResponse = JSON.parse(req.responseText)
+            onSuccess(jsonResponse)
           } catch (error) {
             return onError(error)
           }
-          onSuccess(JSON.parse(req.responseText))
         } else if (req.status === 0 && req.timeout > 0) {
           // Possible timeout, waiting for ontimeout event
           // Timeout will throw a status = 0 request
