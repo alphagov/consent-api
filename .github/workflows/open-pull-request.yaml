@@ -23,8 +23,6 @@ jobs:
 
     env:
       BRANCH_NAME: ${{ github.head_ref }}
-      CHROME_VERSION: "110.0"
-      SPLINTER_REMOTE_BROWSER_VERSION: "110.0"
 
     permissions:
       contents: write
@@ -82,9 +80,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - run: docker pull selenoid/chrome:${{ env.CHROME_VERSION }}
-
-      - run: make test-end-to-end-docker
+      - run: ENV=development make docker-e2e
         name: Run tests
         env:
           DOCKER_IMAGE: ${{ env.IMAGE_TAG }}
