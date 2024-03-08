@@ -148,9 +148,9 @@ services:
       context: ./e2e-tests
       dockerfile: .Dockerfile
     volumes:
-      - "./e2e-tests:/home/app"
+      - "./e2e-tests:/app"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-    entrypoint: ["npx", "playwright", "test", "--retries=10"]
+    entrypoint: ["npx", "playwright", "test"]
     environment:
       DISPLAY: host.docker.internal:0
       DUMMY_SERVICE_1_ORIGIN: "http://dummy-service-1"

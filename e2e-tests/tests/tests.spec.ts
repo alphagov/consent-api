@@ -12,7 +12,6 @@ test('I can manage the cookies on a single domain, starting with a rejection', a
   await expect(page.getByLabel('Cookies on GOV.UK')).toBeVisible();
   await page.getByRole('button', { name: 'Reject analytics cookies' }).click();
 
-  await page.waitForTimeout(2000);
 
   await expect(page.getByLabel('Cookies on GOV.UK')).not.toBeVisible();
 
@@ -29,7 +28,6 @@ test('I can manage the cookies on a single domain, starting with a rejection', a
   await page.getByText('Use cookies that measure my website use', { exact: true }).click();
   await expect(page.getByLabel('Use cookies that measure my website use', { exact: true })).toBeChecked();
   await page.getByRole('button', { name: 'Save changes' }).click();
-  await page.waitForTimeout(2000);
 
   // Wait for page to reload
   await expect(page.getByRole('heading', { name: 'Cookies on GOV.UK' })).toBeVisible();
@@ -43,7 +41,6 @@ test('I can manage the cookies on a single domain, starting with a rejection', a
   await expect(page.getByLabel('Do not use cookies that help')).toBeChecked();
   await expect(page.getByLabel('Do not use cookies that remember my settings on the site')).toBeChecked();
   await page.getByRole('link', { name: 'Go back to the page you were' }).click();
-  await page.waitForTimeout(2000);
 
   await expect(page.getByLabel('Cookies on GOV.UK')).not.toBeVisible();
 
@@ -95,17 +92,14 @@ test('I can manage cookies across domains', async ({ page }) => {
   await expect(page.getByLabel('Do not use cookies that help')).toBeChecked();
   await page.getByRole('button', { name: 'Save changes' }).click();
 
+
   await expect(page.getByRole('heading', { name: 'Cookies on GOV.UK' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible();
   await expect(page.getByLabel('Do not use cookies that help')).toBeChecked();
 
-  // wait 2 sec
-  await page.waitForTimeout(2000);
-
   await assertCookie(page, 'cookies_policy', { usage: true, settings: true, essential: true, campaigns:false });
   await assertCookie(page, 'cookies_preferences_set', 'true');
   await assertCookie(page, 'gov_singleconsent_uid',);
-
 
   // Go back to service 1
   await page.getByRole('link', { name: 'Go back to the page you were' }).click();
