@@ -80,7 +80,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - run: ENV=development make docker-e2e
+      - run: ENV=development CI=true make docker-e2e
         name: Run tests
         env:
           DOCKER_IMAGE: ${{ env.IMAGE_TAG }}

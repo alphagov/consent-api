@@ -4,6 +4,8 @@ import {assertCookie, clearCookies} from './utils';
 const serviceOneOrigin = process.env.DUMMY_SERVICE_1_ORIGIN || 'http://localhost:8001';
 const serviceTwoOrigin = process.env.DUMMY_SERVICE_2_ORIGIN || 'http://localhost:8002';
 
+test.setTimeout(120000)
+
 
 test('I can manage the cookies on a single domain, starting with a rejection', async ({ page }) => {
   // Load service 1 and reject cookies

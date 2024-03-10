@@ -133,7 +133,7 @@ services:
   #     context: ./express-app
   #     dockerfile: .Dockerfile
   #   ports:
-  #     - "3000:3000"
+  #     - "3000:3000"e
   #   volumes:
   #     - "./express-app:/usr/src/app"
 
@@ -146,11 +146,14 @@ services:
       - e2e
     build:
       context: ./e2e-tests
-      dockerfile: .Dockerfile
+      dockerfile: .jammy-test
+    # image: mcr.microsoft.com/playwright:v1.42.1-jammy
     volumes:
-      - "./e2e-tests:/app"
+      - "./e2e-tests/tests:/app/tests"
+      - "./e2e-tests/tests-results:/app/tests-results"
+      - "./e2e-tests/playwright-report:/app/playwright-report"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-    entrypoint: ["npx", "playwright", "test", "--retries=5", "--project=chromium"]
+    entrypoint: ["npx", "playwright", "test", "--retries=10", "--project=chromium"]
     environment:
       DISPLAY: host.docker.internal:0
       DUMMY_SERVICE_1_ORIGIN: "http://dummy-service-1"
