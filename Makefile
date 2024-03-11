@@ -1,84 +1,125 @@
 -include .envrc
 
-APP_NAME ?= consent_api
-DATABASE_URL ?= postgresql+asyncpg://localhost:5432/$(APP_NAME)
-DOCKER ?= docker
-DOCKER_BUILD ?= docker buildx build
-DOCKER_DB_URL ?= postgresql+asyncpg://postgres@host.docker.internal:5432/$(APP_NAME)
 DOCKER_IMAGE ?= gcr.io/sde-consent-api/consent-api
 TAG ?= latest
 ENV ?= development
-PORT ?= 8000
-PREVIEW := $(shell \
-		echo $${PREVIEW:+--preview} \
-)
-SELENIUM_DRIVER ?= chrome
-SPLINTER_REMOTE_BROWSER_VERSION ?= ""
-SPLINTER_REMOTE_URL := $(shell \
-		echo $${SELENIUM_REMOTE_URL:+--splinter-remote-url $${SELENIUM_REMOTE_URL}} \
-)
 
-## clean: Remove temporary files
-.PHONY: clean
-clean:
-	find . \( -name '__pycache__' -and -not -name ".venv" \) -depth -prune -exec rm -r {} +
+
+# ---------------------------------------------------------------------------------
+# STARTUP COMMANDS
+# ---------------------------------------------------------------------------------
+# Commands that start the project in different modes
+
+.PHONY: docker-run docker-e2e docker-e2e-ui docker-e2e-debug
+
+docker-run:
+	docker-compose --profile local up
+
+docker-e2e:
+	docker-compose --profile test up
+
+docker-e2e-ui:
+	docker-compose --profile test-ui up
+
+docker-e2e-debug:
+	docker-compose --profile debug up
+
+docker-e2e-codegen:
+	docker-compose --profile codegen up playwright-codegen
+
+
+
+# ---------------------------------------------------------------------------------
+# PROJECT SETUP COMMANDS
+# ---------------------------------------------------------------------------------
+# Use this section for commands that help set up the project, like installing dependencies, setting up databases, etc.
+
+.PHONY: install migrations new-migration
 
 ## install: Install dependencies
-.PHONY: install
-install:
-	curl -sSL https://install.python-poetry.org | python3 -
+install: install-consent-api install-client install-e2e-tests
+
+install-consent-api:
+	@command -v poetry >/dev/null 2>&1 || { echo >&2 "Poetry is not installed. Please install it by following the instructions at https://python-poetry.org/docs/#installation"; exit 1; }
 	poetry install
 
-.PHONY: check
-check:
-	black --check .
-	ruff check .
+install-client:
+	cd client && npm install && npm run build
 
-.PHONY: fix
-fix:
-	pre-commit run --all-files
+install-e2e-tests:
+	cd e2e-tests && npm install
+
+
+
+# ---------------------------------------------------------------------------------
+# DB COMMANDS
+# ---------------------------------------------------------------------------------
+# Commands for managing the database
 
 ## migrations: Run all database migrations
-.PHONY: migrations
 migrations:
 	alembic --config migrations/alembic.ini upgrade head
 
 ## new-migration: Generate a new database migration from model code
-.PHONY: new-migration
 new-migration:
 	alembic --config migrations/alembic.ini revision --autogenerate
 
-## test: Run tests
-.PHONY: test
+
+
+# ---------------------------------------------------------------------------------
+# INFRA COMMANDS
+# ---------------------------------------------------------------------------------
+# Infrastructure-related commands, like IaC, Pulumi setups & deployments, etc.
+
+.PHONY: infra infra-destroy deploy destroy-deployment
+
+## infra: Create/update a deployment environment
+infra:
+	python infra/setup_env.py -e $(ENV) $(PREVIEW)
+
+## infra-destroy: Destroy a deployment environment
+infra-destroy:
+	python infra/setup_env.py --destroy -e $(ENV) $(PREVIEW)
+
+## deploy: Deploy the service to an environment
+deploy:
+	python infra/deploy.py -e $(ENV) $(PREVIEW) -b main
+
+destroy-deployment:
+	python infra/deploy.py --destroy -e $(ENV) $(PREVIEW) -b main
+
+
+
+# ---------------------------------------------------------------------------------
+# Linting / Formatting
+# ---------------------------------------------------------------------------------
+# Commands for linting and formatting code
+
+.PHONY: fix check
+
+fix:
+	pre-commit run --all-files
+
+check:
+	black --check .
+	ruff check .
+
+
+# ---------------------------------------------------------------------------------
+# OTHER
+# ---------------------------------------------------------------------------------
+# Use this section for miscellaneous commands that don't fit into the above categories.
+
+.PHONY: clean test
+
+## clean: Remove temporary files
+clean:
+	find . \( -name '__pycache__' -and -not -name ".venv" \) -depth -prune -exec rm -r {} +
+
+
 test:
 	pytest -x -n=auto --dist=loadfile -W ignore::DeprecationWarning -m "not end_to_end"
 
-.PHONY: test-client
-test-client:
-	cd client && npm test
-
-## test-end-to-end: Run webdriver tests
-.PHONY: test-end-to-end
-test-end-to-end: migrations
-# test-end-to-end:
-	python consent_api/tests/wait_for_url.py $(E2E_TEST_CONSENT_API_URL)
-	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_1_URL)
-	python consent_api/tests/wait_for_url.py $(E2E_TEST_DUMMY_SERVICE_2_URL)
-	pytest \
-		-s \
-		-W ignore::DeprecationWarning \
-		-m end_to_end \
-		--splinter-webdriver $(SELENIUM_DRIVER) \
-		$(SPLINTER_REMOTE_URL) \
-		--splinter-headless
-
-
-.PHONY: test-end-to-end-docker
-test-end-to-end-docker:
-	ENV=testing COMPOSE_PROFILES=testing $(DOCKER) compose up --exit-code-from test
-
-.PHONY: test-all
-test-all: migrations test test-end-to-end
 
 .PHONY: test-coverage
 test-coverage:
@@ -88,64 +129,21 @@ test-coverage:
 .PHONY: run
 run:
 ifeq ($(ENV),development)
-	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+	uvicorn consent_api:app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
 else ifeq ($(ENV),testing)
-	uvicorn $(APP_NAME):app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
+	uvicorn consent_api:app --reload --host "0.0.0.0" --port $(PORT) --proxy-headers --forwarded-allow-ips="*"
 else
-	gunicorn $(APP_NAME):app --worker-class uvicorn.workers.UvicornWorker --bind "0.0.0.0:$(PORT)" --forwarded-allow-ips="*"
+	gunicorn consent_api:app --worker-class uvicorn.workers.UvicornWorker --bind "0.0.0.0:$(PORT)" --forwarded-allow-ips="*"
 endif
 
 
 ## docker-build: Build a Docker image
 .PHONY: docker-build
 docker-build: clean
-	$(DOCKER_BUILD) --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
+	docker buildx build --platform linux/amd64 --tag $(DOCKER_IMAGE):$(TAG) .
 
-## docker-run: Start a Docker container
-.PHONY: docker-run
-docker-run:
-	$(DOCKER) run \
-		--interactive \
-		--tty \
-		--rm \
-		--env DATABASE_URL="$(DOCKER_DB_URL)" \
-		--env PORT="$(PORT)" \
-		--publish $(PORT):$(PORT) \
-		$(DOCKER_IMAGE)
-
-## infra: Create/update a deployment environment
-.PHONY: infra
-infra:
-	python infra/setup_env.py -e $(ENV) $(PREVIEW)
-
-## infra-destroy: Destroy a deployment environment
-.PHONY: infra-destroy
-infra-destroy:
-	python infra/setup_env.py --destroy -e $(ENV) $(PREVIEW)
-
-## deploy: Deploy the service to an environment
-.PHONY: deploy
-deploy:
-	python infra/deploy.py -e $(ENV) $(PREVIEW) -b main
-
-.PHONY: destroy-deployment
-destroy-deployment:
-	python infra/deploy.py --destroy -e $(ENV) $(PREVIEW) -b main
-
-## dist: Build client distribution file
-.PHONY: dist
-dist:
-	@mkdir -p client/dist
-	$(shell echo ";(function () {\n\n$$(cat client/src/singleconsent.js)\n\n})();\n" > "client/dist/singleconsent.js")
-	@echo client/dist/singleconsent.js written
 
 ## help: Show this message
 .PHONY: help
 help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' | sed -e 's/^/ /'
-
-
-## Generage openapi.json
-.PHONY: generate-openapi
-generate-openapi:
-	python scripts/generate_openapi.py

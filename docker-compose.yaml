@@ -43,6 +43,29 @@ services:
 
   dummy-service-1:
     container_name: dummy-service-1
+    profiles:
+      - "test"
+      - "test-ui"
+      - "debug"
+      - "codegen"
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
+    volumes:
+      - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
+    entrypoint: ["make", "run"]
+    environment:
+      CONSENT_API_ORIGIN: "http://consent-api"
+      OTHER_SERVICE_ORIGIN: "http://dummy-service-2"
+      PORT: "80"
+      ENV: ${ENV}
+
+  dummy-service-1-local:
+    container_name: dummy-service-1-local
+    profiles:
+      - "local"
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
@@ -54,17 +77,37 @@ services:
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
-      PORT: "80"
-      # CONSENT_API_ORIGIN: "http://consent-api"
       CONSENT_API_ORIGIN: "http://localhost:8000"
-      # CONSENT_API_ORIGIN: "http://localhost:3000"
-      # CONSENT_API_ORIGIN: "https://expired.badssl.com"
-      OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-2"
-      OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8002"
+      OTHER_SERVICE_ORIGIN: "http://localhost:8002"
+      PORT: "80"
       ENV: ${ENV}
+
 
   dummy-service-2:
     container_name: dummy-service-2
+    profiles:
+      - "test"
+      - "test-ui"
+      - "debug"
+      - "codegen"
+    networks:
+      - e2e
+    image: "${DOCKER_IMAGE}"
+    volumes:
+      - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
+      - "./consent_api:/home/app/consent_api"
+    entrypoint: ["make", "run"]
+    environment:
+      CONSENT_API_ORIGIN: "http://consent-api"
+      OTHER_SERVICE_ORIGIN: "http://dummy-service-1"
+      PORT: "80"
+      ENV: ${ENV}
+
+  dummy-service-2-local:
+    container_name: dummy-service-2-local
+    profiles:
+      - "local"
     networks:
       - e2e
     image: "${DOCKER_IMAGE}"
@@ -72,13 +115,13 @@ services:
       - "8002:80"
     volumes:
       - "./client:/home/app/client"
+      - "./Makefile:/home/app/Makefile"
       - "./consent_api:/home/app/consent_api"
     entrypoint: ["make", "run"]
     environment:
       CONSENT_API_ORIGIN: "http://localhost:8000"
+      OTHER_SERVICE_ORIGIN: "http://localhost:8001"
       PORT: "80"
-      OTHER_SERVICE_ORIGIN_DOCKER: "http://dummy-service-1"
-      OTHER_SERVICE_ORIGIN_HOST: "http://localhost:8001"
       ENV: ${ENV}
 
 
@@ -90,68 +133,56 @@ services:
   #     context: ./express-app
   #     dockerfile: .Dockerfile
   #   ports:
-  #     - "3000:3000"
+  #     - "3000:3000"e
   #   volumes:
   #     - "./express-app:/usr/src/app"
 
 
-
-  selenoid-ui:
+  playwright: &playwright
     profiles:
-      - "testing"
-    container_name: selenoid-ui
-    image: "aerokube/selenoid-ui:latest-release"
+      - "test"
+    container_name: playwright
     networks:
       - e2e
-    links:
-      - selenoid
-    command: ["--selenoid-uri", "http://selenoid:4444"]
-    ports:
-      - "8080:8080"
-
-  selenoid:
-    profiles:
-      - "testing"
-    container_name: selenoid
-    networks:
-      - e2e
-    image: "aerokube/selenoid:latest-release"
+    build:
+      context: ./e2e-tests
+      dockerfile: .jammy-test
+    # image: mcr.microsoft.com/playwright:v1.42.1-jammy
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./selenoid/config:/etc/selenoid/"
-      - "$PWD/selenoid/opt:/opt/selenoid/video"
-      - "$PWD/selenoid/opt:/opt/selenoid/logs"
+      - "./e2e-tests/tests:/app/tests"
+      - "./e2e-tests/tests-results:/app/tests-results"
+      - "./e2e-tests/playwright-report:/app/playwright-report"
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+    entrypoint: ["npx", "playwright", "test", "--retries=10", "--project=chromium"]
     environment:
-      OVERRIDE_VIDEO_OUTPUT_DIR: "$PWD/selenoid/opt"
-    command: ["-service-startup-timeout", "1m", "-container-network", "e2e"]
-    ports:
-      - "4444:4444"
-
-  test:
-    profiles:
-      - "testing"
-    container_name: test
-    networks:
-      - e2e
-    image: "${DOCKER_IMAGE}"
-    volumes:
-      - "$PWD/selenoid/opt:/home/app/logs"
-      - "$PWD/Makefile:/home/app/Makefile"
-      - "$PWD/consent_api/tests:/home/app/consent_api/tests"
-      - "$PWD/.pytest_cache:/home/app/.pytest_cache"
-    entrypoint: ["make", "test-all"]
-    # entrypoint: ["tail", "-f", "/dev/null"]
-    environment:
-      ENV: ${ENV}
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
-      E2E_TEST_CONSENT_API_URL: "http://consent-api"
-      E2E_TEST_DUMMY_SERVICE_1_URL: "http://dummy-service-1"
-      E2E_TEST_DUMMY_SERVICE_2_URL: "http://dummy-service-2"
-      SELENIUM_DRIVER: remote
-      SELENIUM_REMOTE_URL: http://selenoid:4444/wd/hub/
-      SPLINTER_REMOTE_BROWSER_VERSION: "${SPLINTER_REMOTE_BROWSER_VERSION}"
+      DISPLAY: host.docker.internal:0
+      DUMMY_SERVICE_1_ORIGIN: "http://dummy-service-1"
+      DUMMY_SERVICE_2_ORIGIN: "http://dummy-service-2"
     depends_on:
       - consent-api
       - dummy-service-1
       - dummy-service-2
-      - selenoid
+
+
+  playwright-ui:
+    <<: *playwright
+    profiles:
+      - "test-ui"
+    container_name: playwright-ui
+    entrypoint: ["npx", "playwright", "test", "--ui"]
+
+
+  playwright-debug:
+    <<: *playwright
+    profiles:
+      - "debug"
+    container_name: playwright-debug
+    entrypoint: ["npx", "playwright", "test", "--debug"]
+
+
+  playwright-codegen:
+    <<: *playwright
+    profiles:
+      - "codegen"
+    container_name: playwright-codegen
+    entrypoint: ["npx", "playwright", "codegen"]

@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/playwright:v1.42.1-jammy
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm ci
+RUN npm i -g playwright@1.42.1
+RUN npm i @playwright/test
+RUN npx playwright install --with-deps
