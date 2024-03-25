@@ -1,4 +1,5 @@
 """App configuration."""
+
 import os
 from enum import Enum
 

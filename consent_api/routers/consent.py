@@ -1,4 +1,5 @@
 """Consent REST API."""
+
 from typing import Annotated
 
 import fastapi

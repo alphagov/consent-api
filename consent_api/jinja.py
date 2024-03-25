@@ -1,6 +1,5 @@
 """Set up Jinja2 templates."""
 
-
 import jinja2
 from starlette.templating import Jinja2Templates
 

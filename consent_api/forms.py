@@ -1,4 +1,5 @@
 """Forms for self-service."""
+
 from wtforms import EmailField
 from wtforms import Form
 from wtforms import PasswordField
