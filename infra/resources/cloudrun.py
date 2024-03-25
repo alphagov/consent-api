@@ -61,9 +61,9 @@ class CloudRun(AbstractResource):
                 "annotations": {
                     "autoscaling.knative.dev/maxScale": "5",
                     "run.googleapis.com/cloudsql-instances": self.db.connection_name,
-                    "production-color": self.next_color.value
-                    if self.next_color
-                    else "none",
+                    "production-color": (
+                        self.next_color.value if self.next_color else "none"
+                    ),
                 }
             },
             "spec": {

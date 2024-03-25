@@ -4,16 +4,16 @@ module.exports = {
     es2021: false,
     node: true,
   },
-  extends: 'eslint:recommended',
+  extends: "eslint:recommended",
   overrides: [],
   parserOptions: {
     ecmaVersion: 2020,
-    sourceType: 'module',
-    project: 'tsconfig.json',
+    sourceType: "module",
+    project: "tsconfig.json",
   },
   rules: {
-    semi: ['error', 'never'],
-    'no-extra-semi': ['off'],
+    semi: ["error", "never"],
+    "no-extra-semi": ["off"],
   },
-  ignorePatterns: ['src/*.test.js'],
-}
+  ignorePatterns: ["src/*.test.js"],
+};

@@ -1,6 +1,5 @@
 """Dummy service for end-to-end testing."""
 
-
 from fastapi import APIRouter
 from fastapi import Request
 from starlette.responses import Response

@@ -16,43 +16,43 @@
  * endpoint from which the consent status can be fetched or to which it can be sent.
  */
 
-const { GovSingleConsent } = require('govuk-single-consent')
+const { GovSingleConsent } = require("govuk-single-consent");
 
-const SINGLE_CONSENT_API_BASE_URL = 'dummy-url.gov.uk'
+const SINGLE_CONSENT_API_BASE_URL = "dummy-url.gov.uk";
 
 const onConsentsUpdated = (consents, consentsPreferencesSet, error) => {
   // Do something with the consents
   // e.g
 
   if (consentsPreferencesSet) {
-    hideCookieBanner()
+    hideCookieBanner();
   }
 
   if (error) {
-    sendErrorLog(error)
+    sendErrorLog(error);
   }
-}
+};
 
 const singleConsent = new GovSingleConsent(
   onConsentsUpdated,
-  SINGLE_CONSENT_API_BASE_URL
-)
+  SINGLE_CONSENT_API_BASE_URL,
+);
 
 /**
  * Some Cookie Banner Event Handlers
  */
 
 const onRejectAllButtonClick = () => {
-  singleConsent.setConsents(GovSingleConsent.REJECT_ALL)
-}
+  singleConsent.setConsents(GovSingleConsent.REJECT_ALL);
+};
 
 const onAcceptAllButtonClick = () => {
-  singleConsent.setConsents(GovSingleConsent.ACCEPT_ALL)
-}
+  singleConsent.setConsents(GovSingleConsent.ACCEPT_ALL);
+};
 
 const onAcceptCustomConsentsButtonClick = (customConsents) => {
-  singleConsent.setConsents(customConsents)
-}
+  singleConsent.setConsents(customConsents);
+};
 
 /**
  * Some Logic That Depends On Consents
@@ -60,7 +60,7 @@ const onAcceptCustomConsentsButtonClick = (customConsents) => {
 
 const sendToAnalytics = (event) => {
   if (!GovSingleConsent.hasConsentedToUsage()) {
-    return
+    return;
   }
   // Send event to analytics here
-}
+};
