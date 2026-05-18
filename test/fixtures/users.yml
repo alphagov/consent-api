@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  govukId: MyString
+  apprenticeId: MyString
+  colCampaignId: MyString
+
+two:
+  govukId: MyString
+  apprenticeId: MyString
+  colCampaignId: MyString

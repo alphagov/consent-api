@@ -10,5 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_18_102911) do
+  create_table "users", force: :cascade do |t|
+    t.string "apprenticeId"
+    t.string "colCampaignId"
+    t.datetime "created_at", null: false
+    t.string "govukId"
+    t.datetime "updated_at", null: false
+  end
 end
